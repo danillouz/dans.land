@@ -29,21 +29,23 @@
         display: flex;
         flex-direction: column;
         margin: 0;
-        padding: 1rem;
+        padding: 0 1rem;
         background-color: rgb(var(--color-base));
         color: rgb(var(--color-text));
       }
 
-      main {
+      main,
+      hr,
+      footer {
         width: 100%;
-        max-width: 45ch;
+        max-width: 28rem;
         flex: 1 1 0%;
         margin: 0 auto;
       }
+
       main p:first-child {
         text-align: center;
       }
-
       p {
         text-align: justify;
       }
@@ -137,6 +139,18 @@
         100% {
           text-shadow: 0 0 4px currentColor;
         }
+      }
+
+      hr {
+        color: rgb(var(--color-hlm));
+      }
+
+      footer {
+        font-size: 1rem; /* Base: 16px */
+        line-height: 1.5rem; /* Base: 24px */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
       }
 
       @media (prefers-color-scheme: light) {
@@ -429,7 +443,7 @@ $  $        $ $$u5e" .     "k                    d"       #$bu$F  $        $ |;
 
       <figure class="ascii">
         <pre id="map" aria-hidden="true">
-                  <a href="https://dans.garden">Garden of Knowledge</a>
+                  <a href="https://dans.garden/">Garden of Knowledge</a>
                       ╱╲^╱╲+╱╲^╱╲
              .-..._,-╱╲+╱╲*╱╲*╱╲^╱╲-._.-._..
           ,-'         ╱╲^╱╲+╱╲^╱╲           '.-.
@@ -443,7 +457,7 @@ $  $        $ $$u5e" .     "k                    d"       #$bu$F  $        $ |;
               @@@@@@@@@@@                                 \       :    -     .
             @@@@@@@@@@@@@@@                                '        . ..-.'._'
              @@@@@@@@@@@@@@@                               ;
-               @@@@@@@@@@@           <a href="https://github.com/danillouz">Chaos Fields</a>           .
+               @@@@@@@@@@@           <a href="https://github.com/danillouz/">Chaos Fields</a>           .
  ..                @@@@               * ? @ * $ +             ;,_,.-.,-._,.
  .⌂.⌂..              ~~               _ % * # *                           '
  ..⌂.⌂..              ~~                 3 . ^ * x               #⌂#⌂#     \
@@ -462,9 +476,16 @@ $  $        $ $$u5e" .     "k                    d"       #$bu$F  $        $ |;
 
       <ul id="links">
         <li><a href="/">The Gates of Dan</a></li>
-        <li><a href="https://github.com/danillouz">Chaos Fields</a></li>
-        <li><a href="https://dans.garden">Garden of Knowledge</a></li>
+        <li><a href="https://github.com/danillouz/">Chaos Fields</a></li>
+        <li><a href="https://dans.garden/">Garden of Knowledge</a></li>
       </ul>
     </main>
+
+    <hr />
+
+    <footer>
+      <p class="subtext">Copyright &copy; Daniël Illouz</p>
+      <a href="https://github.com/danillouz/dans.land/">src</a>
+    </footer>
   </body>
 </html>
