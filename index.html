@@ -28,6 +28,7 @@
         min-height: 100vh;
         display: flex;
         flex-direction: column;
+        gap: 3rem;
         margin: 0;
         padding: 0 1rem;
         background-color: rgb(var(--color-base));
@@ -35,7 +36,6 @@
       }
 
       main,
-      hr,
       footer {
         width: 100%;
         max-width: 28rem;
@@ -43,8 +43,15 @@
         margin: 0 auto;
       }
 
-      main p:first-child {
+      main {
+        display: flex;
+        flex-direction: column;
+        gap: 3rem;
+      }
+
+      main > p:first-child {
         text-align: center;
+        margin: 3rem 0 0 0;
       }
       p {
         text-align: justify;
@@ -70,7 +77,7 @@
         font-family: serif;
         font-style: italic;
         text-align: center;
-        margin: 3rem 0;
+        margin: 0;
         padding: 1.5rem;
         border: thick double;
       }
@@ -84,7 +91,7 @@
         font-style: italic;
         font-weight: normal;
         text-align: center;
-        margin: 1rem 0;
+        margin-top: 1rem;
         color: rgb(var(--color-subtle));
       }
 
@@ -141,16 +148,13 @@
         }
       }
 
-      hr {
-        color: rgb(var(--color-hlm));
-      }
-
       footer {
         font-size: 1rem; /* Base: 16px */
         line-height: 1.5rem; /* Base: 24px */
         display: flex;
         justify-content: space-between;
         align-items: center;
+        border-top: 1px solid rgb(var(--color-hlm));
       }
 
       @media (prefers-color-scheme: light) {
@@ -232,7 +236,6 @@
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          margin: 3rem 0;
         }
 
         #links {
@@ -244,10 +247,6 @@
       @media (min-width: 1024px) {
         figure pre {
           font-size: 0.875rem; /* Small: 14px */
-        }
-
-        .ascii {
-          margin: 4.5rem 0;
         }
       }
     </style>
@@ -281,7 +280,7 @@
       </figure>
 
       <figure>
-        <p>The Oracles of DNS have foretold your arrival.</p>
+        <p>The Oracles of DNS foretold your arrival.</p>
       </figure>
 
       <figure class="ascii">
@@ -325,21 +324,24 @@ $  $        $ $$u5e" .     "k                    d"       #$bu$F  $        $ |;
         <figcaption>BEHOLD! The Gates of Dan.</figcaption>
       </figure>
 
-      <p>Greetings traveler. I am Dan. The ruler of this domain.</p>
+      <div>
+        <p>Greetings traveler. I am Dan. The ruler of this domain.</p>
 
-      <p>
-        In ages past, I soared through the heavens as the rider of great metal
-        dragons, commanding these magnificent beasts across the vast skies. But
-        in the year of our realm 2012, I heard the calling of a different
-        magic&mdash;the ancient art of software crafting.
-      </p>
+        <p>
+          In ages past, I soared through the heavens as the rider of great metal
+          dragons, commanding these magnificent beasts across the vast skies.
+          But in the year of our realm 2012, I heard the calling of a different
+          magic&mdash;the ancient art of software crafting.
+        </p>
 
-      <p>
-        Now, from The Tower high atop Mount Dan, I serve the Legendary Builders
-        of <a href="https://www.framer.com/">Framer</a>&colon; as Warlock of the
-        Backend Voids, I cast powerful spells and command vast armies of crazed
-        Gophers to SHAPE THE DIGITAL AETHER TO MY WILL!
-      </p>
+        <p>
+          Now, from The Tower high atop Mount Dan, I serve the Legendary
+          Builders of <a href="https://www.framer.com/">Framer</a>&colon; as
+          Warlock of the Backend Voids, I cast powerful spells and command vast
+          armies of crazed Gophers to
+          <b>SHAPE THE DIGITAL AETHER TO MY WILL!</b>
+        </p>
+      </div>
 
       <figure>
         <p>Maniacal laughter echoes through the load balancers.</p>
@@ -363,10 +365,6 @@ $  $        $ $$u5e" .     "k                    d"       #$bu$F  $        $ |;
 </pre>
 
         <pre id="moon" aria-hidden="true"><span class="radiate">
-               
-                     
-                    
-                   
            .g88R_.</span>
          <span class="radiate">*d888</span><span class="cloud">('  ).                   _._</span>
 <span class="radiate">        88888</span><span class="cloud">(     )</span><span class="radiate">          </span>       <span class="cloud">.+('  ).</span>
@@ -417,20 +415,22 @@ $  $        $ $$u5e" .     "k                    d"       #$bu$F  $        $ |;
         <figcaption>BEHOLD! The Tower atop Mount Dan.</figcaption>
       </figure>
 
-      <p>
-        When not whispering to TCP/IP packets, you might find me lost in ancient
-        tomes chronicling epic adventures. I am also known to practice the Dark
-        Arts of Pastromancy (the forbidden ritual of consuming questionable
-        amounts of baked goods).
-      </p>
+      <div>
+        <p>
+          When not whispering to TCP/IP packets, you might find me lost in
+          ancient tomes chronicling epic adventures. I am also known to practice
+          the Dark Arts of Pastromancy (the forbidden ritual of consuming
+          questionable amounts of baked goods).
+        </p>
 
-      <p>
-        To balance out the baked temptations of evil, I sometimes attempt the
-        sacred dance of salsa&mdash;though I must confess, my mastery of this
-        art remains... a work in progress. You may even spot me traversing the
-        cobblestone streets upon my trusted mechanical steed, although the
-        commoners merely call it "bicycle".
-      </p>
+        <p>
+          To balance out the baked temptations of evil, I sometimes attempt the
+          sacred dance of salsa&mdash;though I must confess, my mastery of this
+          art remains... a work in progress. You may even spot me traversing the
+          cobblestone streets upon my trusted mechanical steed, although the
+          commoners merely call it "bicycle".
+        </p>
+      </div>
 
       <figure>
         <p>
@@ -481,11 +481,9 @@ $  $        $ $$u5e" .     "k                    d"       #$bu$F  $        $ |;
       </ul>
     </main>
 
-    <hr />
-
     <footer>
       <p class="subtext">Copyright &copy; Daniël Illouz</p>
-      <a href="https://github.com/danillouz/dans.land/">src</a>
+      <a href="https://github.com/danillouz/dans.land/">Source</a>
     </footer>
   </body>
 </html>
