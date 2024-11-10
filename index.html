@@ -1,0 +1,271 @@
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dan&apos;s land</title>
+
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      body {
+        font-family: sans-serif;
+        font-weight: normal;
+        font-size: 1.125rem; /* large: 18px */
+        line-height: 1.75rem; /* large: 28px */
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+        padding: 1rem;
+      }
+
+      main {
+        width: 100%;
+        max-width: 45ch;
+        flex: 1 1 0%;
+        margin: 0 auto;
+      }
+      main p:first-child {
+        text-align: center;
+      }
+
+      p {
+        text-align: justify;
+        margin: 1.5rem 0;
+      }
+
+      figure,
+      pre {
+        margin: 0;
+      }
+
+      figure p {
+        font-family: serif;
+        font-style: italic;
+        text-align: center;
+        margin: 3rem 0;
+        padding: 1.5rem;
+        border: thick double;
+      }
+      figure pre {
+        font-size: 0.75rem; /* extra small: 12px */
+        line-height: normal;
+      }
+
+      figcaption {
+        font-size: 0.875rem; /* small: 14px */
+        line-height: 1.25rem; /* small: 20px */
+        text-align: center;
+        margin: 1rem 0;
+      }
+
+      #title {
+        font-family: serif;
+        text-align: center;
+      }
+
+      .ascii {
+        display: none;
+      }
+
+      @media (prefers-color-scheme: light) {
+        body {
+          background-color: white;
+          color: black;
+        }
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          background-color: black;
+          color: white;
+        }
+      }
+
+      /* Medium screens. */
+      @media (min-width: 768px) {
+        #title {
+          display: none;
+        }
+
+        .ascii {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          margin: 3rem 0;
+        }
+      }
+
+      /* Large screens. */
+      @media (min-width: 1024px) {
+        figure pre {
+          font-size: 0.875rem; /* small: 14px */
+        }
+
+        .ascii {
+          margin: 4.5rem 0;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <main>
+      <p>You are entering...</p>
+
+      <h1 id="title">Dan&apos;s Land</h1>
+
+      <figure class="ascii">
+        <pre id="banner" aria-hidden="true">
+   ******  ***                                            ******  *                                      **
+ **    *  * ***                                          **   *  *                                       **
+*     *  *   ***                         **             *    *  *                                        **
+     *  *     ***                         *                  *  *                                         **
+    ** **      **    ****    ***  ****       ****          ** **              ****    ***  ****      *** **
+    ** **      **   * ***  *  **** ****     * **** *       ** **             * ***  *  **** ****    *********
+    ** **      **  *   ****    **   ****   **  ****        ** **            *   ****    **   ****  **   ****
+    ** **      ** **    **     **    **    *****           ** **           **    **     **    **   **    **
+    ** **      ** **    **     **    **     ***            ** **           **    **     **    **   **    **
+    *  **      ** **    **     **    **       ***          *  **           **    **     **    **   **    **
+       *       *  **    **     **    **         ***           *            **    **     **    **   **    **
+  *****       *   **    **     **    **    ****  **        ****           * **    **     **    **   **    ** 
+ *   *********     ***** **    ***   ***  * **** *       *  *************   ***** **    ***   ***   *****
+*       ****        ***   **    ***   ***    ****       *     *********      ***   **    ***   ***   ***
+*                                                       *
+ **                                                      **</pre
+        >
+      </figure>
+
+      <figure>
+        <p>The Oracles of DNS have foretold your arrival.</p>
+      </figure>
+
+      <figure class="ascii">
+        <pre id="gate" aria-hidden="true">
+                              .  . @$* @$3  .  .
+                         .  '$Nueeed$$ed$$eeec$;$',..
+                      4$Lze@*$C2$b* ed(he*rb$CC$*$bc@$r.
+                   .. .e$$"W$$B$B$**  ^$  e""##d?$Bd$$$Nc.,
+                 $kd*Cr$6F#"'  **   .*==      # '"**F#$I$b$*
+                d$5N@$$"   ....eu$$$$$$N$*$zbeuu     #$d$$$$b.
+            . z$Ted*"$P zue$*9d$$$@#       W$e@B$$L.    "#@$E$b@.
+           #d$Id*P#  'Nd$$B$**"               "#*N$$b$c   $$$*$$c*
+          .d#+C6J   @@$B$*"            *           "#$$$$c   *$$$#$u.
+        .u$l4@"^"zJ$7W*"              ***            ^*$@$$$r "$$E$@B'
+       |@$l$P"+Rd$$N#"          *      *      *        '"$$$c.. ?E$*b|.
+      .z$ "*.  .Jz$"           ***           ***         '*@N$b   d**N..
+     .z$JBR^bs@$$#          *   *             *   *        "$l*9N "bN$Nee
+    |$$.C*   dB@"          ***                   ***        '$$$z* 3$b$$#
+    .$"$e$  @*$"        *   *                     *   *       $$$u.^*$N$c.
+   ,JPd$%  @@d"        ***                           ***      '$Ni$  $EP$.
+  .e$"*$  :et$          *                             *        ^$$E  4$N$be
+u*""""""""""""h                                                u*""""""""""""h
+E +e       ue. N                                               E +e       ue. N
+#e$@e.. ..z6+6d"                                               #e$@e.. ..z6+6d"
+   $ ""*"" 4F"  ze=eu                                    z***hc ^"$ ""*""  $
+   $       ^F :*    3r                                  @"  e "b  $        $
+ .e$        N $  'be$L...                            ...?be@F  $F $        $.
+4" $        $ $.  zm$*****h.                      ue""""*h6   J$" $        $ ".
+$  $        $ $$u5e" .     "k                    d"       #$bu$F  $        $ |;
+"N $        $ ^d%P  dF      $  .            .e   $     -c  "N$F  .$        $ #,
+ #$$        $  $4*. "N.    zP  3r ..    ..  $c   *u     $  u$K$  ,$       ,$ .
+  ^N$e.     3  F$k*. "*C$$$# .z$" '$    4L  "$c. '#$eeedF  $$$9r  3       J$^ 
+   $'"$$eu. 4  F3"K$ .e=*CB$$$$L .e$    '$bc.u$***hd6C""  4kF$4F  4     u@'$ 
+   $   '"*$*@u N'L$B*"z*""     "$F" 4k 4c '7$"      "*$eu 4'L$J"  $  .e$*" $ 
+   $      '"hC*$ "$#.P"          $me$"  #$*$       .  ^*INJL$"$  $e$$*#    $ 
+   $         $b"h ".F     $"     ^F        $       9r   #L#$FJEd#C@"       $ 
+  .$         $Jb   J"..  4b      uF        *k      J%    #c^ $"  d$        $
+ # $         $k9   $ $%4c $Bme.ze$         '*$+eee@*$"  :r$     @L$        $
+;  $         $$Jr  $d" '$r "*==*"            "#**"" $r  4$3r   db$F        $</pre
+        >
+        <figcaption>BEHOLD! The Gates of Dan.</figcaption>
+      </figure>
+
+      <p>Greetings traveler. I am Dan. The ruler of this domain.</p>
+
+      <p>
+        In ages past, I soared through the heavens as the rider of great metal
+        dragons, commanding these magnificent beasts across the vast skies. But
+        in the year of our realm 2012, I heard the calling of a different
+        magic&mdash;the ancient art of software crafting.
+      </p>
+
+      <p>
+        Now, from my tower high atop Mount Dan, I serve the Legendary Builders
+        of <a href="https://www.framer.com/">Framer</a>&colon; as Warlock of the
+        Backend Voids, I cast powerful spells and command vast armies of crazed
+        Gophers to SHAPE THE DIGITAL AETHER TO MY WILL!
+      </p>
+
+      <figure>
+        <p>Maniacal laughter echoes through the load balancers.</p>
+      </figure>
+
+      <p>
+        When not whispering to TCP/IP packets, you might find me lost in ancient
+        tomes chronicling epic adventures. I am also known to practice the Dark
+        Arts of Pastromancy (the forbidden ritual of consuming questionable
+        amounts of baked goods).
+      </p>
+
+      <p>
+        To balance out the baked temptations of evil, I sometimes attempt the
+        sacred dance of salsa&mdash;though I must confess, my mastery of this
+        art remains... a work in progress. You may even spot me traversing the
+        cobblestone streets upon my trusted mechanical steed, although the
+        commoners merely call it "bicycle".
+      </p>
+
+      <figure>
+        <p>
+          Make yourself comfortable in Dan&apos;s Land.
+          <br />
+          May your connections be blessed with <code>200 OK</code>, low latency,
+          and high uptime.
+        </p>
+      </figure>
+
+      <figure class="ascii">
+        <pre id="map" aria-hidden="true">
+                 [GARDEN OF KNOWLEDGE]
+                      ╱╲^╱╲+╱╲^╱╲
+             .-..._,-╱╲+╱╲*╱╲*╱╲^╱╲-._.-._..
+          ,-'         ╱╲^╱╲+╱╲^╱╲           '.-.
+       ,-'                                      '.-.
+     ,'                               .@@@.         ';,           _
+   ,'                               .@~⌂~⌂~@.          \       .'_8,;
+ ,'                                  .@~⌂~⌂~@.          '
+'                /\                    .@@@.            |        ,.-'.--.'.,
+                /  \  /\                                 ;       :     _    :
+               /    \/  \                                '       :   ((*))   :
+              @@@@@@@@@@@                                 \       :    -     .
+            @@@@@@@@@@@@@@@                                '        . ..-.'._'
+             @@@@@@@@@@@@@@@                               ;
+               @@@@@@@@@@@           [CHAOS FIELDS]         .
+ ..                @@@@               * ? @ * $ +             ;,_,.-.,-._,.
+ .⌂.⌂..              ~~               _ % * # *                           '
+ ..⌂.⌂..              ~~                 3 . ^ * x               #⌂#⌂#     \
+  ..⌂.⌂.               ~~              * ! * 8 *               #⌂#⌂#⌂#⌂#   /
+    ...                ~~                (&:=                   #⌂#⌂#⌂#    ;
+                        ~~                                       ##⌂##      \
+                         ~~                                                  .
+.#.#.                    ~                                                    \
+#.#.#.#.  #.#    .#.#.     [THE GATES OF DAN]       #.     .#.##.      .#.#.   .
+.#.#.#.#.#.#.#.#.#.#.#.#.#       _*+*_        .#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#
+#.#.#.#.#.#.#.#.#.#.#.#.#.#.#. //==*==\\ .#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.
+.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#|||     |||#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#</pre
+        >
+
+        <figcaption>BEHOLD! The Land of Dan.</figcaption>
+      </figure>
+    </main>
+  </body>
+</html>
