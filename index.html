@@ -15,6 +15,11 @@
         -moz-osx-font-smoothing: grayscale;
       }
 
+      *::selection {
+        background-color: rgb(var(--color-iris) / 0.3);
+        color: rgb(var(--color-text));
+      }
+
       body {
         font-family: sans-serif;
         font-weight: normal;
@@ -25,7 +30,7 @@
         flex-direction: column;
         margin: 0;
         padding: 1rem;
-        background: rgb(var(--color-base));
+        background-color: rgb(var(--color-base));
         color: rgb(var(--color-text));
       }
 
@@ -49,6 +54,9 @@
       a {
         color: rgb(var(--color-iris));
         text-underline-offset: 2px;
+      }
+      a:focus {
+        outline: 2px solid rgb(var(--color-love));
       }
 
       figure,
