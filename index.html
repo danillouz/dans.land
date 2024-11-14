@@ -68,6 +68,10 @@
         outline: 2px solid rgb(var(--color-love));
       }
 
+      ul {
+        list-style: square;
+      }
+
       figure,
       pre {
         margin: 0;
@@ -240,6 +244,18 @@
         figure pre {
           font-size: 0.875rem; /* Small: 14px */
         }
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
       }
     </style>
   </head>
@@ -429,19 +445,25 @@ $  $        $ $$u5e" .     "k                    d"       #$bu$F  $        $ |;
       </figure>
 
       <figure class="ascii">
-        <pre id="map" aria-hidden="true">
+        <figcaption id="sr-map" class="sr-only">
+          Fantasy map of Dan's Land with three clickable locations: The Gates of
+          Dan (Home), Chaos Fields (GitHub), and Garden of Knowledge (Digital
+          garden).
+        </figcaption>
+
+        <pre id="map">
                   <a href="https://dans.garden/">Garden of Knowledge</a>
                       ╱╲^╱╲+╱╲^╱╲
              .-..._,-╱╲+╱╲*╱╲*╱╲^╱╲-._.-._..
           ,-'         ╱╲^╱╲+╱╲^╱╲           '.-.
-       ,-'    ^^                                '.-.
-     ,'    ^^^^                       .@@@.         ';,           _
-   ,'    ^^^             ^^         .@~⌂~⌂~@.          \       .'_8,;
- ,'    ^^^^               ^^^        .@~⌂~⌂~@.          '
-'    ^^^         /\         ^^         .@@@.            |        ,.-'.--.'.,
-    ^^          /  \  /\     ^^^                        ;       :     _    :
-               /    \/  \      ^^                   ^   '       :   ((*))   :
-              @@@@@@@@@@@        ^                 ^^    \       :    -     .
+       ,-'     ^^                               '.-.
+     ,'     ^^^         ^              .@@@.        ';,           _
+   ,'      ^^            ^^          .@~⌂~⌂~@.         \       .'_8,;
+ ,'     ^^^                ^^         .@~⌂~⌂~@.         '
+'     ^^         /\          ^^         .@@@.           |        ,.-'.--.'.,
+    ^           /  \  /\       ^^^                      ;       :     _    :
+               /    \/  \         ^^                ^   '       :   ((*))   :
+              @@@@@@@@@@@@          ^              ^^    \       :    -     .
             @@@@@@@@@@@@@@@                         ^^    '       '. ..-.'._'
              @@@@@@@@@@@@@@@                          ^    ;
                @@@@@@@@@@@           <a href="https://github.com/danillouz/">Chaos Fields</a>           .
@@ -458,7 +480,7 @@ $  $        $ $$u5e" .     "k                    d"       #$bu$F  $        $ |;
 #.#.#.#.#.#.#.#.#.#.#.#.#.#.#. //==*==\\ .#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.
 .#.#.#.#.#.#.#.#.#.#.#.#.#.#.#|||     |||#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#</pre>
 
-        <pre id="map-legend">
+        <pre id="map-legend" aria-hidden="true">
 
 
 ────────────────────────────────────────────────────────────────────────────────
@@ -476,11 +498,23 @@ Instructions
         >
       </figure>
 
-      <ul id="links">
-        <li><a href="/">The Gates of Dan</a></li>
-        <li><a href="https://github.com/danillouz/">Chaos Fields</a></li>
-        <li><a href="https://dans.garden/">Garden of Knowledge</a></li>
-      </ul>
+      <nav id="links">
+        <ul>
+          <li>
+            <a href="/">The Gates of Dan (Home)</a>
+          </li>
+
+          <li>
+            <a href="https://github.com/danillouz/">Chaos Fields (GitHub)</a>
+          </li>
+
+          <li>
+            <a href="https://dans.garden/"
+              >Garden of Knowledge (Digital garden)</a
+            >
+          </li>
+        </ul>
+      </nav>
     </main>
 
     <footer>
