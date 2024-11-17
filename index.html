@@ -70,10 +70,6 @@
         outline: 2px solid rgb(var(--color-love));
       }
 
-      ul {
-        list-style: square;
-      }
-
       figure,
       pre {
         margin: 0;
@@ -97,6 +93,7 @@
         font-weight: normal;
         text-align: center;
         margin-top: 1rem;
+        color: rgb(var(--color-subtle));
       }
 
       #title {
@@ -118,8 +115,9 @@
       #tower {
         color: rgb(var(--color-love));
       }
-      #map {
-        color: rgb(var(--color-text));
+      #map,
+      #map-legend {
+        color: rgb(var(--color-subtle));
       }
       .cloud {
         color: rgb(var(--color-muted));
@@ -153,6 +151,11 @@
         justify-content: center;
         align-items: center;
         margin: 0.5rem auto;
+      }
+
+      #links ul {
+        list-style: square;
+        margin: 0;
       }
 
       @media (prefers-color-scheme: light) {
@@ -209,9 +212,9 @@
         }
 
         figure p {
-          border-color: rgb(var(--color-foam) / 0.5);
-          background-color: rgb(var(--color-foam) / 0.1);
-          color: rgb(var(--color-foam));
+          border-color: rgb(var(--color-rose) / 0.5);
+          background-color: rgb(var(--color-rose) / 0.1);
+          color: rgb(var(--color-rose));
         }
 
         #sun {
@@ -273,7 +276,7 @@
    ******  ***                                            ******  *                                      **
  **    *  * ***                                          **   *  *                                       **
 *     *  *   ***                         **             *    *  *                                        **
-     *  *     ***                         *                  *  *                                         **
+     *  *     ***                         *                  *  *                                        **
     ** **      **    ****    ***  ****       ****          ** **              ****    ***  ****      *** **
     ** **      **   * ***  *  **** ****     * **** *       ** **             * ***  *  **** ****    *********
     ** **      **  *   ****    **   ****   **  ****        ** **            *   ****    **   ****  **   ****
@@ -281,9 +284,9 @@
     ** **      ** **    **     **    **     ***            ** **           **    **     **    **   **    **
     *  **      ** **    **     **    **       ***          *  **           **    **     **    **   **    **
        *       *  **    **     **    **         ***           *            **    **     **    **   **    **
-  *****       *   **    **     **    **    ****  **        ****           * **    **     **    **   **    ** 
- *   *********     ***** **    ***   ***  * **** *       *  *************   ***** **    ***   ***   *****
-*       ****        ***   **    ***   ***    ****       *     *********      ***   **    ***   ***   ***
+  *****       *   **    **     **    **    ****  **        ****          * **    **     **    **   **    *** 
+ *   *********     ***** **    ***   ***  * **** *       *  *************   ***** **    ***   ***   *********
+*       ****        ***   **    ***   ***    ****       *     *********      ***   **    ***   ***   ******
 *                                                       *
  **                                                      **</pre
         >
@@ -299,9 +302,9 @@
                          .  '$Nueeed$$ed$$eeec$;$',..
                       4$Lze@*$C2$b* ed(he*rb$CC$*$bc@$r.
                    .. .e$$"W$$B$B$**  ^$  e""##d?$Bd$$$Nc.,
-                 $kd*Cr$6F#"'  **   .*==      # '"**F#$I$b$*
+                 $kd*Cr$6F#"'  **   .*===*.   # '"**F#$I$b$*
                 d$5N@$$"   ....eu$$$$$$N$*$zbeuu     #$d$$$$b.
-            . z$Ted*"$P zue$*9d$$$@#       W$e@B$$L.    "#@$E$b@.
+            . z$Ted*"$P zue$*9d$$$@W       W$e@B$$L.    "#@$E$b@.
            #d$Id*P#  'Nd$$B$**"               "#*N$$b$c   $$$*$$c*
           .d#+C6J   @@$B$*"            *           "#$$$$c   *$$$#$u.
         .u$l4@"^"zJ$7W*"              ***            ^*$@$$$r "$$E$@B'
@@ -326,10 +329,10 @@ $  $        $ $$u5e" .     "k                    d"       #$bu$F  $        $ |;
    $'"$$eu. 4  F3"K$ .e=*CB$$$$L .e$    '$bc.u$***hd6C""  4kF$4F  4     u@'$ 
    $   '"*$*@u N'L$B*"z*""     "$F" 4k 4c '7$"      "*$eu 4'L$J"  $  .e$*" $ 
    $      '"hC*$ "$#.P"          $me$"  #$*$       .  ^*INJL$"$  $e$$*#    $ 
-   $         $b"h ".F     $"     ^F        $       9r   #L#$FJEd#C@"       $ 
-  .$         $Jb   J"..  4b      uF        *k      J%    #c^ $"  d$        $
- # $         $k9   $ $%4c $Bme.ze$         '*$+eee@*$"  :r$     @L$        $
-;  $         $$Jr  $d" '$r "*==*"            "#**"" $r  4$3r   db$F        $</pre
+   $        $b"h  ".F     $"     ^F        $       9r   #L#$FJEd#C@"       $ 
+   $        $Jb ,  J"..  4b      uF        *k      J%    #c^ $"  d$        $
+   $        $k9.   $ $%4c $Bme.ze$         '*$+eee@*$"  :r$ ,   @L$        $
+   $        $$Jr  .$d" '$r "*==*"            "#**"" $r  4$3r  .db$F        $</pre
         >
         <figcaption>Behold! The Gates of Dan.</figcaption>
       </figure>
@@ -431,19 +434,15 @@ $  $        $ $$u5e" .     "k                    d"       #$bu$F  $        $ |;
         </p>
 
         <p>
-          When not manipulating the digital plane (or resisting baked
+          When not manipulating the digital cosmos (or resisting the baked
           temptations of evil) you will find me lost in tomes of epic adventure.
-          Occasionally, I dare to attempt the Sacred Dance of Salsa. Alas, my
-          mastery of this art remains... a work in progress.
+          Occasionally, I dare to attempt the Sacred Dance of Salsa. Although,
+          my mastery of this art remains... a work in progress.
         </p>
       </div>
 
       <figure>
-        <p>
-          Welcome to Dan&apos;s Land.
-          <br />
-          May your connections be blessed with <code>200 OK</code>.
-        </p>
+        <p>Welcome to Dan&apos;s Land.</p>
       </figure>
 
       <figure class="ascii">
@@ -461,15 +460,15 @@ $  $        $ $$u5e" .     "k                    d"       #$bu$F  $        $ |;
        ,-'     ^^                               '.-.
      ,'     ^^^         ^              .@@@.        ';,           _
    ,'      ^^            ^^          .@~⌂~⌂~@.         \       .'_8,;
- ,'     ^^^                ^^         .@~⌂~⌂~@.         '
-'     ^^         /\          ^^         .@@@.           |        ,.-'.--.'.,
+ .'     ^^^                ^^         .@~⌂~⌂~@.         '
+.     ^^         /\          ^^         .@@@.           |        ,.-'.--.'.,
     ^           /  \  /\       ^^^                      ;       :     _    :
                /    \/  \         ^^                ^   '       :   ((*))   :
               @@@@@@@@@@@@          ^              ^^    \       :    -     .
             @@@@@@@@@@@@@@@                         ^^    '       '. ..-.'._'
              @@@@@@@@@@@@@@@                          ^    ;
                @@@@@@@@@@@           <a href="https://github.com/danillouz/">Chaos Fields</a>           .
- ..                @@@@               * ? @ * $ +            ';,_,.-.,-._,.
+ ..                @@@@               * ? @ * $ +            ';,_,.-.,-._,
  .⌂.⌂..              ~~               _ % * # *                           '
  ..⌂.⌂..              ~~                 3 . ^ * x               #⌂#⌂#     \
   ..⌂.⌂.               ~~              * ! * 8 *               #⌂#⌂#⌂#⌂#   /
@@ -478,12 +477,11 @@ $  $        $ $$u5e" .     "k                    d"       #$bu$F  $        $ |;
                          ~~                                                  .
 .#.#.                    ~                                                    \
 #.#.#.#.  #.#    .#.#.      <a href="/">The Gates of Dan</a>        #.     .#.##.      .#.#.   .
-.#.#.#.#.#.#.#.#.#.#.#.#.#       _*+*_        .#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#
-#.#.#.#.#.#.#.#.#.#.#.#.#.#.#. //==*==\\ .#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.
+.#.#.#.#.#.#.#.#.#.#.#.#.#       _*|*_        .#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#
+#.#.#.#.#.#.#.#.#.#.#.#.#.#.#. //==I==\\ .#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.
 .#.#.#.#.#.#.#.#.#.#.#.#.#.#.#|||     |||#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#.#</pre>
 
         <pre id="map-legend" aria-hidden="true">
-
 
 ────────────────────────────────────────────────────────────────────────────────
 Legend
@@ -492,11 +490,10 @@ Legend
  ⌂⌂ - Settlement                 ## - Hill
  @@ - Water                      .. - Elevation
  ~~ - River
-
 ────────────────────────────────────────────────────────────────────────────────
 Instructions
 ────────────────────────────────────────────────────────────────────────────────
- ?? Click marked locations to traverse the land</pre
+ ? Click marked locations to traverse the land</pre
         >
       </figure>
 
