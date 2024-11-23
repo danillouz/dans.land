@@ -12,4 +12,4 @@ After running `npm i`, run:
 
 ## ASCII art
 
-Taken from [ASCII Art Archive](https://www.asciiart.eu/).
+Taken/adapted from [ASCII Art Archive](https://www.asciiart.eu/).
