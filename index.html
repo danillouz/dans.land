@@ -33,7 +33,7 @@
         gap: 3rem;
         margin: 0;
         padding: 0 1rem;
-        background-color: rgb(var(--color-base));
+        background-color: rgb(var(--color-surface));
         color: rgb(var(--color-text));
       }
 
@@ -99,6 +99,9 @@
       #title {
         text-align: center;
         margin: 0;
+      }
+      #banner {
+        font-weight: bold;
       }
 
       .ascii {
@@ -193,28 +196,28 @@
       }
       @media (prefers-color-scheme: dark) {
         :root {
-          /* Rosé Pine Main: https://rosepinetheme.com/palette/ */
-          --color-base: 25 23 36;
-          --color-surface: 31 29 46;
-          --color-overlay: 38 35 58;
+          /* Rosé Pine Moon: https://rosepinetheme.com/palette/ */
+          --color-base: 35 33 54;
+          --color-surface: 42 39 63;
+          --color-overlay: 57 53 82;
           --color-muted: 110 106 134;
           --color-subtle: 144 140 170;
           --color-text: 224 222 244;
           --color-love: 235 111 146;
           --color-gold: 246 193 119;
-          --color-rose: 235 188 186;
-          --color-pine: 49 116 143;
+          --color-rose: 234 154 151;
+          --color-pine: 62 143 176;
           --color-foam: 156 207 216;
-          --color-iris: 196 167 2319;
-          --color-hll: 33 32 46;
-          --color-hlm: 64 61 82;
-          --color-hlh: 82 79 103;
+          --color-iris: 196 167 231;
+          --color-hll: 42 40 62;
+          --color-hlm: 68 65 90;
+          --color-hlh: 86 82 110;
         }
 
         figure p {
-          border-color: rgb(var(--color-rose) / 0.5);
-          background-color: rgb(var(--color-rose) / 0.1);
-          color: rgb(var(--color-rose));
+          border-color: rgb(var(--color-foam) / 0.5);
+          background-color: rgb(var(--color-foam) / 0.1);
+          color: rgb(var(--color-foam));
         }
 
         #sun {
@@ -232,7 +235,6 @@
         }
 
         .ascii {
-          font-weight: bold;
           display: flex;
           flex-direction: column;
           align-items: center;
