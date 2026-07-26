@@ -131,6 +131,13 @@ figcaption {
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .radiate {
+    animation: none;
+    text-shadow: 0 0 4px currentColor;
+  }
+}
+
 footer {
   display: flex;
   justify-content: center;
