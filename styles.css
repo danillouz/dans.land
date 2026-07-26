@@ -520,8 +520,17 @@ footer {
 
 /* ASCII layout */
 @media (min-width: 800px) {
-  #title {
-    display: none;
+  #title,
+  #links {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
   }
 
   .ascii {
@@ -531,8 +540,14 @@ footer {
     justify-content: center;
   }
 
-  #links {
-    display: none;
+  #links:focus-within {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
   }
 }
 
