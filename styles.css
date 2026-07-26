@@ -518,8 +518,8 @@ footer {
   }
 }
 
-/* Medium screens */
-@media (min-width: 768px) {
+/* ASCII layout */
+@media (min-width: 800px) {
   #title {
     display: none;
   }
