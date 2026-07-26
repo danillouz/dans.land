@@ -4,572 +4,34 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="author" content="Daniël Illouz" />
-    <meta name="description" content="Dan's personal website." />
-    <title>Dan&apos;s land</title>
 
-    <style>
-      :root {
-        color-scheme: light dark;
-        font-synthesis: none;
-        text-rendering: optimizeLegibility;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-      }
+    <link rel="stylesheet" href="/styles.css" />
 
-      *::selection {
-        background-color: rgb(var(--color-iris) / 0.3);
-        color: rgb(var(--color-text));
-      }
+    <title>Daniël Illouz</title>
+    <meta
+      name="description"
+      content="Personal site of Daniël Illouz."
+    />
 
-      body {
-        font-family: monospace;
-        font-weight: normal;
-        font-size: 1rem; /* Base: 16px */
-        line-height: 1.5rem; /* Base: 24px */
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        gap: 3rem;
-        margin: 0;
-        padding: 0 1rem;
-        background-color: rgb(var(--color-surface));
-        color: rgb(var(--color-text));
-      }
+    <link rel="canonical" href="https://dans.land/" />
 
-      main,
-      footer {
-        width: 100%;
-        max-width: 32rem;
-        flex: 1 1 0%;
-        margin: 0 auto;
-      }
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://dans.land/" />
+    <meta
+      property="og:title"
+      content="Daniël Illouz"
+    />
+    <meta
+      property="og:description"
+      content="Personal site of Daniël Illouz."
+    />
+    <meta property="og:image" content="https://dans.land/portrait.png" />
+    <meta
+      property="og:image:alt"
+      content="Daniël Illouz wearing armor and riding a toy horse"
+    />
 
-      main {
-        display: flex;
-        flex-direction: column;
-        gap: 3rem;
-      }
-
-      main > p:first-child {
-        text-align: center;
-        margin: 3rem 0 0 0;
-      }
-      a {
-        color: rgb(var(--color-love));
-        text-underline-offset: 4px;
-      }
-      a:focus {
-        outline: 2px solid rgb(var(--color-gold));
-      }
-
-      figure,
-      pre {
-        margin: 0;
-      }
-
-      figure p {
-        font-family: sans-serif;
-        font-style: italic;
-        text-align: center;
-        margin: 0;
-        padding: 1.5rem;
-        border: thick double;
-      }
-      figure pre {
-        font-size: 0.75rem; /* Extra small: 12px */
-        line-height: normal;
-      }
-
-      figcaption {
-        font-family: sans-serif;
-        font-weight: normal;
-        text-align: center;
-        margin-top: 1rem;
-        color: rgb(var(--color-subtle));
-      }
-
-      #title {
-        text-align: center;
-        margin: 0;
-      }
-      #banner {
-        font-weight: bold;
-      }
-
-      .ascii {
-        display: none;
-      }
-
-      #gate,
-      #sun {
-        color: rgb(var(--color-gold));
-      }
-      #moon {
-        color: rgb(var(--color-text));
-      }
-      #tower {
-        color: rgb(var(--color-love));
-      }
-      #map,
-      #map-legend {
-        color: rgb(var(--color-subtle));
-      }
-      .cloud {
-        color: rgb(var(--color-muted));
-      }
-      .mountain {
-        color: rgb(var(--color-subtle));
-        text-shadow: none;
-      }
-      .water {
-        color: rgb(var(--color-foam));
-      }
-
-      .radiate {
-        animation: radiate 12s ease-in-out infinite;
-      }
-
-      @keyframes radiate {
-        0% {
-          text-shadow: 0 0 4px currentColor;
-        }
-        50% {
-          text-shadow: 0 0 24px currentColor;
-        }
-        100% {
-          text-shadow: 0 0 4px currentColor;
-        }
-      }
-
-      footer {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin: 0.5rem auto;
-      }
-
-      #links ul {
-        list-style: square;
-        margin: 0;
-      }
-
-      .character-sheet {
-        --frame-accent: rgb(var(--color-gold) / 0.82);
-        --frame-line: 1.5px;
-        --frame-line-offset: -1.5px;
-        --frame-join-offset: calc(1rem - 3px);
-        --frame-short-size: calc(1rem - 1.5px);
-        --character-sheet-width: 49.22rem;
-        --character-panel-bg: rgb(var(--color-base));
-
-        box-sizing: border-box;
-        position: relative;
-        isolation: isolate;
-        border: var(--frame-line) solid var(--frame-accent);
-        background: var(--character-panel-bg);
-        padding: 1.5rem;
-      }
-
-      .frame-corner {
-        box-sizing: border-box;
-        position: absolute;
-        z-index: 2;
-        width: 0.5rem;
-        height: 0.5rem;
-        border: var(--frame-line) solid var(--frame-accent);
-        pointer-events: none;
-      }
-      .frame-corner::before,
-      .frame-corner::after {
-        content: "";
-        position: absolute;
-      }
-      .frame-corner::before {
-        width: var(--frame-short-size);
-        height: 2rem;
-      }
-      .frame-corner::after {
-        width: 2rem;
-        height: var(--frame-short-size);
-      }
-      .frame-corner-top {
-        top: -0.5rem;
-      }
-      .frame-corner-bottom {
-        bottom: -0.5rem;
-      }
-      .frame-corner-left {
-        left: -0.5rem;
-      }
-      .frame-corner-right {
-        right: -0.5rem;
-      }
-      .frame-corner-left::before,
-      .frame-corner-left::after {
-        left: var(--frame-line-offset);
-      }
-      .frame-corner-left::before {
-        border-left: var(--frame-line) solid var(--frame-accent);
-      }
-      .frame-corner-left::after {
-        left: var(--frame-join-offset);
-        border-left: var(--frame-line) solid var(--frame-accent);
-      }
-      .frame-corner-right::before,
-      .frame-corner-right::after {
-        right: var(--frame-line-offset);
-      }
-      .frame-corner-right::before {
-        border-right: var(--frame-line) solid var(--frame-accent);
-      }
-      .frame-corner-right::after {
-        right: var(--frame-join-offset);
-        border-right: var(--frame-line) solid var(--frame-accent);
-      }
-      .frame-corner-top::before {
-        top: var(--frame-join-offset);
-        border-top: var(--frame-line) solid var(--frame-accent);
-      }
-      .frame-corner-top::after {
-        top: var(--frame-line-offset);
-        border-top: var(--frame-line) solid var(--frame-accent);
-      }
-      .frame-corner-bottom::before {
-        bottom: var(--frame-join-offset);
-        border-bottom: var(--frame-line) solid var(--frame-accent);
-      }
-      .frame-corner-bottom::after {
-        bottom: var(--frame-line-offset);
-        border-bottom: var(--frame-line) solid var(--frame-accent);
-      }
-
-      .character-header {
-        --title-line: 1px;
-
-        position: relative;
-        z-index: 1;
-        width: min(34rem, calc(100% - 4rem));
-        margin: 0.5rem auto 2rem;
-      }
-
-      .character-title {
-        --title-notch: 1rem;
-
-        box-sizing: border-box;
-        display: flex;
-        position: relative;
-        align-items: center;
-        justify-content: center;
-        min-height: 2rem;
-        margin: 0;
-        padding: 0 2.25rem;
-        color: rgb(var(--color-text));
-        font-size: 1.25rem;
-        line-height: 1.5rem;
-        text-align: center;
-      }
-      .character-title::before,
-      .character-title::after {
-        content: "";
-        position: absolute;
-        pointer-events: none;
-      }
-      .character-title::before {
-        inset: 0;
-        background-color: var(--frame-accent);
-        clip-path: polygon(
-          var(--title-notch) 0,
-          calc(100% - var(--title-notch)) 0,
-          100% 50%,
-          calc(100% - var(--title-notch)) 100%,
-          var(--title-notch) 100%,
-          0 50%
-        );
-      }
-      .character-title::after {
-        inset: var(--title-line);
-        background: var(--character-panel-bg);
-        clip-path: polygon(
-          calc(var(--title-notch) - var(--title-line)) 0,
-          calc(100% - var(--title-notch) + var(--title-line)) 0,
-          100% 50%,
-          calc(100% - var(--title-notch) + var(--title-line)) 100%,
-          calc(var(--title-notch) - var(--title-line)) 100%,
-          0 50%
-        );
-      }
-      .character-title span {
-        position: relative;
-        z-index: 1;
-      }
-
-      .character-sheet h3 {
-        margin: 0;
-        font-size: 1rem;
-        line-height: 1.5rem;
-      }
-
-      .character-body {
-        display: grid;
-        gap: 1.5rem;
-        position: relative;
-        z-index: 1;
-      }
-
-      .portrait-frame {
-        display: grid;
-        min-height: 39rem;
-        margin: 0;
-        overflow: hidden;
-        border: 0;
-      }
-
-      .portrait-art {
-        position: relative;
-        min-height: 35rem;
-        overflow: hidden;
-        background:
-          repeating-linear-gradient(
-            0deg,
-            rgb(var(--color-text) / 0.1) 0,
-            rgb(var(--color-text) / 0.1) 1px,
-            transparent 1px,
-            transparent 4px
-          ),
-          radial-gradient(
-            circle at 55% 15%,
-            transparent 0 13%,
-            rgb(var(--color-gold) / 0.24) 18%,
-            rgb(var(--color-gold) / 0.1) 27%,
-            transparent 38%
-          ),
-          radial-gradient(
-            circle at 50% 24%,
-            transparent 56%,
-            rgb(var(--color-base) / 0.22)
-          ),
-          linear-gradient(
-            180deg,
-            rgb(var(--color-overlay) / 0.18),
-            rgb(var(--color-base) / 0.22)
-          );
-      }
-
-      .portrait-image {
-        display: block;
-        position: relative;
-        z-index: 1;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        object-position: 50% 30%;
-      }
-
-      .character-details {
-        padding: 0.25rem 0;
-      }
-
-      .character-stats {
-        display: grid;
-        gap: 0.5rem;
-        grid-template-columns: max-content minmax(4rem, 1fr) 3ch;
-        align-items: center;
-        margin: 0.5rem 0 2.5rem;
-      }
-      .stat-name {
-        color: rgb(var(--color-text));
-      }
-      .stat-name::before {
-        content: "[";
-      }
-      .stat-name::after {
-        content: "]";
-      }
-      .character-stats dd {
-        margin: 0;
-      }
-      .stat-value {
-        color: rgb(var(--color-subtle));
-        text-align: right;
-      }
-      .stat-bar {
-        height: 0.5rem;
-        background-color: rgb(var(--color-muted) / 0.18);
-      }
-      .stat-fill {
-        display: block;
-        height: 100%;
-        background-color: rgb(var(--color-foam));
-      }
-      .stat-fill-spellcraft {
-        width: 88%;
-      }
-      .stat-fill-appraisal {
-        width: 81%;
-      }
-      .stat-fill-questing {
-        width: 79%;
-      }
-      .stat-fill-clairvoyance {
-        width: 92%;
-      }
-      .stat-fill-speech {
-        width: 31%;
-        background-color: rgb(var(--color-love));
-      }
-
-      .character-abilities,
-      .character-inventory {
-        margin: 0.5rem 0 0;
-        padding-left: 1.25rem;
-      }
-      .character-abilities {
-        margin-bottom: 2.5rem;
-      }
-      .character-abilities li::marker,
-      .character-inventory li::marker {
-        color: rgb(var(--color-gold));
-      }
-
-      @media (max-width: 767px) {
-        .character-header {
-          width: calc(100% - 2rem);
-          margin-bottom: 1.5rem;
-        }
-
-        .character-title {
-          font-size: 1rem;
-        }
-
-        .portrait-frame {
-          min-height: 0;
-        }
-
-        .portrait-art {
-          min-height: 24rem;
-        }
-      }
-
-      @media (min-width: 768px) {
-        .character-sheet {
-          width: min(var(--character-sheet-width), calc(100vw - 2rem));
-          align-self: center;
-        }
-
-        .character-body {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-      }
-
-      @media (prefers-color-scheme: light) {
-        :root {
-          /* Rosé Pine Dawn: https://rosepinetheme.com/palette/ */
-          --color-base: 250 244 237;
-          --color-surface: 255 250 243;
-          --color-overlay: 242 233 222;
-          --color-muted: 152 147 165;
-          --color-subtle: 121 117 147;
-          --color-text: 87 82 121;
-          --color-love: 180 99 122;
-          --color-gold: 234 157 52;
-          --color-rose: 215 130 126;
-          --color-pine: 40 105 131;
-          --color-foam: 86 148 159;
-          --color-iris: 144 122 169;
-          --color-hll: 244 237 232;
-          --color-hlm: 223 218 217;
-          --color-hlh: 206 202 205;
-        }
-
-        figure p {
-          border-color: rgb(var(--color-pine) / 0.5);
-          background-color: rgb(var(--color-pine) / 0.1);
-          color: rgb(var(--color-pine));
-        }
-
-        #sun {
-          display: block;
-        }
-        #moon {
-          display: none;
-        }
-      }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          /* Rosé Pine Moon: https://rosepinetheme.com/palette/ */
-          --color-base: 35 33 54;
-          --color-surface: 42 39 63;
-          --color-overlay: 57 53 82;
-          --color-muted: 110 106 134;
-          --color-subtle: 144 140 170;
-          --color-text: 224 222 244;
-          --color-love: 235 111 146;
-          --color-gold: 246 193 119;
-          --color-rose: 234 154 151;
-          --color-pine: 62 143 176;
-          --color-foam: 156 207 216;
-          --color-iris: 196 167 231;
-          --color-hll: 42 40 62;
-          --color-hlm: 68 65 90;
-          --color-hlh: 86 82 110;
-        }
-
-        figure p {
-          border-color: rgb(var(--color-foam) / 0.5);
-          background-color: rgb(var(--color-foam) / 0.1);
-          color: rgb(var(--color-foam));
-        }
-
-        #sun {
-          display: none;
-        }
-        #moon {
-          display: block;
-        }
-      }
-
-      /* Medium screens */
-      @media (min-width: 768px) {
-        #title {
-          display: none;
-        }
-
-        .ascii {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-        }
-
-        #links {
-          display: none;
-        }
-      }
-
-      /* Large screens */
-      @media (min-width: 1024px) {
-        .character-sheet {
-          --character-sheet-width: 57.42rem;
-        }
-
-        figure pre {
-          font-size: 0.875rem; /* Small: 14px */
-        }
-      }
-
-      .sr-only {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        padding: 0;
-        margin: -1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        white-space: nowrap;
-        border-width: 0;
-      }
-    </style>
+    <meta name="twitter:card" content="summary" />
   </head>
 
   <body>
@@ -645,16 +107,19 @@ $  $        $ $$u5e" .     "k                    d"       #$bu$F  $        $ |;
       </figure>
 
       <div>
-        <p>Greetings traveler. I am Dan, the guardian of this domain.</p>
-
         <p>
-          In ages past, I soared through the heavens astride great metal
-          dragons. But in the year 2012, I answered the call of a different
-          magic&colon; the ancient art of software crafting.
+          Greetings traveler. I am <a href="/about/">Dan</a>, the guardian of
+          this domain.
         </p>
 
         <p>
-          From my Fortress of Contemplation, I now serve the Legendary Builders
+          In ages past I soared through the heavens astride great metal dragons.
+          But in the year 2012, I answered the call of a different magic&colon;
+          the ancient art of software crafting.
+        </p>
+
+        <p>
+          From my Fortress of Contemplation I now serve the Legendary Builders
           of <a href="https://www.framer.com/">Framer</a>. As Battlemage of the
           Backend Voids, I wield arcane spells and command vast armies of
           immortal Gophers to <b>SHAPE THE DIGITAL AETHER TO MY WILL!</b>
@@ -740,148 +205,23 @@ $  $        $ $$u5e" .     "k                    d"       #$bu$F  $        $ |;
         </p>
 
         <p>
-          When not holding the line against artificial deadlines (or resisting
-          the baked temptations of evil) you will find me lost in tomes of epic
+          When I'm not holding the line against artificial deadlines (or resisting
+          the baked temptations of evil), you will find me lost in tomes of epic
           adventure (mostly fantasy), or exploring the countryside.
         </p>
       </div>
 
-      <section class="character-sheet">
-        <span
-          class="frame-corner frame-corner-top frame-corner-left"
-          aria-hidden="true"
-        ></span>
-        <span
-          class="frame-corner frame-corner-top frame-corner-right"
-          aria-hidden="true"
-        ></span>
-        <span
-          class="frame-corner frame-corner-bottom frame-corner-left"
-          aria-hidden="true"
-        ></span>
-        <span
-          class="frame-corner frame-corner-bottom frame-corner-right"
-          aria-hidden="true"
-        ></span>
-
-        <header class="character-header">
-          <h2 class="character-title">
-            <span>Daniël Illouz &amp; Silvester Stallion</span>
-          </h2>
-        </header>
-
-        <div class="character-body">
-          <figure class="portrait-frame">
-            <div class="portrait-art">
-              <img
-                class="portrait-image"
-                src="/portrait.png"
-                alt="Dan wearing armor and riding a toy horse"
-              />
-            </div>
-          </figure>
-
-          <div class="character-details">
-            <h3>Stats</h3>
-
-            <dl class="character-stats">
-              <dt class="stat-name">Spellcraft</dt>
-              <dd class="stat-bar">
-                <span
-                  class="stat-fill stat-fill-spellcraft"
-                  role="meter"
-                  aria-label="Spellcraft 88 out of 100"
-                  aria-valuemin="0"
-                  aria-valuemax="100"
-                  aria-valuenow="88"
-                ></span>
-              </dd>
-              <dd class="stat-value">88</dd>
-
-              <dt class="stat-name">Appraisal</dt>
-              <dd class="stat-bar">
-                <span
-                  class="stat-fill stat-fill-appraisal"
-                  role="meter"
-                  aria-label="Appraisal 81 out of 100"
-                  aria-valuemin="0"
-                  aria-valuemax="100"
-                  aria-valuenow="81"
-                ></span>
-              </dd>
-              <dd class="stat-value">81</dd>
-
-              <dt class="stat-name">Questing</dt>
-              <dd class="stat-bar">
-                <span
-                  class="stat-fill stat-fill-questing"
-                  role="meter"
-                  aria-label="Questing 79 out of 100"
-                  aria-valuemin="0"
-                  aria-valuemax="100"
-                  aria-valuenow="79"
-                ></span>
-              </dd>
-              <dd class="stat-value">79</dd>
-
-              <dt class="stat-name">Clairvoyance</dt>
-              <dd class="stat-bar">
-                <span
-                  class="stat-fill stat-fill-clairvoyance"
-                  role="meter"
-                  aria-label="Clairvoyance 92 out of 100"
-                  aria-valuemin="0"
-                  aria-valuemax="100"
-                  aria-valuenow="92"
-                ></span>
-              </dd>
-              <dd class="stat-value">92</dd>
-
-              <dt class="stat-name">Speech</dt>
-              <dd class="stat-bar">
-                <span
-                  class="stat-fill stat-fill-speech"
-                  role="meter"
-                  aria-label="Speech 30 out of 100"
-                  aria-valuemin="0"
-                  aria-valuemax="100"
-                  aria-valuenow="30"
-                ></span>
-              </dd>
-              <dd class="stat-value">30</dd>
-            </dl>
-
-            <h3>Special abilities</h3>
-
-            <ul class="character-abilities">
-              <li>Summon immortal Gopher army</li>
-              <li>Incident foresight</li>
-              <li>10x damage to hidden bugs</li>
-            </ul>
-
-            <h3>Inventory</h3>
-
-            <ul class="character-inventory">
-              <li>Cinnamon buns</li>
-              <li>Sugar cubes</li>
-              <li>MacBook Pro</li>
-              <li>Kindle</li>
-              <li>Walking shoes</li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      <div>
+      <figure>
         <p>
-          Go forth and explore Dan&apos;s Land. I bless you with this cinnamon
-          bun: may your caches stay warm when nights are cold, the roads remain
-          bug free, and your uptime hold as many nines as the eye can see.
+          Go forth and explore Dan&apos;s Land.<br />I bless you with this
+          cinnamon bun: may your caches stay warm when nights are cold, the
+          roads remain bug free, and your uptime hold as many nines as the eye
+          can see.
         </p>
-      </div>
+      </figure>
 
       <figure class="ascii">
-        <figcaption id="sr-map" class="sr-only">
+        <figcaption class="sr-only">
           Fantasy map of Dan's Land with three clickable locations: The Gates of
           Dan (Home), Chaos Fields (GitHub), and Garden of Knowledge (Digital
           garden).
