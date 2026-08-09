@@ -366,53 +366,32 @@ footer {
   padding: 0.25rem 0;
 }
 
-.character-stats {
+.character-attributes {
   display: grid;
-  gap: 0.5rem;
-  grid-template-columns: max-content minmax(4rem, 1fr) 3ch;
+  grid-template-columns: max-content 1ch;
+  gap: 0.5rem 0.75rem;
   align-items: center;
   margin: 0.5rem 0 2.5rem;
 }
-.stat-name {
+.character-attributes dt {
   color: rgb(var(--color-text));
 }
-.stat-name::before {
+.character-attributes dt::before {
   content: "[";
 }
-.stat-name::after {
+.character-attributes dt::after {
   content: "]";
 }
-.character-stats dd {
+.character-attributes dd {
   margin: 0;
+  font-weight: bold;
+  text-align: center;
 }
-.stat-value {
-  color: rgb(var(--color-subtle));
-  text-align: right;
+.attribute-positive {
+  color: rgb(var(--color-foam));
 }
-.stat-bar {
-  height: 0.5rem;
-  background-color: rgb(var(--color-muted) / 0.18);
-}
-.stat-fill {
-  display: block;
-  height: 100%;
-  background-color: rgb(var(--color-foam));
-}
-.stat-fill-spellcraft {
-  width: 88%;
-}
-.stat-fill-appraisal {
-  width: 81%;
-}
-.stat-fill-questing {
-  width: 79%;
-}
-.stat-fill-clairvoyance {
-  width: 92%;
-}
-.stat-fill-speech {
-  width: 33%;
-  background-color: rgb(var(--color-love));
+.attribute-negative {
+  color: rgb(var(--color-love));
 }
 
 .character-abilities,
