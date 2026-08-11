@@ -120,14 +120,12 @@ figcaption {
 }
 
 @keyframes radiate {
-  0% {
+  0%,
+  100% {
     text-shadow: 0 0 4px currentColor;
   }
   50% {
     text-shadow: 0 0 24px currentColor;
-  }
-  100% {
-    text-shadow: 0 0 4px currentColor;
   }
 }
 
@@ -316,13 +314,10 @@ footer {
 .portrait-frame {
   display: grid;
   min-height: 39rem;
-  margin: 0;
   overflow: hidden;
-  border: 0;
 }
 
 .portrait-art {
-  position: relative;
   min-height: 35rem;
   overflow: hidden;
   background:
@@ -354,8 +349,6 @@ footer {
 
 .portrait-image {
   display: block;
-  position: relative;
-  z-index: 1;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -368,14 +361,8 @@ footer {
 
 .character-abilities,
 .character-inventory {
-  margin: 0.5rem 0 0;
+  margin: 0.5rem 0 2.5rem;
   padding-left: 1.25rem;
-}
-.character-abilities {
-  margin-bottom: 2.5rem;
-}
-.character-inventory {
-  margin-bottom: 2.5rem;
 }
 .character-abilities li::marker,
 .character-inventory li::marker {
