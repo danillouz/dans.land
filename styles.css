@@ -366,34 +366,6 @@ footer {
   padding: 0.25rem 0;
 }
 
-.character-attributes {
-  display: grid;
-  grid-template-columns: max-content 1ch;
-  gap: 0.5rem 0.75rem;
-  align-items: center;
-  margin: 0.5rem 0 2.5rem;
-}
-.character-attributes dt {
-  color: rgb(var(--color-text));
-}
-.character-attributes dt::before {
-  content: "[";
-}
-.character-attributes dt::after {
-  content: "]";
-}
-.character-attributes dd {
-  margin: 0;
-  font-weight: bold;
-  text-align: center;
-}
-.attribute-positive {
-  color: rgb(var(--color-foam));
-}
-.attribute-negative {
-  color: rgb(var(--color-love));
-}
-
 .character-abilities,
 .character-inventory {
   margin: 0.5rem 0 0;
