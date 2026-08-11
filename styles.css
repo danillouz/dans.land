@@ -374,9 +374,25 @@ footer {
 .character-abilities {
   margin-bottom: 2.5rem;
 }
+.character-inventory {
+  margin-bottom: 2.5rem;
+}
 .character-abilities li::marker,
 .character-inventory li::marker {
   color: rgb(var(--color-gold));
+}
+
+.character-mount {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 0.25rem 0.75rem;
+  margin: 0.5rem 0 0;
+}
+.character-mount dt::after {
+  content: ":";
+}
+.character-mount dd {
+  margin: 0;
 }
 
 @media (max-width: 767px) {
