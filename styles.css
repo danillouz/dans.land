@@ -12,7 +12,9 @@
 }
 
 body {
-  font-family: monospace;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    monospace;
   font-weight: normal;
   font-size: 1rem; /* Base: 16px */
   line-height: 1.5rem; /* Base: 24px */
@@ -40,9 +42,9 @@ main {
   gap: 3rem;
 }
 
-main > p:first-child {
+.entering {
   text-align: center;
-  margin: 3rem 0 0 0;
+  margin: 3rem 0 0;
 }
 a {
   color: rgb(var(--color-love));
@@ -57,13 +59,39 @@ pre {
   margin: 0;
 }
 
-figure p {
-  font-family: sans-serif;
-  font-style: italic;
+.callout {
+  --callout-color: var(--color-text);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-block: 1rem;
+  padding: 0 1.5rem;
+  color: rgb(var(--callout-color));
+  font-family: Georgia, "Times New Roman", serif;
   text-align: center;
+}
+.callout::before {
+  content: "◆ ◆ ◆";
+  margin-bottom: 0.875rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.35em;
+  line-height: 1;
+}
+.callout::after {
+  content: "";
+  width: 7rem;
+  margin-top: 1.25rem;
+  border-top: 1.5px solid rgb(var(--callout-color) / 0.65);
+}
+.callout p {
+  max-width: 28rem;
+  font-size: 1.125rem;
+  font-style: italic;
+  line-height: 1.875rem;
+  letter-spacing: 0.015em;
   margin: 0;
-  padding: 1.5rem;
-  border: thick double;
+  text-wrap: balance;
 }
 figure pre {
   font-size: 0.75rem; /* Extra small: 12px */
@@ -141,6 +169,9 @@ footer {
   justify-content: center;
   align-items: center;
   margin: 0.5rem auto;
+  color: rgb(var(--color-subtle));
+  font-size: 0.875rem;
+  line-height: 1.25rem;
 }
 
 #links ul {
@@ -412,6 +443,12 @@ footer {
   }
 }
 
+@media (max-width: 799px) {
+  main {
+    gap: 2rem;
+  }
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     /* Rosé Pine Dawn: https://rosepinetheme.com/palette/ */
@@ -432,10 +469,8 @@ footer {
     --color-hlh: 206 202 205;
   }
 
-  figure p {
-    border-color: rgb(var(--color-pine) / 0.5);
-    background-color: rgb(var(--color-pine) / 0.1);
-    color: rgb(var(--color-pine));
+  .callout {
+    --callout-color: var(--color-pine);
   }
 
   #sun {
@@ -465,10 +500,8 @@ footer {
     --color-hlh: 86 82 110;
   }
 
-  figure p {
-    border-color: rgb(var(--color-foam) / 0.5);
-    background-color: rgb(var(--color-foam) / 0.1);
-    color: rgb(var(--color-foam));
+  .callout {
+    --callout-color: var(--color-foam);
   }
 
   #sun {
@@ -592,7 +625,6 @@ footer {
 
 @media (max-width: 767px) {
   .about-page main {
-    gap: 2rem;
     padding-top: 1.5rem;
   }
 
