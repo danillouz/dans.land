@@ -648,49 +648,98 @@ footer {
 }
 
 .not-found-page main {
-  justify-content: center;
   padding: 3rem 0;
 }
 
 .not-found-panel {
-  padding: 2rem;
+  --not-found-scene-height: clamp(7rem, 22vw, 15rem);
+
+  position: relative;
+  isolation: isolate;
+  padding: 2rem 1rem;
   text-align: center;
 }
 
-.cinnamon-bun {
-  width: 144px;
-  height: 144px;
-  margin: 0 auto 1.5rem;
-  background-image: url("/bun-spritesheet.png");
-  background-position: 0 0;
-  background-repeat: no-repeat;
-  background-size: 864px 144px;
-  image-rendering: crisp-edges;
-  image-rendering: pixelated;
-  animation: cinnamon-bun-sparkle 2s steps(6, end) infinite;
+.not-found-scene {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  left: 50%;
+  width: 100vw;
+  height: var(--not-found-scene-height);
+  overflow: hidden;
+  transform: translateX(-50%);
 }
 
-@keyframes cinnamon-bun-sparkle {
-  to {
-    background-position: -864px 0;
-  }
+.not-found-dragon {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  color: rgb(var(--color-iris));
+  font-size: clamp(0.55rem, 1.8vw, 1.25rem);
+  line-height: 1em;
+  text-align: left;
+  transform: translateX(calc(-50% + 4ch));
+  user-select: none;
+  -webkit-mask-image: linear-gradient(to bottom, black 62%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 62%, transparent 100%);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .cinnamon-bun {
-    animation: none;
-    background-position: 0 0;
-  }
+.not-found-dragon-eye {
+  display: inline-block;
+  width: 1ch;
+  color: rgb(var(--color-gold));
+  opacity: 0.85;
+  transform: scale(0.65);
 }
 
-.not-found-page h1 {
-  margin: 0 0 1rem;
-  font-size: 1.5rem;
-  line-height: 2rem;
+.not-found-copy {
+  display: flex;
+  width: 100%;
+  max-width: 32rem;
+  flex-direction: column;
+  align-items: center;
+  margin-inline: auto;
+  padding-top: calc(var(--not-found-scene-height) + 1rem);
 }
 
-.not-found-panel p {
+.not-found-callout {
+  margin: 1rem 0 4rem;
+}
+
+.not-found-callout h1 {
+  max-width: 28rem;
+  margin: 0;
+  font-size: 1.125rem;
+  font-style: italic;
+  font-weight: normal;
+  line-height: 1.875rem;
+  letter-spacing: 0.015em;
+  text-wrap: balance;
+}
+
+.not-found-message {
   margin: 0 0 1.5rem;
+}
+
+@media (max-width: 799px) {
+  .not-found-scene {
+    display: none;
+  }
+
+  .not-found-copy {
+    padding-top: 0;
+  }
+
+  .not-found-callout {
+    margin-bottom: 3rem;
+  }
+}
+
+@media (max-width: 479px) {
+  .not-found-panel {
+    padding-inline: 0;
+  }
 }
 
 .not-found-page footer {
