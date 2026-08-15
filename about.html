@@ -10,7 +10,7 @@
     <title>About Daniël Illouz</title>
     <meta
       name="description"
-      content="About Daniël Illouz, a staff backend engineer at Framer specializing in Go, networking, and reliable, high-performance web infrastructure."
+      content="Daniël Illouz is a staff backend engineer at Framer specializing in Go, high-performance backend systems, networking, and large-scale web infrastructure. Previously a commercial airline pilot."
     />
 
     <link rel="canonical" href="https://dans.land/about" />
@@ -20,7 +20,7 @@
     <meta property="og:title" content="About Daniël Illouz" />
     <meta
       property="og:description"
-      content="About Daniël Illouz, a staff backend engineer at Framer specializing in Go, networking, and reliable, high-performance web infrastructure."
+      content="Daniël Illouz is a staff backend engineer at Framer specializing in Go, high-performance backend systems, networking, and large-scale web infrastructure. Previously a commercial airline pilot."
     />
     <meta property="og:site_name" content="Dan's Land" />
     <meta property="og:image" content="https://dans.land/social.png" />
@@ -36,7 +36,7 @@
     <meta name="twitter:title" content="About Daniël Illouz" />
     <meta
       name="twitter:description"
-      content="About Daniël Illouz, a staff backend engineer at Framer specializing in Go, networking, and reliable, high-performance web infrastructure."
+      content="Daniël Illouz is a staff backend engineer at Framer specializing in Go, high-performance backend systems, networking, and large-scale web infrastructure. Previously a commercial airline pilot."
     />
     <meta name="twitter:image" content="https://dans.land/social.png" />
     <meta
@@ -51,15 +51,19 @@
         "@id": "https://dans.land/about#profile",
         "url": "https://dans.land/about",
         "name": "About Daniël Illouz",
+        "inLanguage": "en",
+        "isPartOf": {
+          "@id": "https://dans.land/#website"
+        },
         "mainEntity": {
           "@type": "Person",
           "@id": "https://dans.land/#danillouz",
           "name": "Daniël Illouz",
           "alternateName": ["Daniel Illouz", "Dan Illouz", "Dan", "danillouz"],
-          "url": "https://dans.land/",
+          "url": "https://dans.land/about",
           "image": "https://dans.land/portrait.png",
           "jobTitle": "Staff backend engineer",
-          "description": "Specializes in Go, high-performance backend systems, networking, and large-scale web infrastructure. Previously a commercial airline pilot.",
+          "description": "Daniël Illouz is a staff backend engineer at Framer specializing in Go, high-performance backend systems, networking, and large-scale web infrastructure. Previously a commercial airline pilot.",
           "worksFor": {
             "@type": "Organization",
             "name": "Framer",
@@ -77,7 +81,9 @@
   <body class="about-page">
     <main>
       <header class="profile-copy">
-        <a class="back-link" href="/">&larr; Home</a>
+        <div class="back-link-row">
+          <a href="/">&larr; Home</a>
+        </div>
 
         <h1>About</h1>
 
@@ -126,11 +132,25 @@
         <div class="character-body">
           <figure class="portrait-frame">
             <div class="portrait-art">
-              <img
-                class="portrait-image"
-                src="/portrait.png"
-                alt="Daniël Illouz wearing armor and riding a toy horse"
-              />
+              <picture>
+                <source
+                  srcset="/assets/portrait-07648bb8.avif"
+                  type="image/avif"
+                />
+                <source
+                  srcset="/assets/portrait-57c0ecbb.webp"
+                  type="image/webp"
+                />
+                <img
+                  class="portrait-image"
+                  src="/portrait.png"
+                  width="640"
+                  height="800"
+                  alt="Daniël Illouz wearing armor and riding a toy horse"
+                  decoding="async"
+                  fetchpriority="high"
+                />
+              </picture>
             </div>
           </figure>
 
