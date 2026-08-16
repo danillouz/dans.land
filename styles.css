@@ -46,6 +46,11 @@ main {
   text-align: center;
   margin: 3rem 0 0;
 }
+
+/*
+ * Shared link and focus treatment for every page. Keep standalone links inside
+ * a block wrapper so flex and grid layouts do not blockify the anchor itself.
+ */
 a {
   color: rgb(var(--color-link));
   text-underline-offset: 4px;
@@ -471,7 +476,7 @@ footer {
     --color-hll: 244 237 232;
     --color-hlm: 223 218 217;
     --color-hlh: 206 202 205;
-    --color-link: 172 88 113;
+    --color-link: 172 88 113; /* Darker than love to meet WCAG AA contrast. */
     --color-caption: 116 112 142;
     --color-focus: var(--color-pine);
   }
