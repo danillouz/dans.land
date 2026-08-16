@@ -4,7 +4,7 @@ import { defineConfig } from "vite"
 
 export default defineConfig({
   build: {
-    rollupOptions: {
+    rolldownOptions: {
       input: {
         home: fileURLToPath(new URL("./index.html", import.meta.url)),
         about: fileURLToPath(new URL("./about.html", import.meta.url)),
