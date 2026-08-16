@@ -1,5 +1,5 @@
 /*
-  Content-Security-Policy: default-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'
+  Content-Security-Policy: base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'
   Strict-Transport-Security: max-age=31536000
   X-Frame-Options: DENY
 
