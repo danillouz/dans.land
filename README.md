@@ -1,6 +1,6 @@
 # dans.land
 
-Welcome to Dan's land. My personal site.
+Welcome to Dan's Land, my personal site.
 
 ## Build commands
 
