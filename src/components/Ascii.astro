@@ -1,0 +1,52 @@
+---
+interface Props {
+  caption?: string
+  label?: string
+}
+
+const { caption, label } = Astro.props
+---
+
+<figure class="ascii-art">
+  {label && <figcaption class="sr-only">{label}</figcaption>}
+
+  <slot />
+
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+  .ascii-art {
+    display: none;
+    margin: 0;
+  }
+
+  .ascii-art :global(pre) {
+    margin: 0;
+    font-size: 0.75rem;
+    line-height: normal;
+  }
+
+  .ascii-art figcaption {
+    margin-top: 1rem;
+    color: rgb(var(--color-caption));
+    font-family: sans-serif;
+    font-weight: normal;
+    text-align: center;
+  }
+
+  @media (min-width: 800px) {
+    .ascii-art {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .ascii-art :global(pre) {
+      font-size: 0.875rem;
+    }
+  }
+</style>

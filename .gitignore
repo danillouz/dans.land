@@ -1,14 +1,15 @@
-# Build output.
+# Build output
+.astro
 dist
 
-# Dependencies.
+# Dependencies
 node_modules
 
-# Environment variables.
+# Environment variables
 .env
 
-# Logs.
+# Logs
 npm-debug.log*
 
-# MacOS.
+# MacOS
 .DS_Store

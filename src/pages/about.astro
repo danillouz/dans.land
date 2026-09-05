@@ -1,0 +1,131 @@
+---
+import { getImage } from "astro:assets"
+
+import portrait from "../assets/portrait.png"
+
+import CharacterSheet from "../components/CharacterSheet.astro"
+import ReturnHome from "../components/ReturnHome.astro"
+import Page from "../layouts/Page.astro"
+
+const description =
+  "Daniël Illouz is a backend engineer at Framer specializing in Go, high-performance backend systems, networking, and large-scale web infrastructure."
+const portraitImage = await getImage({ src: portrait, format: "png" })
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "ProfilePage",
+  "@id": "https://dans.land/about#profile",
+  url: "https://dans.land/about",
+  name: "About Daniël Illouz",
+  inLanguage: "en",
+  isPartOf: {
+    "@id": "https://dans.land/#website",
+  },
+  mainEntity: {
+    "@type": "Person",
+    "@id": "https://dans.land/#danillouz",
+    name: "Daniël Illouz",
+    alternateName: ["Daniel Illouz", "Dan Illouz", "Dan", "danillouz"],
+    url: "https://dans.land/about",
+    image: new URL(portraitImage.src, Astro.site).href,
+    jobTitle: "Backend engineer",
+    description,
+    worksFor: {
+      "@type": "Organization",
+      name: "Framer",
+      url: "https://www.framer.com/",
+    },
+    sameAs: [
+      "https://github.com/danillouz/",
+      "https://www.linkedin.com/in/danillouz/",
+    ],
+  },
+}
+---
+
+<Page
+  title="About Daniël Illouz"
+  share={{
+    description,
+    openGraphType: "profile",
+    structuredData,
+  }}
+  bodyClass="about-page"
+>
+  <header class="profile-copy">
+    <ReturnHome spaced />
+
+    <h1>About</h1>
+
+    <p>Hi, I’m Daniël Illouz (Dan).</p>
+
+    <p>I used to fly commercial jets, but moved into software in 2012.</p>
+
+    <p>
+      I’m currently a backend engineer at{" "}
+      <a href="https://www.framer.com/">Framer</a>, where I help turn product
+      ideas into reliable software. I specialize in Go, high-performance backend
+      systems, networking, and large-scale web infrastructure.
+    </p>
+
+    <p>
+      Outside software I mostly read fantasy, ride my bike, go for walks, and
+      have a weakness for cinnamon buns.
+    </p>
+  </header>
+
+  <CharacterSheet />
+</Page>
+
+<style>
+  :global(.about-page) {
+    gap: 0;
+  }
+
+  :global(.about-page main),
+  :global(.about-page footer) {
+    max-width: 57.42rem;
+  }
+
+  :global(.about-page main) {
+    box-sizing: border-box;
+    padding: 3rem 0;
+  }
+
+  :global(.about-page footer) {
+    box-sizing: border-box;
+    flex: none;
+    padding: 0 0 1.5rem;
+    text-align: center;
+  }
+
+  :global(.about-page footer p) {
+    margin: 0;
+  }
+
+  .profile-copy {
+    width: 100%;
+    max-width: 32rem;
+    align-self: center;
+  }
+
+  .profile-copy h1 {
+    margin: 0 0 1.5rem;
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+
+  .profile-copy p {
+    margin: 0 0 1.5rem;
+  }
+
+  .profile-copy p:last-of-type {
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 767px) {
+    :global(.about-page main) {
+      padding-top: 1.5rem;
+    }
+  }
+</style>

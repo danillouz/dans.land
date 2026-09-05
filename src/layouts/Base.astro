@@ -1,0 +1,31 @@
+---
+interface Props {
+  title: string
+  description?: string
+  canonical?: URL
+  robots?: string
+  bodyClass?: string
+}
+
+const { title, description, canonical, robots, bodyClass } = Astro.props
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>{title}</title>
+
+    {robots && <meta name="robots" content={robots} />}
+    {description && <meta name="description" content={description} />}
+    {canonical && <link rel="canonical" href={canonical} />}
+
+    <slot name="head" />
+  </head>
+
+  <body class={bodyClass}>
+    <slot />
+  </body>
+</html>

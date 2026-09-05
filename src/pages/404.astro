@@ -1,0 +1,137 @@
+---
+import Callout from "../components/Callout.astro"
+import ReturnHome from "../components/ReturnHome.astro"
+import Page from "../layouts/Page.astro"
+---
+
+<Page title="Hic sunt dracones" robots="noindex" bodyClass="not-found-page">
+  <section class="not-found-panel" aria-labelledby="not-found-title">
+    <figure class="not-found-scene">
+      <figcaption class="sr-only">
+        A colossal dragon watches from the distance.
+      </figcaption>
+      <pre
+        class="not-found-dragon"
+        aria-hidden="true">
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢳⣤⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⢙⣻⡉⠓⠋⠓⠃⠉⠹⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⢀⣠⠼⠍⠀⠀⠀⠀⠐⠀⠠⠀⠈⠳⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⢉⡇⠀⠐⠄⡐⠀⠀⠀⠀⠀⠀⠄<span class="not-found-dragon-eye radiate">◆</span>⠹⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⢀⡴⠋⠀⠀⠀⠀⢀⡴⠒⠒⠓⢦⣒⣀⡀⠀⠠⡹⡄⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⢈⡗⠀⠀⠀⠀⢠⠏⠀⠀⠀⠀⠀⠀⠀⠉⠓⢦⡴⠃⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⣐⡏⠀⠂⠄⠀⠀⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⢀⣨⠇⠀⠀⠀⠀⠘⢸⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠩⠉⢀⠄⠀⠀⠀⠈⢂⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠔⠀⠀⠀⡼⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀</pre>
+    </figure>
+
+    <div class="not-found-copy">
+      <Callout as="h1" id="not-found-title" lang="la" variant="not-found">
+        Hic sunt dracones
+      </Callout>
+
+      <p class="not-found-message">
+        You have wandered beyond Dan&apos;s Land.<br />
+        For your own safety, return at once!
+      </p>
+
+      <ReturnHome />
+    </div>
+  </section>
+</Page>
+
+<style>
+  :global(.not-found-page) {
+    gap: 0;
+  }
+
+  :global(.not-found-page main) {
+    padding: 3rem 0;
+  }
+
+  :global(.not-found-page footer) {
+    flex: none;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+
+  :global(.not-found-page footer p) {
+    margin: 0;
+  }
+
+  .not-found-panel {
+    --not-found-scene-height: clamp(7rem, 22vw, 15rem);
+
+    position: relative;
+    isolation: isolate;
+    padding: 2rem 1rem;
+    text-align: center;
+  }
+
+  .not-found-scene {
+    position: absolute;
+    z-index: -1;
+    top: 0;
+    left: 50%;
+    width: 100vw;
+    height: var(--not-found-scene-height);
+    margin: 0;
+    overflow: hidden;
+    transform: translateX(-50%);
+  }
+
+  .not-found-dragon {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    margin: 0;
+    color: rgb(var(--color-iris));
+    font-size: clamp(0.55rem, 1.8vw, 1.25rem);
+    line-height: 1em;
+    text-align: left;
+    transform: translateX(calc(-50% + 4ch));
+    user-select: none;
+    -webkit-mask-image: linear-gradient(to bottom, black 62%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 62%, transparent 100%);
+  }
+
+  .not-found-dragon-eye {
+    display: inline-block;
+    width: 1ch;
+    color: rgb(var(--color-gold));
+    opacity: 0.85;
+    transform: scale(0.65);
+  }
+
+  .not-found-copy {
+    display: flex;
+    width: 100%;
+    max-width: 32rem;
+    flex-direction: column;
+    align-items: center;
+    margin-inline: auto;
+    padding-top: calc(var(--not-found-scene-height) + 1rem);
+  }
+
+  .not-found-message {
+    margin: 0 0 1.5rem;
+  }
+
+  @media (max-width: 799px) {
+    .not-found-scene {
+      display: none;
+    }
+
+    .not-found-copy {
+      padding-top: 0;
+    }
+  }
+
+  @media (max-width: 479px) {
+    .not-found-panel {
+      padding-inline: 0;
+    }
+  }
+</style>

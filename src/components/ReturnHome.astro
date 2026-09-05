@@ -1,0 +1,17 @@
+---
+interface Props {
+  spaced?: boolean
+}
+
+const { spaced = false } = Astro.props
+---
+
+<nav class:list={{ spaced }} aria-label="Return home">
+  <a href="/">&larr; The Gates of Dan</a>
+</nav>
+
+<style>
+  .spaced {
+    margin-bottom: 2rem;
+  }
+</style>

@@ -1,0 +1,136 @@
+:root {
+  color-scheme: light dark;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*::selection {
+  background-color: rgb(var(--color-iris) / 0.3);
+  color: rgb(var(--color-text));
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  margin: 0;
+  padding: 0 1rem;
+  background-color: rgb(var(--color-surface));
+  color: rgb(var(--color-text));
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    monospace;
+  font-size: 1rem;
+  font-weight: normal;
+  line-height: 1.5rem;
+}
+
+main {
+  display: flex;
+  width: 100%;
+  max-width: 32rem;
+  flex: 1 1 0%;
+  flex-direction: column;
+  gap: 3rem;
+  margin: 0 auto;
+}
+
+a {
+  color: rgb(var(--color-link));
+  text-underline-offset: 4px;
+}
+
+a:focus {
+  outline: 2px solid rgb(var(--color-focus));
+}
+
+.radiate {
+  animation: radiate 12s ease-in-out infinite;
+}
+
+@keyframes radiate {
+  0%,
+  100% {
+    text-shadow: 0 0 4px currentColor;
+  }
+
+  50% {
+    text-shadow: 0 0 24px currentColor;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .radiate {
+    animation: none;
+    text-shadow: 0 0 4px currentColor;
+  }
+}
+
+@media (max-width: 799px) {
+  main {
+    gap: 2rem;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    /* Rosé Pine Dawn: https://rosepinetheme.com/palette/ */
+    --color-base: 250 244 237;
+    --color-surface: 255 250 243;
+    --color-overlay: 242 233 222;
+    --color-muted: 152 147 165;
+    --color-subtle: 121 117 147;
+    --color-text: 87 82 121;
+    --color-love: 180 99 122;
+    --color-gold: 234 157 52;
+    --color-rose: 215 130 126;
+    --color-pine: 40 105 131;
+    --color-foam: 86 148 159;
+    --color-iris: 144 122 169;
+    --color-hll: 244 237 232;
+    --color-hlm: 223 218 217;
+    --color-hlh: 206 202 205;
+    --color-link: 172 88 113;
+    --color-caption: 116 112 142;
+    --color-focus: var(--color-pine);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Rosé Pine Moon: https://rosepinetheme.com/palette/ */
+    --color-base: 35 33 54;
+    --color-surface: 42 39 63;
+    --color-overlay: 57 53 82;
+    --color-muted: 110 106 134;
+    --color-subtle: 144 140 170;
+    --color-text: 224 222 244;
+    --color-love: 235 111 146;
+    --color-gold: 246 193 119;
+    --color-rose: 234 154 151;
+    --color-pine: 62 143 176;
+    --color-foam: 156 207 216;
+    --color-iris: 196 167 231;
+    --color-hll: 42 40 62;
+    --color-hlm: 68 65 90;
+    --color-hlh: 86 82 110;
+    --color-link: var(--color-love);
+    --color-caption: 146 142 172;
+    --color-focus: var(--color-gold);
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
