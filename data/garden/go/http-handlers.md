@@ -2,7 +2,7 @@
 title: HTTP handlers
 description: Learning about the HTTP request multiplexer, handlers and middleware in Go.
 created: 2022-12-22
-updated: 2024-08-17
+updated: 2026-09-07
 status: evergreen
 ---
 
@@ -133,7 +133,7 @@ So the following won't compile:
 handler := func(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Home"))
 }
-http.Handle("/", handler) // ❌ Does not compile
+http.Handle("/", handler) // Does not compile
 
 ```
 
@@ -143,7 +143,7 @@ But this will compile:
 handler := func(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Home"))
 }
-http.Handle("/", http.HandlerFunc(handler)) // ✅ Compiles
+http.Handle("/", http.HandlerFunc(handler)) // Compiles
 ```
 
 Note that `http.HandlerFunc(handler)` does _not_ invoke `http.HandlerFunc` (it's a type, not a function!). But that it's doing a [type conversion](https://go.dev/ref/spec#Conversions)[^3] which converts `handler` with type `func(ResponseWriter, *Request)` into type `http.HandlerFunc`.
@@ -215,11 +215,11 @@ mux.HandleFunc("/", homeHandler) // Subtree path
 
 | Request path   | Calls `homeHandler` |
 | :------------- | :------------------ |
-| `/`            | ✅ Yes              |
-| `/blog`        | ✅ Yes              |
-| `/blog/`       | ✅ Yes              |
-| `/blog/create` | ✅ Yes              |
-| `/notfound`    | ✅ Yes              |
+| `/`            | Yes                 |
+| `/blog`        | Yes                 |
+| `/blog/`       | Yes                 |
+| `/blog/create` | Yes                 |
+| `/notfound`    | Yes                 |
 
 Note that subtree path patterns will match when _not_ matched by other registered (fixed path) patterns:
 
@@ -230,11 +230,11 @@ mux.HandleFunc("/blog", blogHandler) // Fixed path
 
 | Request path   | Calls `homeHandler` | Calls `blogHandler` |
 | :------------- | :------------------ | :------------------ |
-| `/`            | ✅ Yes              | ❌ No               |
-| `/blog`        | ❌ No               | ✅ Yes              |
-| `/blog/`       | ✅ Yes              | ❌ No               |
-| `/blog/create` | ✅ Yes              | ❌ No               |
-| `/notfound`    | ✅ Yes              | ❌ No               |
+| `/`            | Yes                 | No                  |
+| `/blog`        | No                  | Yes                 |
+| `/blog/`       | Yes                 | No                  |
+| `/blog/create` | Yes                 | No                  |
+| `/notfound`    | Yes                 | No                  |
 
 So to for example let handlers match the `/blog/*` URL patterns, a subtree path must be used instead of a fixed path:
 
@@ -245,11 +245,11 @@ mux.HandleFunc("/blog/", blogHandler) // Subtree path
 
 | Request path   | Calls `homeHandler` | Calls `blogHandler` |
 | :------------- | :------------------ | :------------------ |
-| `/`            | ✅ Yes              | ❌ No               |
-| `/blog`        | ❌ No               | ✅ Yes              |
-| `/blog/`       | ❌ No               | ✅ Yes              |
-| `/blog/create` | ❌ No               | ✅ Yes              |
-| `/notfound`    | ✅ Yes              | ❌ No               |
+| `/`            | Yes                 | No                  |
+| `/blog`        | No                  | Yes                 |
+| `/blog/`       | No                  | Yes                 |
+| `/blog/create` | No                  | Yes                 |
+| `/notfound`    | Yes                 | No                  |
 
 Also note that longer registered path patterns take precedence over shorter ones:
 
@@ -260,13 +260,13 @@ mux.HandleFunc("/blog/create/", blogCreateHandler) // Subtree path
 
 | Request path     | Calls `blogHandler` | Calls `blogCreateHandler` |
 | :--------------- | :------------------ | :------------------------ |
-| `/`              | ❌ No               | ❌ No                     |
-| `/blog`          | ✅ Yes              | ❌ No                     |
-| `/blog/`         | ✅ Yes              | ❌ No                     |
-| `/blog/1`        | ✅ Yes              | ❌ No                     |
-| `/blog/create`   | ❌ No               | ✅ Yes                    |
-| `/blog/create/1` | ❌ No               | ✅ Yes                    |
-| `/notfound`      | ✅ Yes              | ❌ No                     |
+| `/`              | No                  | No                        |
+| `/blog`          | Yes                 | No                        |
+| `/blog/`         | Yes                 | No                        |
+| `/blog/1`        | Yes                 | No                        |
+| `/blog/create`   | No                  | Yes                       |
+| `/blog/create/1` | No                  | Yes                       |
+| `/notfound`      | Yes                 | No                        |
 
 ### Path redirects
 
