@@ -1,0 +1,54 @@
+---
+interface Backlink {
+  href: string
+  title: string
+}
+
+interface Props {
+  backlinks: Backlink[]
+}
+
+const { backlinks } = Astro.props
+---
+
+{
+  backlinks.length > 0 && (
+    <section class="backlinks" aria-labelledby="backlinks-title">
+      <h2 id="backlinks-title">Backlinks</h2>
+
+      <ul>
+        {backlinks.map((backlink) => (
+          <li>
+            <a href={backlink.href}>{backlink.title}</a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+<style>
+  .backlinks {
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgb(var(--garden-border));
+  }
+
+  .backlinks h2 {
+    margin-top: 0;
+  }
+
+  .backlinks ul {
+    padding-inline-start: 1.75rem;
+  }
+
+  .backlinks li {
+    padding-inline-start: 0.25rem;
+    margin-block: 0.45rem;
+  }
+
+  .backlinks li::marker {
+    color: rgb(var(--garden-description));
+    font-weight: 700;
+  }
+</style>

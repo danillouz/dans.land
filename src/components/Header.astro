@@ -1,0 +1,63 @@
+---
+const path = Astro.url.pathname.replace(/\/$/, "") || "/"
+const links = [
+  { href: "/", label: "Home" },
+  { href: "/garden", label: "Garden" },
+  { href: "/about", label: "About" },
+]
+
+function current(href: string) {
+  if (path === href) {
+    return "page"
+  }
+
+  return href !== "/" && path.startsWith(`${href}/`) ? "location" : undefined
+}
+---
+
+<header class="site-header">
+  <nav aria-label="Primary">
+    {
+      links.map(({ href, label }) => (
+        <a class="nav-link" href={href} aria-current={current(href)}>
+          {label}
+        </a>
+      ))
+    }
+  </nav>
+</header>
+
+<style>
+  .site-header {
+    box-sizing: border-box;
+    display: flex;
+    width: min(100%, 72rem);
+    margin-inline: auto;
+    padding: 1.5rem;
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  nav {
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  .nav-link[aria-current] {
+    text-decoration: none;
+  }
+
+  .nav-link[aria-current]::before {
+    content: ">";
+  }
+
+  .nav-link[aria-current]::after {
+    content: "<";
+  }
+
+  @media (max-width: 40rem) {
+    nav {
+      flex-direction: column;
+    }
+  }
+</style>

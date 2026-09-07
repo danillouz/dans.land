@@ -1,0 +1,278 @@
+---
+import { getPublishedGardenEntries } from "../../garden/collection"
+import Ascii from "../../components/Ascii.astro"
+import Corners from "../../components/Corners.astro"
+import Garden from "../../layouts/Garden.astro"
+
+const entries = await getPublishedGardenEntries()
+const recent = [...entries]
+  .sort(
+    (a, b) =>
+      recentDate(b).getTime() - recentDate(a).getTime() ||
+      a.data.title.localeCompare(b.data.title),
+  )
+  .slice(0, 5)
+const dateFormatter = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "short",
+  timeZone: "UTC",
+  year: "numeric",
+})
+
+function recentDate(entry: (typeof entries)[number]) {
+  return entry.data.updated ?? entry.data.created
+}
+---
+
+<Garden title="Garden of Knowledge" description="Dan's digital garden.">
+  <header class="garden-intro">
+    <p class="entering">You have found the...</p>
+
+    <h1>Garden of Knowledge</h1>
+
+    <Ascii>
+      <pre
+        id="garden-banner"
+        aria-hidden="true">
+                  * ***                                   **                                                  ***
+                *  ****  *                                 **                                               ** ***
+               *  *  ****                                  **                                              **   ***
+              *  **   **                                   **                                              **
+             *  ***                     ***  ****          **                                      ****    **
+            **   **             ****     **** **** *   *** **      ***    ***  ****               * ***  * ******
+            **   **   ***      * ***  *   **   ****   *********   * ***    **** **** *           *   ****  *****
+            **   **  ****  *  *   ****    **         **   ****   *   ***    **   ****           **    **   **
+            **   ** *  ****  **    **     **         **    **   **    ***   **    **            **    **   **
+            **   ***    **   **    **     **         **    **   ********    **    **            **    **   **
+             **  **     *    **    **     **         **    **   *******     **    **            **    **   **
+              ** *      *    **    **     **         **    **   **          **    **            **    **   **
+               ***     *     **    **     ***        **    **   ****    *   **    **             ******    **
+                *******       ***** **     ***        *****      *******    ***   ***             ****     **
+                  ***          ***   **                ***        *****      ***   ***                      **
+
+
+
+     *****                                                             ***                    **
+  ******                                                                ***                    **
+ **   *  *    **                                **                       **                    **
+*    *  *   **** *                              **                       **                    **
+    *  *     ****                       ****     **    ***    ****       **                    **
+   ** **    * **        ***  ****      * ***  *   **    ***     ***  *   **       ***      *** **       ****         ***
+   ** **   *             **** **** *  *   ****    **     ***     ****    **      * ***    *********    *  ***  *    * ***
+   ** *****               **   ****  **    **     **      **      **     **     *   ***  **   ****    *    ****    *   ***
+   ** ** ***              **    **   **    **     **      **      **     **    **    *** **    **    **     **    **    ***
+   ** **   ***            **    **   **    **     **      **      **     **    ********  **    **    **     **    ********
+   *  **    ***           **    **   **    **     **      **      **     **    *******   **    **    **     **    *******
+      *       ***         **    **   **    **     **      **      *      **    **        **    **    **     **    **
+  ****         ***        **    **    ******       ******* *******       **    ****    * **    **    **     **    ****    *
+ *  *****        ***  *   ***   ***    ****         *****   *****        *** *  *******   *****       ********     *******
+*    ***           ***     ***   ***                                      ***    *****     ***          *** ***     *****
+*                                                                                                            ***
+ **                                                                                                    ****   ***
+                                                                                                     *******  **
+                                                                                                    *     ****</pre>
+    </Ascii>
+  </header>
+
+  <section class="recent" aria-labelledby="recent-posts">
+    <Corners />
+
+    <h2 id="recent-posts">Recently tended</h2>
+
+    <ul class="recent-list">
+      {
+        recent.map((entry) => {
+          const date = recentDate(entry)
+          return (
+            <li>
+              <span>
+                <a href={`/garden/${entry.id}`}>{entry.data.title}</a>
+              </span>
+
+              <hr aria-hidden="true" />
+
+              <time datetime={date.toISOString().slice(0, 10)}>
+                {dateFormatter.format(date)}
+              </time>
+            </li>
+          )
+        })
+      }
+    </ul>
+
+    <p class="recent-index">
+      <a class="nav-link" href="/garden/index" aria-label="Full garden index"
+        >Index</a
+      >
+    </p>
+  </section>
+
+  <article class="garden-about garden-prose">
+    <h2>What is this?</h2>
+
+    <p>
+      This is my{" "}
+      <a href="https://maggieappleton.com/garden-history">digital garden</a>.
+      It's a place for personal knowledge that sits somewhere between messy
+      personal notes and more polished blog posts.
+    </p>
+
+    <p>
+      The main goal of a digital garden is to collect, grow and evolve ideas
+      over time. So it can have unfinished and imperfect work.
+    </p>
+
+    <h2>Why I garden</h2>
+
+    <p>
+      I like the idea of a digital garden because it represents continuous
+      learning and embraces imperfection.
+    </p>
+
+    <p>
+      I enjoy learning about software engineering and computer science. But I’m
+      also curious to try out the more chaotic nature of a digital garden, as
+      posting regularly doesn’t really work for me: I end up with a lot of
+      drafts and don’t publish much, because I feel like it’s not good enough.
+    </p>
+
+    <h2>How I garden</h2>
+
+    <p>Each post has a maturity stage:</p>
+
+    <ul>
+      <li><b>Seedling</b> is (very) rough and early stage.</li>
+
+      <li>
+        <b>Sapling</b> is starting to take shape, but is not complete yet.
+      </li>
+
+      <li><b>Evergreen</b> is reasonably complete.</li>
+    </ul>
+
+    <p>
+      The <b>planted</b> and (when applicable) <b>last tended</b> dates show how long
+      a post has been growing.
+    </p>
+  </article>
+</Garden>
+
+<style>
+  .garden-intro {
+    margin-bottom: 3rem;
+  }
+
+  .entering {
+    margin: 0 0 1.5rem;
+    text-align: center;
+  }
+
+  .garden-intro h1 {
+    margin-bottom: 0;
+    text-align: center;
+  }
+
+  #garden-banner {
+    font-weight: bold;
+  }
+
+  .garden-about {
+    margin-top: 4rem;
+  }
+
+  .garden-about > :first-child {
+    margin-top: 0;
+  }
+
+  .garden-about > :last-child {
+    margin-bottom: 0;
+  }
+
+  .garden-about h2 {
+    margin-top: 2.5em;
+  }
+
+  .recent {
+    --frame-accent: rgb(var(--color-gold) / 0.82);
+    --frame-line: 1.5px;
+    --frame-line-offset: -1.5px;
+    --frame-join-offset: calc(1rem - 3px);
+    --frame-short-size: calc(1rem - 1.5px);
+
+    box-sizing: border-box;
+    position: relative;
+    isolation: isolate;
+    margin-top: 4rem;
+    padding: 1.5rem;
+    border: var(--frame-line) solid var(--frame-accent);
+    background: rgb(var(--color-base));
+  }
+
+  .recent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .recent-list li {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+  }
+
+  .recent-list hr {
+    flex: 1;
+    min-width: 1rem;
+    margin: 0;
+    border: 0;
+    border-top: 2px dotted rgb(var(--garden-border));
+  }
+
+  .recent-list time {
+    color: rgb(var(--color-subtle));
+    font-variant-numeric: tabular-nums;
+  }
+
+  .recent-index {
+    margin: 1rem 0 0;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    text-align: center;
+  }
+
+  @media (max-width: 32rem) {
+    .recent {
+      padding: 1rem;
+    }
+
+    .recent-list li {
+      display: block;
+    }
+
+    .recent-list hr {
+      display: none;
+    }
+
+    .recent-list time {
+      display: block;
+      margin-top: 0.125rem;
+      font-size: 0.875rem;
+    }
+  }
+
+  @media (min-width: 800px) {
+    .garden-intro h1 {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border-width: 0;
+    }
+  }
+</style>

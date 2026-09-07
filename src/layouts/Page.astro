@@ -1,9 +1,9 @@
 ---
-import "../styles/main.css"
+import "../styles/page.css"
 import { canonicalUrl } from "../urls"
 
 import Base from "./Base.astro"
-import Footer from "../components/Footer.astro"
+import Frame from "../components/Frame.astro"
 
 interface ShareMetadata {
   description: string
@@ -71,9 +71,7 @@ const structuredData = share
     }
   </Fragment>
 
-  <main>
+  <Frame>
     <slot />
-  </main>
-
-  <Footer />
+  </Frame>
 </Base>

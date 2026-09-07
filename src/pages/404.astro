@@ -1,5 +1,5 @@
 ---
-import Callout from "../components/Callout.astro"
+import Banner from "../components/Banner.astro"
 import ReturnHome from "../components/ReturnHome.astro"
 import Page from "../layouts/Page.astro"
 ---
@@ -10,6 +10,7 @@ import Page from "../layouts/Page.astro"
       <figcaption class="sr-only">
         A colossal dragon watches from the distance.
       </figcaption>
+
       <pre
         class="not-found-dragon"
         aria-hidden="true">
@@ -28,9 +29,9 @@ import Page from "../layouts/Page.astro"
     </figure>
 
     <div class="not-found-copy">
-      <Callout as="h1" id="not-found-title" lang="la" variant="not-found">
+      <Banner as="h1" id="not-found-title" lang="la" variant="not-found">
         Hic sunt dracones
-      </Callout>
+      </Banner>
 
       <p class="not-found-message">
         You have wandered beyond Dan&apos;s Land.<br />
@@ -43,22 +44,8 @@ import Page from "../layouts/Page.astro"
 </Page>
 
 <style>
-  :global(.not-found-page) {
-    gap: 0;
-  }
-
   :global(.not-found-page main) {
     padding: 3rem 0;
-  }
-
-  :global(.not-found-page footer) {
-    flex: none;
-    margin-bottom: 1.5rem;
-    text-align: center;
-  }
-
-  :global(.not-found-page footer p) {
-    margin: 0;
   }
 
   .not-found-panel {

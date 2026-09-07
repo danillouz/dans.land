@@ -1,4 +1,12 @@
 ---
+import "../styles/base.css"
+import "@fontsource/ia-writer-quattro/400.css"
+import "@fontsource/ia-writer-quattro/400-italic.css"
+import "@fontsource/ia-writer-quattro/700.css"
+import quattroRegular from "@fontsource/ia-writer-quattro/files/ia-writer-quattro-latin-400-normal.woff2?url"
+import quattroItalic from "@fontsource/ia-writer-quattro/files/ia-writer-quattro-latin-400-italic.woff2?url"
+import quattroBold from "@fontsource/ia-writer-quattro/files/ia-writer-quattro-latin-700-normal.woff2?url"
+
 interface Props {
   title: string
   description?: string
@@ -22,10 +30,32 @@ const { title, description, canonical, robots, bodyClass } = Astro.props
     {description && <meta name="description" content={description} />}
     {canonical && <link rel="canonical" href={canonical} />}
 
+    <link
+      rel="preload"
+      href={quattroRegular}
+      as="font"
+      type="font/woff2"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="preload"
+      href={quattroBold}
+      as="font"
+      type="font/woff2"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="preload"
+      href={quattroItalic}
+      as="font"
+      type="font/woff2"
+      crossorigin="anonymous"
+    />
+
     <slot name="head" />
   </head>
 
-  <body class={bodyClass}>
+  <body id="top" class={bodyClass}>
     <slot />
   </body>
 </html>

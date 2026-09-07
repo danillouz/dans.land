@@ -1,21 +1,36 @@
-<footer>
+<footer class="site-footer">
   <p>
     &copy; Daniël Illouz &bull;{" "}
     <a href="https://github.com/danillouz/dans.land/">Source</a>
   </p>
+
+  <a class="nav-link" href="#top">Scroll to top</a>
 </footer>
 
 <style>
-  footer {
+  .site-footer {
+    box-sizing: border-box;
     display: flex;
-    width: 100%;
-    max-width: 32rem;
-    flex: 1 1 0%;
-    justify-content: center;
+    width: min(100%, 72rem);
     align-items: center;
-    margin: 0.5rem auto;
-    color: rgb(var(--color-caption));
-    font-size: 0.875rem;
-    line-height: 1.25rem;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-inline: auto;
+    padding: 1.5rem;
+    color: rgb(var(--shell-muted));
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  p {
+    margin: 0;
+  }
+
+  @media (max-width: 32rem) {
+    .site-footer {
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
+    }
   }
 </style>

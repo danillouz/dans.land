@@ -1,0 +1,268 @@
+:root {
+  --shell-muted: var(--color-subtle);
+  --garden-radius: 0.25rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: rgb(var(--color-surface));
+  color: rgb(var(--color-text));
+  line-height: 1.65;
+}
+
+main {
+  padding-block: 3rem;
+}
+
+a {
+  color: rgb(var(--color-link));
+  text-underline-offset: 0.25em;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.garden-prose :is(h2, h3) {
+  margin-top: 2.5em;
+}
+
+.garden-prose :is(h2, h3, h4, h5, h6) > .heading-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.garden-prose :is(h2, h3, h4, h5, h6) > .heading-link::after {
+  content: " #";
+  color: rgb(var(--garden-description));
+  font-weight: 400;
+  opacity: 0;
+}
+
+.garden-prose
+  :is(h2, h3, h4, h5, h6)
+  > .heading-link:is(:hover, :focus-visible)::after {
+  color: rgb(var(--color-link));
+  opacity: 1;
+}
+
+.garden-prose :is(ol, ul) {
+  margin-inline: 0;
+  padding-inline-start: 1.75rem;
+  list-style-position: outside;
+}
+
+.garden-prose li {
+  padding-inline-start: 0.25rem;
+  margin-block: 0.45rem;
+}
+
+.garden-prose li::marker {
+  color: rgb(var(--garden-description));
+  font-weight: 700;
+}
+
+.garden-prose blockquote {
+  margin: 1.5rem 0;
+  padding-left: 1rem;
+  border-left: 3px solid rgb(var(--color-rose));
+}
+
+.garden-prose blockquote > :first-child {
+  margin-top: 0;
+}
+
+.garden-prose blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+.garden-prose .callout {
+  --garden-callout: var(--color-foam);
+
+  margin: 1.5rem 0;
+  padding: 0.875rem 1rem 1rem;
+  border: 1px solid rgb(var(--garden-callout));
+  border-radius: var(--garden-radius);
+  background: rgb(var(--color-base));
+}
+
+.garden-prose .callout--warning {
+  --garden-callout: var(--color-gold);
+}
+
+.garden-prose .callout-title {
+  margin: 0;
+  padding: 0;
+  color: rgb(var(--garden-callout));
+  font-weight: 700;
+}
+
+.garden-prose .callout-icon {
+  display: inline-block;
+  width: 1rem;
+  margin-inline-end: 0.125rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1;
+  text-align: left;
+}
+
+.garden-prose .callout-title + * {
+  margin-top: 0.5rem;
+}
+
+.garden-prose .callout--quote {
+  --garden-callout: var(--color-rose);
+
+  position: relative;
+  padding: 0.75rem 1rem 0.75rem 2.75rem;
+  border: 0;
+  border-left: 4px solid rgb(var(--garden-callout));
+  border-radius: 0 var(--garden-radius) var(--garden-radius) 0;
+  background: rgb(var(--color-base));
+}
+
+.garden-prose .callout--quote > .callout-icon {
+  position: absolute;
+  top: 0.45rem;
+  left: 0.75rem;
+  width: auto;
+  margin: 0;
+  color: rgb(var(--garden-callout));
+  font-size: 2.25rem;
+}
+
+.garden-prose .callout--quote > blockquote {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-style: italic;
+}
+
+.garden-prose .callout-citation {
+  margin: 0.75rem 0 0;
+  color: rgb(var(--garden-description));
+  font-size: 0.875rem;
+}
+
+.garden-prose .callout-citation cite {
+  font-style: normal;
+}
+
+.garden-prose :not(pre) > code {
+  padding: 0.1em 0.3em;
+  border-radius: var(--garden-radius);
+  background: rgb(var(--garden-inline-code));
+}
+
+.garden-prose .expressive-code {
+  margin-block: 1.5rem;
+}
+
+.garden-prose .mermaid {
+  margin-block: 2rem;
+  padding: 1rem;
+  overflow-x: auto;
+  border: 1px solid rgb(var(--garden-border));
+  border-radius: var(--garden-radius);
+  background: rgb(var(--color-base));
+  text-align: center;
+}
+
+.garden-prose .mermaid svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin-inline: auto;
+}
+
+/* Keep the live garden's Rose marker without offsetting the line-number gutter. */
+.garden-prose .expressive-code .ec-line.mark {
+  box-shadow: inset var(--ec-tm-lineMarkerAccentWd) 0 0 var(--ec-tm-markBrdCol);
+}
+
+.garden-prose .expressive-code .ec-line.mark .code {
+  --ecGtrBrdWd: 0px;
+}
+
+.garden-prose .expressive-code pre:focus-visible {
+  outline: none;
+}
+
+.garden-prose .expressive-code .frame:has(pre:focus-visible),
+.garden-prose .expressive-code .copy button:focus-visible {
+  outline: 2px solid rgb(var(--focus));
+  outline-offset: 0;
+}
+
+.garden-prose .post-image {
+  margin-block: 2rem;
+}
+
+.garden-prose .post-image img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid rgb(var(--garden-border));
+  border-radius: var(--garden-radius);
+}
+
+.garden-prose .post-image figcaption {
+  margin-top: 0.5rem;
+  color: rgb(var(--garden-description));
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.garden-prose table {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin-block: 2rem;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+.garden-prose :is(th, td) {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgb(var(--garden-border));
+  text-align: start;
+  vertical-align: top;
+}
+
+.garden-prose th {
+  background: rgb(var(--color-base));
+}
+
+.garden-prose .footnotes {
+  margin-top: 4rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgb(var(--garden-border));
+}
+
+.garden-prose .footnotes h2 {
+  margin-top: 0;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --garden-border: 223 218 217;
+    --garden-description: 116 112 142;
+    --garden-inline-code: 242 233 225;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --garden-border: 86 82 110;
+    --garden-description: 154 150 180;
+    --garden-inline-code: 57 53 82;
+  }
+}

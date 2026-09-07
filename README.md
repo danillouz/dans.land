@@ -10,7 +10,7 @@ After running `npm i`, run:
 - `npm run build` to build the site for deployment.
 - `npm run preview` to preview built site.
 - `npm run check` to run Astro and TypeScript diagnostics.
-- `npm test` to build and verify the site.
+- `npm test` to build and verify the main pages and garden fixture.
 
 ## ASCII art
 

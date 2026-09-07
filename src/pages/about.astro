@@ -4,7 +4,6 @@ import { getImage } from "astro:assets"
 import portrait from "../assets/portrait.png"
 
 import CharacterSheet from "../components/CharacterSheet.astro"
-import ReturnHome from "../components/ReturnHome.astro"
 import Page from "../layouts/Page.astro"
 
 const description =
@@ -53,8 +52,6 @@ const structuredData = {
   bodyClass="about-page"
 >
   <header class="profile-copy">
-    <ReturnHome spaced />
-
     <h1>About</h1>
 
     <p>Hi, I’m Daniël Illouz (Dan).</p>
@@ -78,35 +75,12 @@ const structuredData = {
 </Page>
 
 <style>
-  :global(.about-page) {
-    gap: 0;
-  }
-
-  :global(.about-page main),
-  :global(.about-page footer) {
-    max-width: 57.42rem;
-  }
-
   :global(.about-page main) {
-    box-sizing: border-box;
     padding: 3rem 0;
-  }
-
-  :global(.about-page footer) {
-    box-sizing: border-box;
-    flex: none;
-    padding: 0 0 1.5rem;
-    text-align: center;
-  }
-
-  :global(.about-page footer p) {
-    margin: 0;
   }
 
   .profile-copy {
     width: 100%;
-    max-width: 32rem;
-    align-self: center;
   }
 
   .profile-copy h1 {

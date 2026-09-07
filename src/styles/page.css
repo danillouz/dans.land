@@ -1,0 +1,61 @@
+:root {
+  --shell-muted: var(--color-caption);
+}
+
+body {
+  background-color: rgb(var(--color-surface));
+  color: rgb(var(--color-text));
+  font-weight: normal;
+  line-height: 1.5rem;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+a {
+  color: rgb(var(--color-link));
+  text-underline-offset: 4px;
+}
+
+.radiate {
+  animation: radiate 12s ease-in-out infinite;
+}
+
+@keyframes radiate {
+  0%,
+  100% {
+    text-shadow: 0 0 4px currentColor;
+  }
+
+  50% {
+    text-shadow: 0 0 24px currentColor;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .radiate {
+    animation: none;
+    text-shadow: 0 0 4px currentColor;
+  }
+}
+
+@media (max-width: 799px) {
+  main {
+    gap: 2rem;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

@@ -1,0 +1,21 @@
+---
+import Footer from "./Footer.astro"
+import Header from "./Header.astro"
+---
+
+<Header />
+
+<main>
+  <slot />
+</main>
+
+<Footer />
+
+<style>
+  main {
+    box-sizing: border-box;
+    width: min(calc(100% - 2.5rem), 70ch);
+    flex: 1 1 0%;
+    margin-inline: auto;
+  }
+</style>

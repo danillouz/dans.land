@@ -1,5 +1,12 @@
 :root {
   color-scheme: light dark;
+  --font-body: "iA Writer Quattro", ui-sans-serif, system-ui, sans-serif;
+  --font-code:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    monospace;
+  --focus: var(--color-focus);
+  --nav-link: var(--color-text);
+  --banner-accent: var(--color-text);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -15,63 +22,46 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  gap: 3rem;
   margin: 0;
-  padding: 0 1rem;
-  background-color: rgb(var(--color-surface));
-  color: rgb(var(--color-text));
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-    monospace;
+  padding: 0;
+  font-family: var(--font-body);
   font-size: 1rem;
-  font-weight: normal;
+}
+
+:is(code, kbd, pre, samp) {
+  font-family: var(--font-code);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+a:focus-visible {
+  outline: 2px solid rgb(var(--focus));
+  outline-offset: 0;
+}
+
+.nav-link {
+  display: inline-block;
+  color: rgb(var(--nav-link));
+  font-size: 1rem;
   line-height: 1.5rem;
+  text-decoration: none;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
-main {
-  display: flex;
-  width: 100%;
-  max-width: 32rem;
-  flex: 1 1 0%;
-  flex-direction: column;
-  gap: 3rem;
-  margin: 0 auto;
+.nav-link::before {
+  content: "[";
 }
 
-a {
-  color: rgb(var(--color-link));
-  text-underline-offset: 4px;
-}
-
-a:focus {
-  outline: 2px solid rgb(var(--color-focus));
-}
-
-.radiate {
-  animation: radiate 12s ease-in-out infinite;
-}
-
-@keyframes radiate {
-  0%,
-  100% {
-    text-shadow: 0 0 4px currentColor;
-  }
-
-  50% {
-    text-shadow: 0 0 24px currentColor;
-  }
+.nav-link::after {
+  content: "]";
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .radiate {
-    animation: none;
-    text-shadow: 0 0 4px currentColor;
-  }
-}
-
-@media (max-width: 799px) {
-  main {
-    gap: 2rem;
+  html {
+    scroll-behavior: auto;
   }
 }
 
@@ -96,6 +86,7 @@ a:focus {
     --color-link: 172 88 113;
     --color-caption: 116 112 142;
     --color-focus: var(--color-pine);
+    --banner-accent: var(--color-pine);
   }
 }
 
@@ -120,17 +111,6 @@ a:focus {
     --color-link: var(--color-love);
     --color-caption: 146 142 172;
     --color-focus: var(--color-gold);
+    --banner-accent: var(--color-foam);
   }
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
 }

@@ -1,0 +1,103 @@
+<span class="frame-corner frame-corner-top frame-corner-left" aria-hidden="true"
+></span>
+<span
+  class="frame-corner frame-corner-top frame-corner-right"
+  aria-hidden="true"></span>
+<span
+  class="frame-corner frame-corner-bottom frame-corner-left"
+  aria-hidden="true"></span>
+<span
+  class="frame-corner frame-corner-bottom frame-corner-right"
+  aria-hidden="true"></span>
+
+<style>
+  .frame-corner {
+    box-sizing: border-box;
+    position: absolute;
+    z-index: 2;
+    width: 0.5rem;
+    height: 0.5rem;
+    border: var(--frame-line) solid var(--frame-accent);
+    pointer-events: none;
+  }
+
+  .frame-corner::before,
+  .frame-corner::after {
+    content: "";
+    position: absolute;
+  }
+
+  .frame-corner::before {
+    width: var(--frame-short-size);
+    height: 2rem;
+  }
+
+  .frame-corner::after {
+    width: 2rem;
+    height: var(--frame-short-size);
+  }
+
+  .frame-corner-top {
+    top: -0.5rem;
+  }
+
+  .frame-corner-bottom {
+    bottom: -0.5rem;
+  }
+
+  .frame-corner-left {
+    left: -0.5rem;
+  }
+
+  .frame-corner-right {
+    right: -0.5rem;
+  }
+
+  .frame-corner-left::before,
+  .frame-corner-left::after {
+    left: var(--frame-line-offset);
+  }
+
+  .frame-corner-left::before {
+    border-left: var(--frame-line) solid var(--frame-accent);
+  }
+
+  .frame-corner-left::after {
+    left: var(--frame-join-offset);
+    border-left: var(--frame-line) solid var(--frame-accent);
+  }
+
+  .frame-corner-right::before,
+  .frame-corner-right::after {
+    right: var(--frame-line-offset);
+  }
+
+  .frame-corner-right::before {
+    border-right: var(--frame-line) solid var(--frame-accent);
+  }
+
+  .frame-corner-right::after {
+    right: var(--frame-join-offset);
+    border-right: var(--frame-line) solid var(--frame-accent);
+  }
+
+  .frame-corner-top::before {
+    top: var(--frame-join-offset);
+    border-top: var(--frame-line) solid var(--frame-accent);
+  }
+
+  .frame-corner-top::after {
+    top: var(--frame-line-offset);
+    border-top: var(--frame-line) solid var(--frame-accent);
+  }
+
+  .frame-corner-bottom::before {
+    bottom: var(--frame-join-offset);
+    border-bottom: var(--frame-line) solid var(--frame-accent);
+  }
+
+  .frame-corner-bottom::after {
+    bottom: var(--frame-line-offset);
+    border-bottom: var(--frame-line) solid var(--frame-accent);
+  }
+</style>

@@ -1,0 +1,27 @@
+---
+import "../styles/garden.css"
+import { canonicalUrl } from "../urls"
+
+import Base from "./Base.astro"
+import Frame from "../components/Frame.astro"
+
+interface Props {
+  title: string
+  description: string
+}
+
+const { title, description } = Astro.props
+const canonical = canonicalUrl(Astro.url, Astro.site)
+---
+
+<Base title={title} description={description} canonical={canonical}>
+  <style is:inline slot="head">
+    .expressive-code .copy button {
+      opacity: 0;
+    }
+  </style>
+
+  <Frame>
+    <slot />
+  </Frame>
+</Base>

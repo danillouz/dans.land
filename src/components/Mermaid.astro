@@ -1,0 +1,36 @@
+<script>
+  import mermaid from "mermaid"
+
+  const diagrams = document.querySelectorAll<HTMLElement>("pre.mermaid")
+
+  if (diagrams.length > 0) {
+    await document.fonts.ready
+
+    const styles = getComputedStyle(document.documentElement)
+    const color = (name: string) => {
+      const channels = styles.getPropertyValue(name).trim().split(/\s+/)
+      return `#${channels
+        .map((channel) => Number(channel).toString(16).padStart(2, "0"))
+        .join("")}`
+    }
+
+    mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: "strict",
+      theme: "base",
+      fontFamily: '"iA Writer Quattro", ui-sans-serif, system-ui, sans-serif',
+      themeVariables: {
+        background: color("--color-surface"),
+        primaryColor: color("--color-base"),
+        primaryTextColor: color("--color-text"),
+        primaryBorderColor: color("--color-pine"),
+        lineColor: color("--color-subtle"),
+        secondaryColor: color("--color-overlay"),
+        tertiaryColor: color("--color-base"),
+        textColor: color("--color-text"),
+      },
+    })
+
+    await mermaid.run({ nodes: diagrams })
+  }
+</script>
