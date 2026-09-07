@@ -145,7 +145,6 @@ h3 {
 .garden-prose .callout-citation {
   margin: 0.75rem 0 0;
   color: rgb(var(--garden-description));
-  font-size: 0.875rem;
 }
 
 .garden-prose .callout-citation cite {
