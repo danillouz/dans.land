@@ -75,6 +75,19 @@ test("links rendered headings to their URL fragments", async () => {
   )
 })
 
+test("renders a heading rail for longer posts", async () => {
+  const [article, shortArticle] = await Promise.all([
+    readFile("dist/garden/go/http-handlers.html", "utf8"),
+    readFile("dist/garden/computer-networks/caddy-local-ca.html", "utf8"),
+  ])
+
+  assert.match(article, /<nav class="toc-rail"[^>]*data-toc-rail/)
+  assert.match(article, /href="#top"[^>]*data-toc-link="top"/)
+  assert.match(article, /data-toc-link="handler--servemux"/)
+  assert.doesNotMatch(article, /data-toc-link="footnote-label"/)
+  assert.doesNotMatch(shortArticle, /<nav class="toc-rail"/)
+})
+
 test("renders Obsidian callouts", async () => {
   const [calloutArticle, quotedArticle, denoQuoteArticle] = await Promise.all([
     readFile("dist/garden/cache-stampeding.html", "utf8"),

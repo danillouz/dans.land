@@ -363,12 +363,14 @@ test("garden routes only load their own styles", async () => {
   assert.doesNotMatch(landingCss, /\.tree/)
   assert.doesNotMatch(landingCss, /\.post-content/)
   assert.doesNotMatch(landingCss, /\.backlinks/)
+  assert.doesNotMatch(landingCss, /\.toc-rail/)
 
   assert.match(indexCss, /\.tree/)
   assert.doesNotMatch(indexCss, /\.garden-about/)
   assert.doesNotMatch(indexCss, /\.frame-corner/)
   assert.doesNotMatch(indexCss, /\.recent-list/)
   assert.doesNotMatch(indexCss, /\.post-content/)
+  assert.doesNotMatch(indexCss, /\.toc-rail/)
 
   assert.match(postCss, /\.site-header/)
   assert.match(postCss, /\.site-footer/)
@@ -378,6 +380,7 @@ test("garden routes only load their own styles", async () => {
   assert.match(postCss, /\.footnotes/)
   assert.match(postCss, /border-collapse:collapse/)
   assert.match(postCss, /\.backlinks/)
+  assert.match(postCss, /\.toc-rail/)
   assert.doesNotMatch(postCss, /\.page-intro/)
   assert.doesNotMatch(postCss, /\.tree/)
   assert.doesNotMatch(postCss, /\.recent-list/)
