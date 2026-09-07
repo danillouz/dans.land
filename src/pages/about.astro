@@ -1,9 +1,10 @@
 ---
-import { getImage } from "astro:assets"
+import { getImage, Picture } from "astro:assets"
 
 import portrait from "../assets/portrait.png"
 
-import CharacterSheet from "../components/CharacterSheet.astro"
+import Ascii from "../components/Ascii.astro"
+import Intro from "../components/Intro.astro"
 import Page from "../layouts/Page.astro"
 
 const description =
@@ -49,12 +50,53 @@ const structuredData = {
     openGraphType: "profile",
     structuredData,
   }}
-  bodyClass="about-page"
 >
-  <header class="profile-copy">
-    <h1>About</h1>
+  <Intro prefix="You stand before the..." title="High Warden">
+    <Ascii slot="art">
+      <pre
+        id="warden-banner"
+        aria-hidden="true">
+                       *****    **                            *
+                    ******  *  **** *   *                   **
+                   **   *  *   *****   ***                  **
+                  *    *  *    * *      *                   **
+                      *  *     *                            **
+                     ** **     *      ***         ****      **  ***
+                     ** **     *       ***       *  ***  *  ** * ***
+                     ** ********        **      *    ****   ***   ***
+                     ** **     *        **     **     **    **     **
+                     ** **     **       **     **     **    **     **
+                     *  **     **       **     **     **    **     **
+                        *       **      **     **     **    **     **
+                    ****        **      **     **     **    **     **
+                   *  *****      **     *** *   ********    **     **
+                  *     **               ***      *** ***    **    **
+                  *                                    ***         *
+                   **                            ****   ***       *
+                                               *******  **       *
+                                              *     ****        *
 
-    <p>Hi, I’m Daniël Illouz (Dan).</p>
+
+     ***** *    **   ***                                 **
+  ******  *  *****    ***                                 **
+ **   *  *     *****   ***                                **
+*    *  **     * **      **                               **
+    *  ***     *         **            ***  ****          **
+   **   **     *         **    ****     **** **** *   *** **      ***    ***  ****
+   **   **     *         **   * ***  *   **   ****   *********   * ***    **** **** *
+   **   **     *         **  *   ****    **         **   ****   *   ***    **   ****
+   **   **     *         ** **    **     **         **    **   **    ***   **    **
+   **   **     *         ** **    **     **         **    **   ********    **    **
+    **  **     *         ** **    **     **         **    **   *******     **    **
+     ** *      *         *  **    **     **         **    **   **          **    **
+      ***      ***      *   **    **     ***        **    **   ****    *   **    **
+       ******** ********     ***** **     ***        *****      *******    ***   ***
+         ****     ****        ***   **                ***        *****      ***   ***</pre>
+    </Ascii>
+  </Intro>
+
+  <div class="profile-copy">
+    <p>Hi, I'm Daniël Illouz.</p>
 
     <p>I used to fly commercial jets, but moved into software in 2012.</p>
 
@@ -69,26 +111,43 @@ const structuredData = {
       Outside software I mostly read fantasy, ride my bike, go for walks, and
       have a weakness for cinnamon buns.
     </p>
-  </header>
+  </div>
 
-  <CharacterSheet />
+  <div class="portrait-exhibit">
+    <figure class="portrait">
+      <Picture
+        src={portrait}
+        formats={["avif", "webp"]}
+        class="portrait-image"
+        alt="Painting of Daniël Illouz in armor riding Silvester Stallion, a toy horse"
+        priority
+      />
+    </figure>
+
+    <aside class="placard" aria-labelledby="portrait-title">
+      <h2 id="portrait-title">Daniël and Silvester Stallion</h2>
+
+      <p class="placard-medium">Tokens on pixels</p>
+
+      <p>
+        Painted at the height of his reign, this portrait shows the High Warden
+        with his faithful warhorse.
+      </p>
+
+      <p>
+        Of noble polyester lineage, Sil was famed for his blistering top speed
+        of 0 km/h and was bested only by stairs.
+      </p>
+
+      <p>
+        Dan was said to possess the gift of incident foresight, its onset
+        supposedly induced by cinnamon buns.
+      </p>
+    </aside>
+  </div>
 </Page>
 
 <style>
-  :global(.about-page main) {
-    padding: 3rem 0;
-  }
-
-  .profile-copy {
-    width: 100%;
-  }
-
-  .profile-copy h1 {
-    margin: 0 0 1.5rem;
-    font-size: 1.5rem;
-    line-height: 2rem;
-  }
-
   .profile-copy p {
     margin: 0 0 1.5rem;
   }
@@ -97,9 +156,68 @@ const structuredData = {
     margin-bottom: 0;
   }
 
-  @media (max-width: 767px) {
-    :global(.about-page main) {
-      padding-top: 1.5rem;
+  .portrait-exhibit {
+    display: grid;
+    gap: 2rem;
+    align-items: center;
+  }
+
+  .portrait {
+    margin: 0;
+  }
+
+  .portrait :global(picture),
+  .portrait-image {
+    display: block;
+    width: 100%;
+  }
+
+  .portrait-image {
+    height: auto;
+    filter: drop-shadow(0 0.75rem 0.6rem rgb(0 0 0 / 0.22));
+  }
+
+  .placard {
+    box-sizing: border-box;
+    width: min(100%, 20rem);
+    justify-self: center;
+    padding: 1.5rem;
+    border: 1px solid rgb(var(--color-subtle) / 0.45);
+    background: rgb(var(--color-base));
+  }
+
+  .placard h2 {
+    margin: 0;
+    font-size: 1.125rem;
+    line-height: 1.5rem;
+  }
+
+  .placard p {
+    margin: 1rem 0 0;
+  }
+
+  .placard .placard-medium {
+    margin-top: 0.25rem;
+    color: rgb(var(--color-caption));
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .placard .placard-medium::after {
+    content: "";
+    display: block;
+    width: 3rem;
+    margin-top: 1rem;
+    border-top: 2px solid rgb(var(--color-iris) / 0.75);
+  }
+
+  @media (min-width: 800px) {
+    .portrait-exhibit {
+      width: min(60rem, calc(100vw - 2.5rem));
+      grid-template-columns: minmax(0, 1fr) 20rem;
+      align-self: center;
     }
   }
 </style>

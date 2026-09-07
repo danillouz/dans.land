@@ -1,6 +1,7 @@
 ---
 import Ascii from "../components/Ascii.astro"
 import Banner from "../components/Banner.astro"
+import Intro from "../components/Intro.astro"
 import Page from "../layouts/Page.astro"
 
 const description =
@@ -32,14 +33,11 @@ const structuredData = {
     structuredData,
   }}
 >
-  <p class="entering">You are entering...</p>
-
-  <h1 id="title">Dan&apos;s Land</h1>
-
-  <Ascii>
-    <pre
-      id="banner"
-      aria-hidden="true">
+  <Intro prefix="You are entering..." title="Dan's Land">
+    <Ascii slot="art">
+      <pre
+        id="banner"
+        aria-hidden="true">
    ******  ***                                            ******  *                                      **
  **    *  * ***                                          **   *  *                                       **
 *     *  *   ***                         **             *    *  *                                        **
@@ -56,9 +54,8 @@ const structuredData = {
 *       ****        ***   **    ***   ***    ****       *     *********      ***   **    ***   ***   ******
 *                                                       *
  **                                                      **</pre>
-  </Ascii>
-
-  <Banner>The Oracles of DNS foretold your arrival.</Banner>
+    </Ascii>
+  </Intro>
 
   <Ascii caption="Behold! The Gates of Dan.">
     <pre
@@ -104,7 +101,7 @@ $  $        $ $$u5e" .     "k                    d"       #$bu$F  $        $ |;
 
   <div>
     <p>
-      Greetings traveler. I am <a href="/about">Dan</a>, the guardian of this
+      Greetings traveler. I'm <a href="/about">Dan</a>, High Warden of this
       domain.
     </p>
 
@@ -217,7 +214,7 @@ $  $        $ $$u5e" .     "k                    d"       #$bu$F  $        $ |;
   </Banner>
 
   <Ascii
-    label="Fantasy map of Dan's Land with four clickable locations: Gates of Dan (Home), Garden of Knowledge (Digital garden), Guardian's Keep (About) and Chaos Fields (GitHub)."
+    label="Fantasy map of Dan's Land with four clickable locations: Gates of Dan (Home), Garden of Knowledge (Garden), High Warden's Keep (About) and Chaos Fields (GitHub)."
   >
     <pre
       id="map"
@@ -229,8 +226,8 @@ $  $        $ $$u5e" .     "k                    d"       #$bu$F  $        $ |;
        ,-'     ^^                               '.-.
      ,'     ^^^         ^              .@@@.        ';,           _
    ,'      ^^            ^^          .@~⌂~⌂~@.         \       .'_8,;
- .'      ^ <a href="/about" tabindex="-1">Guardian's Keep</a> ^^         .@~⌂~⌂~@.         '
-.     ^^         /\          ^^         .@@@.           |        ,.-'.--.'.,
+ .'      ^ <a href="/about" tabindex="-1">High Warden's Keep</a>         .@~⌂~⌂~@.         '
+.     ^^         /\           ^         .@@@.           |        ,.-'.--.'.,
     ^           /  \  /\       ^^^                      ;       :     _    :
                /    \/  \         ^^                ^   '       :   ((*))   :
               @@@@@@@@@@@@          ^              ^^    \       :    -     .
@@ -274,11 +271,11 @@ Instructions
       </li>
 
       <li>
-        <a href="/garden">Garden of Knowledge (Digital garden)</a>
+        <a href="/garden">Garden of Knowledge (Garden)</a>
       </li>
 
       <li>
-        <a href="/about">Guardian's Keep (About)</a>
+        <a href="/about">High Warden's Keep (About)</a>
       </li>
 
       <li>
@@ -289,20 +286,6 @@ Instructions
 </Page>
 
 <style>
-  .entering {
-    margin: 3rem 0 0;
-    text-align: center;
-  }
-
-  #title {
-    margin: 0;
-    text-align: center;
-  }
-
-  #banner {
-    font-weight: bold;
-  }
-
   #gate,
   #sun {
     color: rgb(var(--color-gold));
@@ -360,7 +343,6 @@ Instructions
   }
 
   @media (min-width: 800px) {
-    #title,
     #links {
       position: absolute;
       width: 1px;

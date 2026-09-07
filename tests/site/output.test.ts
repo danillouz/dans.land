@@ -13,7 +13,6 @@ const pages = [
   {
     path: "dist/index.html",
     title: "Dan's Land",
-    bodyClass: undefined,
     description:
       "Dan's Land is the personal site of Daniël Illouz: a fantasy realm of ASCII landscapes, backend engineering, immortal Gophers, and cinnamon buns.",
     canonical: "https://dans.land/",
@@ -23,7 +22,6 @@ const pages = [
   {
     path: "dist/about.html",
     title: "About Daniël Illouz",
-    bodyClass: "about-page",
     description:
       "Daniël Illouz is a backend engineer at Framer specializing in Go, high-performance backend systems, networking, and large-scale web infrastructure.",
     canonical: "https://dans.land/about",
@@ -35,7 +33,6 @@ for (const expected of pages) {
   test(`${expected.path} keeps its document metadata and shared shell`, async () => {
     const { document } = await builtPage(expected.path)
     const html = element(document, (node) => node.tagName === "html")
-    const body = element(document, (node) => node.tagName === "body")
     const title = element(document, (node) => node.tagName === "title")
     const canonical = element(
       document,
@@ -50,7 +47,6 @@ for (const expected of pages) {
     )
 
     assert.equal(attribute(html, "lang"), "en")
-    assert.equal(attribute(body, "class"), expected.bodyClass)
     assert.equal(textContent(title), expected.title)
     assert.equal(
       metaContent(document, "name", "description"),
@@ -94,10 +90,8 @@ for (const expected of pages) {
 
 test("the 404 keeps its intentionally minimal metadata", async () => {
   const { document } = await builtPage("dist/404.html")
-  const body = element(document, (node) => node.tagName === "body")
   const title = element(document, (node) => node.tagName === "title")
 
-  assert.equal(attribute(body, "class"), "not-found-page")
   assert.equal(textContent(title), "Hic sunt dracones")
   assert.equal(metaContent(document, "name", "robots"), "noindex")
   assert.equal(metaContent(document, "name", "description"), undefined)
@@ -143,8 +137,8 @@ test("the about portrait uses Astro's image pipeline", async () => {
     ["image/avif", "image/webp"],
   )
   assert.equal(attribute(image, "class"), "portrait-image")
-  assert.equal(attribute(image, "width"), "640")
-  assert.equal(attribute(image, "height"), "800")
+  assert.equal(attribute(image, "width"), "1199")
+  assert.equal(attribute(image, "height"), "1414")
   assert.equal(attribute(image, "loading"), "eager")
   assert.equal(attribute(image, "decoding"), "sync")
   assert.equal(attribute(image, "fetchpriority"), "high")
@@ -196,13 +190,19 @@ const preBaselines = [
     "dist/index.html",
     "id",
     "map",
-    "62c98111142d5a5c5c4d22e8ee59a1e4ae1ac3293761824821f3cd2f24460272",
+    "f5545ce21c43b3f0da1b8dcec687c342b07f810940def037e0256410d31fb153",
   ],
   [
     "dist/index.html",
     "id",
     "map-legend",
     "d3aff0b9782aef47696e8123b442503f6217891bf056b1d40766a7108dfc6efa",
+  ],
+  [
+    "dist/about.html",
+    "id",
+    "warden-banner",
+    "7e2e26a02dc1f691d82c237d4308fa665cbb4276400f36449847379387ad7cbb",
   ],
   [
     "dist/404.html",
@@ -256,21 +256,24 @@ test("each main page only loads its own component styles", async () => {
     builtStyles(notFound.document),
   ])
 
-  assert.match(homeCss, /#banner/)
+  assert.match(homeCss, /\.page-intro/)
   assert.match(homeCss, /\.ascii-art/)
   assert.match(homeCss, /\.banner/)
-  assert.doesNotMatch(homeCss, /\.character-sheet/)
+  assert.doesNotMatch(homeCss, /\.portrait/)
   assert.doesNotMatch(homeCss, /\.not-found-panel/)
 
-  assert.match(aboutCss, /\.character-sheet/)
+  assert.match(aboutCss, /\.portrait/)
+  assert.match(aboutCss, /\.placard/)
+  assert.match(aboutCss, /\.portrait-exhibit/)
+  assert.match(aboutCss, /\.page-intro/)
   assert.match(aboutCss, /\.profile-copy/)
-  assert.doesNotMatch(aboutCss, /\.ascii-art/)
+  assert.match(aboutCss, /\.ascii-art/)
   assert.doesNotMatch(aboutCss, /\.not-found-panel/)
 
   assert.match(notFoundCss, /\.not-found-panel/)
   assert.match(notFoundCss, /\.banner/)
   assert.doesNotMatch(notFoundCss, /\.ascii-art/)
-  assert.doesNotMatch(notFoundCss, /\.character-sheet/)
+  assert.doesNotMatch(notFoundCss, /\.portrait/)
 })
 
 test("the homepage renders the extracted visual components", async () => {
@@ -289,7 +292,7 @@ test("the homepage renders the extracted visual components", async () => {
   )
 
   assert.equal(asciiFigures.length, 4)
-  assert.equal(banners.length, 3)
+  assert.equal(banners.length, 2)
   assert.equal(
     elements(document, (node) => node.tagName === "figcaption").length,
     3,
@@ -393,7 +396,7 @@ test("garden routes only load their own styles", async () => {
   assert.match(landingCss, /\.site-footer/)
   assert.doesNotMatch(landingCss, /\.banner/)
   assert.match(landingCss, /\.frame-corner/)
-  assert.match(landingCss, /\.garden-intro/)
+  assert.match(landingCss, /\.page-intro/)
   assert.match(landingCss, /\.garden-about/)
   assert.match(landingCss, /\.recent-list/)
   assert.doesNotMatch(landingCss, /\.tree/)
@@ -414,7 +417,7 @@ test("garden routes only load their own styles", async () => {
   assert.match(postCss, /\.footnotes/)
   assert.match(postCss, /border-collapse:collapse/)
   assert.match(postCss, /\.backlinks/)
-  assert.doesNotMatch(postCss, /\.garden-intro/)
+  assert.doesNotMatch(postCss, /\.page-intro/)
   assert.doesNotMatch(postCss, /\.tree/)
   assert.doesNotMatch(postCss, /\.recent-list/)
 })

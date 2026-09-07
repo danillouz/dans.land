@@ -15,10 +15,9 @@ interface Props {
   title: string
   share?: ShareMetadata
   robots?: string
-  bodyClass?: string
 }
 
-const { title, share, robots, bodyClass } = Astro.props
+const { title, share, robots } = Astro.props
 
 const canonical = share ? canonicalUrl(Astro.url, Astro.site) : undefined
 const socialImage = new URL("/social.png", Astro.site)
@@ -34,7 +33,6 @@ const structuredData = share
   description={share?.description}
   canonical={canonical}
   robots={robots}
-  bodyClass={bodyClass}
 >
   <Fragment slot="head">
     {

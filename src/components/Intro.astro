@@ -1,0 +1,57 @@
+---
+interface Props {
+  prefix: string
+  title: string
+}
+
+const { prefix, title } = Astro.props
+const hasArt = Astro.slots.has("art")
+---
+
+<header class:list={["page-intro", { "page-intro--illustrated": hasArt }]}>
+  <p>{prefix}</p>
+  <h1>{title}</h1>
+  <slot name="art" />
+</header>
+
+<style>
+  .page-intro {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .page-intro p,
+  .page-intro h1 {
+    margin: 0;
+    text-align: center;
+  }
+
+  .page-intro h1 {
+    font-size: 2rem;
+    line-height: 1.2;
+  }
+
+  .page-intro p {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .page-intro :global(pre) {
+    font-weight: bold;
+  }
+
+  @media (min-width: 800px) {
+    .page-intro--illustrated h1 {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border-width: 0;
+    }
+  }
+</style>

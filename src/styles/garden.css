@@ -13,10 +13,6 @@ body {
   line-height: 1.65;
 }
 
-main {
-  padding-block: 3rem;
-}
-
 a {
   color: rgb(var(--color-link));
   text-underline-offset: 0.25em;

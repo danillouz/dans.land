@@ -4,7 +4,7 @@ import ReturnHome from "../components/ReturnHome.astro"
 import Page from "../layouts/Page.astro"
 ---
 
-<Page title="Hic sunt dracones" robots="noindex" bodyClass="not-found-page">
+<Page title="Hic sunt dracones" robots="noindex">
   <section class="not-found-panel" aria-labelledby="not-found-title">
     <figure class="not-found-scene">
       <figcaption class="sr-only">
@@ -44,10 +44,6 @@ import Page from "../layouts/Page.astro"
 </Page>
 
 <style>
-  :global(.not-found-page main) {
-    padding: 3rem 0;
-  }
-
   .not-found-panel {
     --not-found-scene-height: clamp(7rem, 22vw, 15rem);
 

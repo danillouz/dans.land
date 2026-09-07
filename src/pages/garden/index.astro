@@ -2,6 +2,7 @@
 import { getPublishedGardenEntries } from "../../garden/collection"
 import Ascii from "../../components/Ascii.astro"
 import Corners from "../../components/Corners.astro"
+import Intro from "../../components/Intro.astro"
 import Garden from "../../layouts/Garden.astro"
 
 const entries = await getPublishedGardenEntries()
@@ -25,12 +26,8 @@ function recentDate(entry: (typeof entries)[number]) {
 ---
 
 <Garden title="Garden of Knowledge" description="Dan's digital garden.">
-  <header class="garden-intro">
-    <p class="entering">You have found the...</p>
-
-    <h1>Garden of Knowledge</h1>
-
-    <Ascii>
+  <Intro prefix="You have found the..." title="Garden of Knowledge">
+    <Ascii slot="art">
       <pre
         id="garden-banner"
         aria-hidden="true">
@@ -72,7 +69,7 @@ function recentDate(entry: (typeof entries)[number]) {
                                                                                                      *******  **
                                                                                                     *     ****</pre>
     </Ascii>
-  </header>
+  </Intro>
 
   <section class="recent" aria-labelledby="recent-posts">
     <Corners />
@@ -158,24 +155,6 @@ function recentDate(entry: (typeof entries)[number]) {
 </Garden>
 
 <style>
-  .garden-intro {
-    margin-bottom: 3rem;
-  }
-
-  .entering {
-    margin: 0 0 1.5rem;
-    text-align: center;
-  }
-
-  .garden-intro h1 {
-    margin-bottom: 0;
-    text-align: center;
-  }
-
-  #garden-banner {
-    font-weight: bold;
-  }
-
   .garden-about {
     margin-top: 4rem;
   }
@@ -259,20 +238,6 @@ function recentDate(entry: (typeof entries)[number]) {
       display: block;
       margin-top: 0.125rem;
       font-size: 0.875rem;
-    }
-  }
-
-  @media (min-width: 800px) {
-    .garden-intro h1 {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border-width: 0;
     }
   }
 </style>

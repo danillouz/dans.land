@@ -12,10 +12,9 @@ interface Props {
   description?: string
   canonical?: URL
   robots?: string
-  bodyClass?: string
 }
 
-const { title, description, canonical, robots, bodyClass } = Astro.props
+const { title, description, canonical, robots } = Astro.props
 ---
 
 <!doctype html>
@@ -55,7 +54,7 @@ const { title, description, canonical, robots, bodyClass } = Astro.props
     <slot name="head" />
   </head>
 
-  <body id="top" class={bodyClass}>
+  <body id="top">
     <slot />
   </body>
 </html>
