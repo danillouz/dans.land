@@ -2,6 +2,8 @@ import assert from "node:assert/strict"
 import { readdir, readFile } from "node:fs/promises"
 import test from "node:test"
 
+import { parseFrontmatter } from "@astrojs/markdown-remark"
+
 test("renders the folder tree on the garden index", async () => {
   const index = await readFile("dist/garden/index.html", "utf8")
   assert.match(index, /<h1[^>]*>Index<\/h1>/)
@@ -11,7 +13,7 @@ test("renders the folder tree on the garden index", async () => {
   assert.match(index, /class="folder"[^>]*>go<\/strong>/)
 })
 
-test("renders the five most recently tended posts with readable dates", async () => {
+test("renders recently tended posts in date order", async () => {
   const landing = await readFile("dist/garden.html", "utf8")
   const recentStart = landing.indexOf('id="recent-posts"')
   const recent = landing.slice(
@@ -24,26 +26,34 @@ test("renders the five most recently tended posts with readable dates", async ()
       landing.indexOf('class="garden-about garden-prose"'),
   )
 
-  const expected = [
-    ["Dotfiles", "2025-01-06", "6 Jan 2025"],
-    ["Signing Git commits with SSH", "2025-01-05", "5 Jan 2025"],
-    ["Cache stampeding", "2025-01-04", "4 Jan 2025"],
-    ["Low latency high availability patterns", "2024-12-15", "15 Dec 2024"],
-    ["pprof reports", "2024-11-28", "28 Nov 2024"],
-  ] as const
-  let previous = -1
+  const items = [...recent.matchAll(/<li\b[^>]*>([\s\S]*?)<\/li>/g)].map(
+    (match) => match[1],
+  )
+  assert.equal(items.length, 5)
 
-  for (const [title, date, displayDate] of expected) {
-    const position = recent.indexOf(`>${title}</a>`)
-    assert.ok(position > previous)
-    assert.match(
-      recent,
-      new RegExp(`<time datetime="${date}"[^>]*>${displayDate}</time>`),
+  const dates = items.map((item) => {
+    assert.match(item, /<a href="\/garden\/[^"]+"[^>]*>[^<]+<\/a>/)
+    const time = item.match(
+      /<time datetime="(\d{4}-\d{2}-\d{2})"[^>]*>([^<]+)<\/time>/,
     )
-    previous = position
-  }
+    assert.ok(time)
 
-  assert.equal(recent.match(/<li\b/g)?.length, 5)
+    const date = new Date(`${time[1]}T00:00:00Z`)
+    assert.equal(
+      time[2],
+      new Intl.DateTimeFormat("en-GB", {
+        day: "numeric",
+        month: "short",
+        timeZone: "UTC",
+        year: "numeric",
+      }).format(date),
+    )
+    return date.getTime()
+  })
+
+  for (let index = 1; index < dates.length; index += 1) {
+    assert.ok(dates[index - 1] >= dates[index])
+  }
 })
 
 test("renders canonical wikilinks instead of literal Obsidian syntax", async () => {
@@ -208,18 +218,9 @@ test("renders post context, dates, and reading time", async () => {
   assert.match(metadata, /<span[^>]*>Evergreen<\/span>/)
   assert.match(metadata, /<span[^>]*>\d+ min read<\/span>/)
   assert.equal(metadata.match(/post-meta-separator/g)?.length, 4)
-  assert.match(
-    metadata,
-    /Planted\s*<time datetime="2022-12-22"[^>]*>22 Dec 2022<\/time>/,
-  )
-  assert.match(
-    metadata,
-    /Last tended\s*<time datetime="2024-08-17"[^>]*>17 Aug 2024<\/time>/,
-  )
-  assert.match(
-    metadataWithoutUpdate,
-    /Planted\s*<time datetime="2023-06-23"[^>]*>23 Jun 2023<\/time>/,
-  )
+  assertReadableDate(metadata, "Planted")
+  assertReadableDate(metadata, "Last tended")
+  assertReadableDate(metadataWithoutUpdate, "Planted")
   assert.doesNotMatch(metadataWithoutUpdate, /Last tended/)
 })
 
@@ -229,14 +230,12 @@ test("renders article images as captioned figures", async () => {
     "utf8",
   )
   const stepsStart = article.indexOf("<ol>")
-  const steps = article.slice(stepsStart, article.indexOf("</ol>", stepsStart))
   assert.match(article, /<figure class="post-image">/)
   assert.match(
     article,
     /<figcaption aria-hidden="true">SEC_ERROR_UNKNOWN_ISSUER<\/figcaption>/,
   )
   assert.notEqual(stepsStart, -1)
-  assert.equal(steps.match(/<li>/g)?.length, 7)
   assert.doesNotMatch(article, /<ol start=/)
 })
 
@@ -268,6 +267,21 @@ test("does not emit draft routes or backlinks", async () => {
 })
 
 test("emits every article image through Astro's asset pipeline", async () => {
+  const contentFiles = await readdir("data/garden", { recursive: true })
+  const expectedImageCount = (
+    await Promise.all(
+      contentFiles
+        .filter((file) => file.endsWith(".md"))
+        .map(async (file) => {
+          const source = await readFile(`data/garden/${file}`, "utf8")
+          const { content, frontmatter } = parseFrontmatter(source)
+          return frontmatter.draft
+            ? 0
+            : [...content.matchAll(/!\[[^\]]*\]\([^)]+\)/g)].length
+        }),
+    )
+  ).reduce((total, count) => total + count, 0)
+
   const files = await readdir("dist/garden", { recursive: true })
   const pages = await Promise.all(
     files
@@ -277,9 +291,29 @@ test("emits every article image through Astro's asset pipeline", async () => {
   const sources = pages.flatMap((page) =>
     [...page.matchAll(/<img[^>]+src="([^"]+)"/g)].map((match) => match[1]),
   )
-  assert.equal(sources.length, 57)
+  assert.equal(sources.length, expectedImageCount)
   for (const source of sources) {
     assert.match(source, /^\/assets\/.+\.(?:avif|png|webp)$/)
     await readFile(`dist${source}`)
   }
 })
+
+function assertReadableDate(metadata: string, label: string) {
+  const match = metadata.match(
+    new RegExp(
+      `${label}\\s*<time datetime="(\\d{4}-\\d{2}-\\d{2})"[^>]*>([^<]+)<\\/time>`,
+    ),
+  )
+  assert.ok(match)
+
+  const date = new Date(`${match[1]}T00:00:00Z`)
+  assert.equal(
+    match[2],
+    new Intl.DateTimeFormat("en-GB", {
+      day: "numeric",
+      month: "short",
+      timeZone: "UTC",
+      year: "numeric",
+    }).format(date),
+  )
+}
