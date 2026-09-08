@@ -8,6 +8,10 @@ export function getPublishedGardenEntries() {
   return getCollection("garden", ({ data }) => !data.draft)
 }
 
+export function gardenTendedDate(entry: CollectionEntry<"garden">) {
+  return entry.data.updated ?? entry.data.created
+}
+
 export async function renderGardenEntry(entry: CollectionEntry<"garden">) {
   const rendered = await render(entry)
   const graph = rendered.remarkPluginFrontmatter.garden ?? {

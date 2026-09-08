@@ -1,5 +1,8 @@
 ---
-import { getPublishedGardenEntries } from "../../garden/collection"
+import {
+  gardenTendedDate,
+  getPublishedGardenEntries,
+} from "../../garden/collection"
 import Ascii from "../../components/Ascii.astro"
 import Corners from "../../components/Corners.astro"
 import Intro from "../../components/Intro.astro"
@@ -9,7 +12,7 @@ const entries = await getPublishedGardenEntries()
 const recent = [...entries]
   .sort(
     (a, b) =>
-      recentDate(b).getTime() - recentDate(a).getTime() ||
+      gardenTendedDate(b).getTime() - gardenTendedDate(a).getTime() ||
       a.data.title.localeCompare(b.data.title),
   )
   .slice(0, 5)
@@ -19,10 +22,6 @@ const dateFormatter = new Intl.DateTimeFormat("en-GB", {
   timeZone: "UTC",
   year: "numeric",
 })
-
-function recentDate(entry: (typeof entries)[number]) {
-  return entry.data.updated ?? entry.data.created
-}
 ---
 
 <Garden title="Garden of Knowledge" description="Dan's digital garden.">
@@ -79,7 +78,7 @@ function recentDate(entry: (typeof entries)[number]) {
     <ul class="recent-list">
       {
         recent.map((entry) => {
-          const date = recentDate(entry)
+          const date = gardenTendedDate(entry)
           return (
             <li>
               <span>

@@ -243,6 +243,7 @@ test("Astro emits all pages and deployment files", async () => {
     "dist/_headers",
     "dist/_redirects",
     "dist/robots.txt",
+    "dist/rss.xml",
     "dist/sitemap-index.xml",
     "dist/sitemap-0.xml",
   ]
@@ -391,23 +392,7 @@ test("the generated sitemap contains every public route", async () => {
   const urls = [...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)]
     .map((match) => match[1])
     .sort()
-  const contentFiles = await readdir("data/garden", { recursive: true })
-  const gardenUrls = (
-    await Promise.all(
-      contentFiles
-        .filter((file) => file.endsWith(".md"))
-        .map(async (file) => {
-          const source = await readFile(`data/garden/${file}`, "utf8")
-          const { frontmatter } = parseFrontmatter(source)
-          if (frontmatter.draft) {
-            return undefined
-          }
-
-          const slug = canonicalizeSlug(frontmatter.slug || file)
-          return `https://dans.land/garden/${slug}`
-        }),
-    )
-  ).filter((url): url is string => Boolean(url))
+  const gardenUrls = await publishedGardenUrls()
 
   assert.deepEqual(
     urls,
@@ -419,6 +404,53 @@ test("the generated sitemap contains every public route", async () => {
       ...gardenUrls,
     ].sort(),
   )
+})
+
+test("the site-wide RSS feed contains published garden posts", async () => {
+  const [homepage, feed] = await Promise.all([
+    builtPage("dist/index.html"),
+    readFile("dist/rss.xml", "utf8"),
+  ])
+  const discovery = element(
+    homepage.document,
+    (node) =>
+      node.tagName === "link" &&
+      attribute(node, "rel") === "alternate" &&
+      attribute(node, "type") === "application/rss+xml",
+  )
+
+  assert.equal(attribute(discovery, "href"), "https://dans.land/rss.xml")
+  assert.equal(attribute(discovery, "title"), "Dan's Land")
+  assert.match(feed, /<title>Dan&apos;s Land<\/title>/)
+  assert.match(
+    feed,
+    /<channel>[\s\S]*?<link>https:\/\/dans\.land<\/link><language>/,
+  )
+  assert.match(feed, /<link>https:\/\/dans\.land\/garden\/[^<]+<\/link>/)
+  assert.match(feed, /<content:encoded>/)
+  assert.match(feed, /src=&quot;https:\/\/dans\.land\/assets\//)
+  assert.match(feed, /&lt;pre&gt;&lt;code class=&quot;language-/)
+  assert.match(feed, /&lt;blockquote cite=&quot;https:/)
+  assert.match(feed, /&lt;footer&gt;&lt;a href=/)
+  assert.match(feed, /<item><title>Dotfiles<\/title>/)
+  assert.match(
+    feed,
+    /<item><title>HTTP handlers<\/title>[\s\S]*?<pubDate>Thu, 22 Dec 2022 00:00:00 GMT<\/pubDate>/,
+  )
+  assert.doesNotMatch(feed, /Fixture|_drafts/)
+  assert.doesNotMatch(
+    feed,
+    /__ASTRO_IMAGE_|callout--quote|data-code|&lt;script/,
+  )
+  assert.doesNotMatch(feed, /srcset=&quot;&quot;/)
+  assert.doesNotMatch(feed, /(?:href|src)=&quot;\//)
+
+  const urls = [
+    ...feed.matchAll(/<link>(https:\/\/dans\.land\/garden\/[^<]+)<\/link>/g),
+  ]
+    .map((match) => match[1])
+    .sort()
+  assert.deepEqual(urls, (await publishedGardenUrls()).sort())
 })
 
 test("robots.txt points to the generated sitemap index", async () => {
@@ -462,6 +494,23 @@ function textContent(node: HtmlNode | undefined): string {
   }
 
   return "childNodes" in node ? node.childNodes.map(textContent).join("") : ""
+}
+
+async function publishedGardenUrls() {
+  const files = await readdir("data/garden", { recursive: true })
+  const urls = await Promise.all(
+    files
+      .filter((file) => file.endsWith(".md"))
+      .map(async (file) => {
+        const source = await readFile(`data/garden/${file}`, "utf8")
+        const { frontmatter } = parseFrontmatter(source)
+        if (frontmatter.draft) return undefined
+
+        const slug = canonicalizeSlug(frontmatter.slug || file)
+        return `https://dans.land/garden/${slug}`
+      }),
+  )
+  return urls.filter((url): url is string => Boolean(url))
 }
 
 function sha256(value: string) {
