@@ -1,4 +1,9 @@
-<div class="link-preview" data-link-preview-popover aria-hidden="true" hidden>
+<div
+  class="link-preview garden-popover"
+  data-link-preview-popover
+  aria-hidden="true"
+  hidden
+>
   <div class="link-preview-inner" data-link-preview-inner inert></div>
 </div>
 
@@ -10,10 +15,6 @@
     max-height: min(20rem, calc(100vh - 2rem));
     overflow: auto;
     overscroll-behavior: contain;
-    border: 1px solid rgb(var(--garden-border));
-    border-radius: var(--garden-radius);
-    background: rgb(var(--color-surface));
-    box-shadow: 0 2px 4px rgb(var(--color-base) / 0.3);
     color: rgb(var(--color-text));
     opacity: 0;
     transform: translateY(0.25rem) scale(0.99);
@@ -71,12 +72,6 @@
   .link-preview :global(.preview-diagram-placeholder) {
     color: rgb(var(--garden-description));
     font-style: italic;
-  }
-
-  @media (prefers-color-scheme: light) {
-    .link-preview {
-      box-shadow: 0 2px 4px rgb(var(--color-text) / 0.12);
-    }
   }
 
   @media (prefers-reduced-motion: reduce) {

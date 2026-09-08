@@ -23,6 +23,13 @@ a[data-garden-link] {
   text-decoration-thickness: 0.1em;
 }
 
+.garden-popover {
+  border: 1px solid rgb(var(--garden-border));
+  border-radius: var(--garden-radius);
+  background: rgb(var(--color-surface));
+  box-shadow: 0 2px 4px rgb(var(--color-base) / 0.3);
+}
+
 h1,
 h2,
 h3 {
@@ -254,6 +261,10 @@ h3 {
     --garden-border: 223 218 217;
     --garden-description: 116 112 142;
     --garden-inline-code: 242 233 225;
+  }
+
+  .garden-popover {
+    box-shadow: 0 2px 4px rgb(var(--color-text) / 0.12);
   }
 }
 

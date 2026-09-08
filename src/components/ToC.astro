@@ -35,7 +35,7 @@ const showRail = railHeadings.length >= 4
               data-toc-link={heading.slug}
             >
               <span class="toc-tick" aria-hidden="true" />
-              <span class="toc-popover" aria-hidden="true">
+              <span class="toc-popover garden-popover" aria-hidden="true">
                 {heading.text}
               </span>
             </a>
@@ -137,10 +137,6 @@ const showRail = railHeadings.length >= 4
       width: max-content;
       max-width: min(20rem, calc(100vw - 8rem));
       padding: 0.45rem 0.625rem;
-      border: 1px solid rgb(var(--garden-border));
-      border-radius: 0.25rem;
-      background: rgb(var(--color-overlay));
-      box-shadow: 0 2px 4px rgb(var(--color-base) / 0.3);
       color: rgb(var(--color-text));
       font-size: 0.9375rem;
       line-height: 1.3;
@@ -163,13 +159,6 @@ const showRail = railHeadings.length >= 4
     .toc-tick,
     .toc-popover {
       transition: none;
-    }
-  }
-
-  @media (prefers-color-scheme: light) {
-    .toc-popover {
-      background: rgb(var(--color-base));
-      box-shadow: 0 2px 4px rgb(var(--color-text) / 0.12);
     }
   }
 </style>
