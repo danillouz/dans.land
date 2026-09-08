@@ -1,0 +1,351 @@
+<div class="link-preview" data-link-preview-popover aria-hidden="true" hidden>
+  <div class="link-preview-inner" data-link-preview-inner inert></div>
+</div>
+
+<style>
+  .link-preview {
+    position: fixed;
+    z-index: 20;
+    width: min(30rem, calc(100vw - 2rem));
+    max-height: min(20rem, calc(100vh - 2rem));
+    overflow: auto;
+    overscroll-behavior: contain;
+    border: 1px solid rgb(var(--garden-border));
+    border-radius: var(--garden-radius);
+    background: rgb(var(--color-surface));
+    box-shadow: 0 2px 4px rgb(var(--color-base) / 0.3);
+    color: rgb(var(--color-text));
+    opacity: 0;
+    transform: translateY(0.25rem) scale(0.99);
+    transform-origin: bottom center;
+    transition:
+      opacity 80ms ease-out,
+      transform 100ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .link-preview[data-visible] {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .link-preview-inner {
+    padding: 1rem;
+  }
+
+  .link-preview :global(.post-header) {
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+  }
+
+  .link-preview :global(.post-meta) {
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+  }
+
+  .link-preview :global(.post-header h1) {
+    margin-block: 0;
+    font-size: 1.25rem;
+  }
+
+  .link-preview :global(.post-description) {
+    margin-bottom: 0;
+  }
+
+  .link-preview :global(.post-content) {
+    font-size: 0.9375rem;
+  }
+
+  .link-preview :global(.post-content > :first-child) {
+    margin-top: 0;
+  }
+
+  .link-preview :global(.post-content > :last-child) {
+    margin-bottom: 0;
+  }
+
+  .link-preview :global(.heading-link::after),
+  .link-preview :global(.copy) {
+    display: none;
+  }
+
+  .link-preview :global(.preview-diagram-placeholder) {
+    color: rgb(var(--garden-description));
+    font-style: italic;
+  }
+
+  @media (prefers-color-scheme: light) {
+    .link-preview {
+      box-shadow: 0 2px 4px rgb(var(--color-text) / 0.12);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .link-preview {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  const preview = document.querySelector<HTMLElement>(
+    "[data-link-preview-popover]",
+  )
+  const previewInner = preview?.querySelector<HTMLElement>(
+    "[data-link-preview-inner]",
+  )
+  const links =
+    document.querySelectorAll<HTMLAnchorElement>("[data-garden-link]")
+  const wideViewport = window.matchMedia("(min-width: 48rem)")
+
+  if (preview && previewInner && links.length > 0) {
+    const parser = new DOMParser()
+    const cache = new Map<string, Promise<HTMLTemplateElement | null>>()
+    let activeLink: HTMLAnchorElement | null = null
+    let hideTimer = 0
+    let positionFrame = 0
+    let requestVersion = 0
+
+    const normalizeUrlAttribute = (
+      element: Element,
+      attribute: "href" | "poster" | "src",
+      baseUrl: URL,
+    ) => {
+      const value = element.getAttribute(attribute)
+      if (!value) {
+        return
+      }
+
+      try {
+        element.setAttribute(attribute, new URL(value, baseUrl).href)
+      } catch {
+        // Leave malformed URLs untouched; the source page already owns them.
+      }
+    }
+
+    const normalizeSrcset = (element: Element, baseUrl: URL) => {
+      const value = element.getAttribute("srcset")
+      if (!value) {
+        return
+      }
+
+      const normalized = value
+        .split(",")
+        .map((candidate) => {
+          const [url, ...descriptor] = candidate.trim().split(/\s+/)
+          try {
+            return [new URL(url, baseUrl).href, ...descriptor].join(" ")
+          } catch {
+            return candidate.trim()
+          }
+        })
+        .join(", ")
+      element.setAttribute("srcset", normalized)
+    }
+
+    const loadPreview = (url: URL) => {
+      const key = url.pathname
+      const cached = cache.get(key)
+      if (cached) {
+        return cached
+      }
+
+      const loaded = fetch(key, { headers: { Accept: "text/html" } })
+        .then(async (response) => {
+          if (!response.ok) {
+            return null
+          }
+
+          const contentType = response.headers.get("Content-Type") ?? ""
+          if (!contentType.includes("text/html")) {
+            return null
+          }
+
+          const document = parser.parseFromString(
+            await response.text(),
+            "text/html",
+          )
+          const sections = document.querySelectorAll<HTMLElement>(
+            "[data-link-preview-content]",
+          )
+          if (sections.length === 0) {
+            return null
+          }
+
+          const responseUrl = new URL(response.url || url)
+          const template = document.createElement("template")
+          for (const section of sections) {
+            template.content.append(section.cloneNode(true))
+          }
+
+          template.content
+            .querySelectorAll("script, .copy")
+            .forEach((element) => element.remove())
+          template.content
+            .querySelectorAll("[href], [poster], [src]")
+            .forEach((element) => {
+              normalizeUrlAttribute(element, "href", responseUrl)
+              normalizeUrlAttribute(element, "poster", responseUrl)
+              normalizeUrlAttribute(element, "src", responseUrl)
+            })
+          template.content
+            .querySelectorAll("[srcset]")
+            .forEach((element) => normalizeSrcset(element, responseUrl))
+
+          const idPrefix = `preview-${key.replace(/[^a-z0-9]+/gi, "-")}-`
+          template.content
+            .querySelectorAll<HTMLElement>("[id]")
+            .forEach((element) => {
+              const originalId = element.id
+              element.dataset.previewAnchor = originalId
+              element.id = `${idPrefix}${originalId}`
+            })
+
+          template.content
+            .querySelectorAll<HTMLElement>(".mermaid")
+            .forEach((diagram) => {
+              const placeholder = document.createElement("p")
+              placeholder.className = "preview-diagram-placeholder"
+              placeholder.textContent = "Diagram available in the full post."
+              diagram.replaceWith(placeholder)
+            })
+
+          return template
+        })
+        .catch(() => null)
+        .then((template) => {
+          // Let a later hover retry after a transient request failure.
+          if (!template) {
+            cache.delete(key)
+          }
+          return template
+        })
+
+      cache.set(key, loaded)
+      return loaded
+    }
+
+    const positionPreview = () => {
+      positionFrame = 0
+      if (!activeLink || preview.hidden) {
+        return
+      }
+
+      const viewportPadding = 16
+      const gap = 10
+      const linkBounds = activeLink.getBoundingClientRect()
+      if (linkBounds.bottom < 0 || linkBounds.top > window.innerHeight) {
+        hidePreview()
+        return
+      }
+
+      const previewBounds = preview.getBoundingClientRect()
+      const centeredLeft =
+        linkBounds.left + linkBounds.width / 2 - previewBounds.width / 2
+      const maxLeft = window.innerWidth - previewBounds.width - viewportPadding
+      const left = Math.min(
+        Math.max(centeredLeft, viewportPadding),
+        Math.max(viewportPadding, maxLeft),
+      )
+      const above = linkBounds.top - previewBounds.height - gap
+      const below = linkBounds.bottom + gap
+      const maxTop = window.innerHeight - previewBounds.height - viewportPadding
+      const top =
+        above >= viewportPadding
+          ? above
+          : Math.min(
+              Math.max(below, viewportPadding),
+              Math.max(viewportPadding, maxTop),
+            )
+
+      preview.style.left = `${Math.round(left)}px`
+      preview.style.top = `${Math.round(top)}px`
+    }
+
+    const schedulePosition = () => {
+      if (!positionFrame) {
+        positionFrame = requestAnimationFrame(positionPreview)
+      }
+    }
+
+    const cancelHide = () => {
+      window.clearTimeout(hideTimer)
+      hideTimer = 0
+    }
+
+    const hidePreview = () => {
+      cancelHide()
+      requestVersion += 1
+      activeLink = null
+      preview.removeAttribute("data-visible")
+      preview.hidden = true
+      previewInner.replaceChildren()
+    }
+
+    const scheduleHide = () => {
+      cancelHide()
+      hideTimer = window.setTimeout(() => {
+        if (!activeLink?.matches(":hover") && !preview.matches(":hover")) {
+          hidePreview()
+        }
+      }, 100)
+    }
+
+    const showPreview = async (link: HTMLAnchorElement) => {
+      if (!wideViewport.matches) {
+        return
+      }
+
+      const targetUrl = new URL(link.href)
+      if (targetUrl.origin !== window.location.origin) {
+        return
+      }
+
+      cancelHide()
+      activeLink = link
+      const version = ++requestVersion
+      targetUrl.search = ""
+      let fragment = targetUrl.hash.slice(1)
+      try {
+        fragment = decodeURIComponent(fragment)
+      } catch {
+        // A malformed fragment should not prevent the post preview from opening.
+      }
+      targetUrl.hash = ""
+      const template = await loadPreview(targetUrl)
+      if (!template || activeLink !== link || version !== requestVersion) {
+        return
+      }
+
+      previewInner.replaceChildren(template.content.cloneNode(true))
+      preview.hidden = false
+      preview.scrollTop = 0
+      positionPreview()
+
+      if (fragment) {
+        const target = [
+          ...previewInner.querySelectorAll<HTMLElement>(
+            "[data-preview-anchor]",
+          ),
+        ].find((element) => element.dataset.previewAnchor === fragment)
+        if (target) preview.scrollTop = Math.max(0, target.offsetTop - 12)
+      }
+
+      preview.setAttribute("data-visible", "")
+    }
+
+    for (const link of links) {
+      link.addEventListener("pointerenter", (event) => {
+        if (event.pointerType !== "touch") void showPreview(link)
+      })
+      link.addEventListener("pointerleave", scheduleHide)
+    }
+
+    preview.addEventListener("pointerenter", cancelHide)
+    preview.addEventListener("pointerleave", scheduleHide)
+    window.addEventListener("scroll", schedulePosition, { passive: true })
+    window.addEventListener("resize", schedulePosition)
+    wideViewport.addEventListener("change", () => {
+      if (!wideViewport.matches) hidePreview()
+    })
+  }
+</script>

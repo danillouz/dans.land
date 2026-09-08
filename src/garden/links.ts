@@ -404,7 +404,12 @@ function escapeAttribute(value: string) {
     .replaceAll(">", "&gt;")
 }
 
-function replacePlaceholder(html: string, index: number, href: string) {
+function replacePlaceholder(
+  html: string,
+  index: number,
+  href: string,
+  preview: boolean,
+) {
   const placeholder = `href="/__garden_wikilink__/${index}"`
   const matches = html.split(placeholder).length - 1
 
@@ -412,7 +417,12 @@ function replacePlaceholder(html: string, index: number, href: string) {
     return null
   }
 
-  return html.replace(placeholder, `href="${escapeAttribute(href)}"`)
+  const attributes = [
+    `href="${escapeAttribute(href)}"`,
+    preview ? "data-garden-link" : null,
+  ].filter(Boolean)
+
+  return html.replace(placeholder, attributes.join(" "))
 }
 
 function renderedFrontmatter(entry: GardenEntry): GardenFrontmatter {
@@ -452,7 +462,12 @@ export function finalizeGardenGraph(entries: GardenEntry[]) {
         isSamePost && fragment.fragment
           ? `#${fragment.fragment}`
           : `/garden/${result.post.slug}${fragment.fragment ? `#${fragment.fragment}` : ""}`
-      const replaced = replacePlaceholder(html, referenceIndex, href)
+      const replaced = replacePlaceholder(
+        html,
+        referenceIndex,
+        href,
+        !isSamePost,
+      )
 
       if (replaced === null) {
         index.issues.push({

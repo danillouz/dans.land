@@ -2,6 +2,7 @@
 import type { CollectionEntry } from "astro:content"
 
 import Backlinks from "../../components/Backlinks.astro"
+import LinkPreview from "../../components/LinkPreview.astro"
 import Mermaid from "../../components/Mermaid.astro"
 import ToC from "../../components/ToC.astro"
 import {
@@ -45,7 +46,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-GB", {
 
 <Garden title={entry.data.title} description={entry.data.description}>
   <article>
-    <header class="post-header">
+    <header class="post-header" data-link-preview-content>
       <p class="post-meta" aria-label="Post details">
         {
           folder && (
@@ -91,12 +92,18 @@ const dateFormatter = new Intl.DateTimeFormat("en-GB", {
 
     <ToC headings={headings} title={entry.data.title} />
 
-    <div class="garden-prose post-content">
+    <div class="garden-prose post-content" data-link-preview-content>
       <Content />
     </div>
 
     <Backlinks backlinks={graph.backlinks} />
   </article>
+
+  {
+    (graph.outgoingLinks.length > 0 || graph.backlinks.length > 0) && (
+      <LinkPreview />
+    )
+  }
 
   {hasMermaid && <Mermaid />}
 </Garden>

@@ -109,6 +109,23 @@ test("uses rendered headings and derives unique outgoing links and backlinks", (
   assert.match(entries[0]?.rendered?.html ?? "", /#résumé/)
 })
 
+test("marks links between posts for previews", () => {
+  const entries = [
+    entry(
+      "welcome",
+      { title: "Welcome" },
+      { references: [parseWikiLink("[[Target]]")] },
+    ),
+    entry("go/target", { title: "Target" }),
+  ]
+
+  assertValidGardenIndex(finalizeGardenGraph(entries))
+  const html = entries[0]?.rendered?.html ?? ""
+
+  assert.match(html, /href="\/garden\/go\/target"/)
+  assert.match(html, /data-garden-link/)
+})
+
 test("keeps same-post wikilinks out of the backlink graph", () => {
   const references = [parseWikiLink("[[#Details]]")]
   const entries = [
@@ -127,6 +144,7 @@ test("keeps same-post wikilinks out of the backlink graph", () => {
   assert.deepEqual(post?.outgoingLinks, [])
   assert.deepEqual(post?.backlinks, [])
   assert.match(entries[0]?.rendered?.html ?? "", /href="#details"/)
+  assert.doesNotMatch(entries[0]?.rendered?.html ?? "", /data-garden-link/)
 })
 
 test("drafts do not validate links or create backlinks", () => {

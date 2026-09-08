@@ -66,6 +66,26 @@ test("renders canonical wikilinks instead of literal Obsidian syntax", async () 
   assert.doesNotMatch(article, /\[\[/)
 })
 
+test("renders full-post previews for garden links and backlinks", async () => {
+  const [article, backlinks] = await Promise.all([
+    readFile("dist/garden/computer-networks/xff.html", "utf8"),
+    readFile("dist/garden/computer-networks/proxies.html", "utf8"),
+  ])
+
+  assert.match(
+    article,
+    /href="\/garden\/computer-networks\/proxies"[^>]*data-garden-link/,
+  )
+  assert.match(article, /class="post-header"[^>]*data-link-preview-content/)
+  assert.match(
+    article,
+    /class="garden-prose post-content"[^>]*data-link-preview-content/,
+  )
+  assert.match(article, /data-link-preview-popover/)
+  assert.match(article, /fetch\(/)
+  assert.match(backlinks, /class="backlinks"[\s\S]*?data-garden-link/)
+})
+
 test("links rendered headings to their URL fragments", async () => {
   const article = await readFile("dist/garden/go/comments.html", "utf8")
 

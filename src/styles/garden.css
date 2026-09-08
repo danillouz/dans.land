@@ -18,6 +18,11 @@ a {
   text-underline-offset: 0.25em;
 }
 
+a[data-garden-link] {
+  text-decoration-style: dotted;
+  text-decoration-thickness: 0.1em;
+}
+
 h1,
 h2,
 h3 {

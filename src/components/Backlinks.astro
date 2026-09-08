@@ -19,7 +19,9 @@ const { backlinks } = Astro.props
       <ul>
         {backlinks.map((backlink) => (
           <li>
-            <a href={backlink.href}>{backlink.title}</a>
+            <a href={backlink.href} data-garden-link>
+              {backlink.title}
+            </a>
           </li>
         ))}
       </ul>
