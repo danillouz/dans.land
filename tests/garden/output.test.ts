@@ -4,13 +4,13 @@ import test from "node:test"
 
 import { parseFrontmatter } from "@astrojs/markdown-remark"
 
-test("renders the folder tree on the garden index", async () => {
-  const index = await readFile("dist/garden/index.html", "utf8")
-  assert.match(index, /<h1[^>]*>Index<\/h1>/)
-  assert.match(index, /<strong[^>]*>Garden<\/strong>/)
-  assert.match(index, /class="folder"[^>]*>computer networks<\/strong>/)
-  assert.match(index, /href="\/garden\/computer-networks\/dns"[^>]*>DNS<\/a>/)
-  assert.match(index, /class="folder"[^>]*>go<\/strong>/)
+test("renders the folder tree in the garden catalog", async () => {
+  const catalog = await readFile("dist/garden/catalog.html", "utf8")
+  assert.match(catalog, /<h1[^>]*>Catalog<\/h1>/)
+  assert.match(catalog, /<strong[^>]*>Garden<\/strong>/)
+  assert.match(catalog, /class="folder"[^>]*>computer networks<\/strong>/)
+  assert.match(catalog, /href="\/garden\/computer-networks\/dns"[^>]*>DNS<\/a>/)
+  assert.match(catalog, /class="folder"[^>]*>go<\/strong>/)
 })
 
 test("renders recently tended posts in date order", async () => {

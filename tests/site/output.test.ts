@@ -307,7 +307,7 @@ test("every page shares the full header and footer shell", async () => {
     "dist/about.html",
     "dist/404.html",
     "dist/garden.html",
-    "dist/garden/index.html",
+    "dist/garden/catalog.html",
     "dist/garden/cache-stampeding.html",
   ]) {
     const { document } = await builtPage(path)
@@ -346,11 +346,11 @@ test("every page shares the full header and footer shell", async () => {
 
 test("garden routes only load their own styles", async () => {
   const landing = await builtPage("dist/garden.html")
-  const index = await builtPage("dist/garden/index.html")
+  const catalog = await builtPage("dist/garden/catalog.html")
   const post = await builtPage("dist/garden/cache-stampeding.html")
-  const [landingCss, indexCss, postCss] = await Promise.all([
+  const [landingCss, catalogCss, postCss] = await Promise.all([
     builtStyles(landing.document),
-    builtStyles(index.document),
+    builtStyles(catalog.document),
     builtStyles(post.document),
   ])
 
@@ -366,12 +366,12 @@ test("garden routes only load their own styles", async () => {
   assert.doesNotMatch(landingCss, /\.backlinks/)
   assert.doesNotMatch(landingCss, /\.toc-rail/)
 
-  assert.match(indexCss, /\.tree/)
-  assert.doesNotMatch(indexCss, /\.garden-about/)
-  assert.doesNotMatch(indexCss, /\.frame-corner/)
-  assert.doesNotMatch(indexCss, /\.recent-list/)
-  assert.doesNotMatch(indexCss, /\.post-content/)
-  assert.doesNotMatch(indexCss, /\.toc-rail/)
+  assert.match(catalogCss, /\.tree/)
+  assert.doesNotMatch(catalogCss, /\.garden-about/)
+  assert.doesNotMatch(catalogCss, /\.frame-corner/)
+  assert.doesNotMatch(catalogCss, /\.recent-list/)
+  assert.doesNotMatch(catalogCss, /\.post-content/)
+  assert.doesNotMatch(catalogCss, /\.toc-rail/)
 
   assert.match(postCss, /\.site-header/)
   assert.match(postCss, /\.site-footer/)
@@ -400,7 +400,7 @@ test("the generated sitemap contains every public route", async () => {
       "https://dans.land",
       "https://dans.land/about",
       "https://dans.land/garden",
-      "https://dans.land/garden/index",
+      "https://dans.land/garden/catalog",
       ...gardenUrls,
     ].sort(),
   )
