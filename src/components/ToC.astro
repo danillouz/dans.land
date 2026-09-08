@@ -2,14 +2,18 @@
 import type { MarkdownHeading } from "astro"
 
 interface Props {
+  hasBacklinks?: boolean
   headings: MarkdownHeading[]
   title: string
 }
 
-const { headings, title } = Astro.props
+const { hasBacklinks = false, headings, title } = Astro.props
 const railHeadings = [
   { depth: 1, slug: "top", text: title },
-  ...headings.filter(({ slug }) => slug !== "footnote-label"),
+  ...headings,
+  ...(hasBacklinks
+    ? [{ depth: 2, slug: "mentioned-in", text: "Mentioned in" }]
+    : []),
 ]
 const showRail = railHeadings.length >= 4
 ---

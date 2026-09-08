@@ -96,15 +96,17 @@ test("links rendered headings to their URL fragments", async () => {
 })
 
 test("renders a heading rail for longer posts", async () => {
-  const [article, shortArticle] = await Promise.all([
+  const [article, footnoteArticle, shortArticle] = await Promise.all([
     readFile("dist/garden/go/http-handlers.html", "utf8"),
+    readFile("dist/garden/lambda/nodejs-event-loop.html", "utf8"),
     readFile("dist/garden/computer-networks/caddy-local-ca.html", "utf8"),
   ])
 
   assert.match(article, /<nav class="toc-rail"[^>]*data-toc-rail/)
   assert.match(article, /href="#top"[^>]*data-toc-link="top"/)
   assert.match(article, /data-toc-link="handler--servemux"/)
-  assert.doesNotMatch(article, /data-toc-link="footnote-label"/)
+  assert.match(article, /data-toc-link="mentioned-in"/)
+  assert.match(footnoteArticle, /data-toc-link="footnote-label"/)
   assert.doesNotMatch(shortArticle, /<nav class="toc-rail"/)
 })
 
@@ -161,7 +163,10 @@ test("renders backlinks from the shared content index", async () => {
     readFile("dist/garden/go/comments.html", "utf8"),
     readFile("dist/garden/lambda/audio-transcoding.html", "utf8"),
   ])
-  assert.match(article, /id="backlinks-title"[^>]*>Backlinks<\/h2>/)
+  assert.match(
+    article,
+    /<h2 id="mentioned-in"[^>]*><a class="heading-link" href="#mentioned-in"[^>]*>Mentioned in<\/a><\/h2>/,
+  )
   assert.match(
     article,
     /href="\/garden\/cache-stampeding"[^>]*>Cache stampeding<\/a>/,

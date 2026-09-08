@@ -34,21 +34,19 @@ h3 {
   margin-top: 2.5em;
 }
 
-.garden-prose :is(h2, h3, h4, h5, h6) > .heading-link {
+.heading-link {
   color: inherit;
   text-decoration: none;
 }
 
-.garden-prose :is(h2, h3, h4, h5, h6) > .heading-link::after {
+.heading-link::after {
   content: " #";
   color: rgb(var(--garden-description));
   font-weight: 400;
   opacity: 0;
 }
 
-.garden-prose
-  :is(h2, h3, h4, h5, h6)
-  > .heading-link:is(:hover, :focus-visible)::after {
+.heading-link:is(:hover, :focus-visible)::after {
   color: rgb(var(--color-link));
   opacity: 1;
 }

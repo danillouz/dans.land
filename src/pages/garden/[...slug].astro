@@ -90,7 +90,11 @@ const dateFormatter = new Intl.DateTimeFormat("en-GB", {
       <p class="post-description">{entry.data.description}</p>
     </header>
 
-    <ToC headings={headings} title={entry.data.title} />
+    <ToC
+      hasBacklinks={graph.backlinks.length > 0}
+      headings={headings}
+      title={entry.data.title}
+    />
 
     <div class="garden-prose post-content" data-link-preview-content>
       <Content />

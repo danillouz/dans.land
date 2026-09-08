@@ -13,8 +13,12 @@ const { backlinks } = Astro.props
 
 {
   backlinks.length > 0 && (
-    <section class="backlinks" aria-labelledby="backlinks-title">
-      <h2 id="backlinks-title">Backlinks</h2>
+    <section class="backlinks" aria-labelledby="mentioned-in">
+      <h2 id="mentioned-in">
+        <a class="heading-link" href="#mentioned-in">
+          Mentioned in
+        </a>
+      </h2>
 
       <ul>
         {backlinks.map((backlink) => (
