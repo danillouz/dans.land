@@ -246,16 +246,25 @@ test("renders post context, dates, and reading time", async () => {
     readFile("dist/garden/go/http-handlers.html", "utf8"),
     readFile("dist/garden/computer-networks/caddy-local-ca.html", "utf8"),
   ])
-  const metadata = article.match(/<p class="post-meta"[^>]*>(.*?)<\/p>/)?.[1]
-  const metadataWithoutUpdate = articleWithoutUpdate.match(
-    /<p class="post-meta"[^>]*>(.*?)<\/p>/,
+  const header = article.match(/<header class="post-header".*?<\/header>/)?.[0]
+  const metadata = article.match(
+    /<div class="post-meta"[^>]*>(.*?)<\/header>/,
   )?.[1]
+  const metadataWithoutUpdate = articleWithoutUpdate.match(
+    /<div class="post-meta"[^>]*>(.*?)<\/header>/,
+  )?.[1]
+  assert.ok(header)
   assert.ok(metadata)
   assert.ok(metadataWithoutUpdate)
-  assert.match(metadata, /<span[^>]*>Go<\/span>/)
-  assert.match(metadata, /<span[^>]*>Evergreen<\/span>/)
-  assert.match(metadata, /<span[^>]*>\d+ min read<\/span>/)
-  assert.equal(metadata.match(/post-meta-separator/g)?.length, 4)
+  assert.ok(header.indexOf("<h1>") < header.indexOf("post-description"))
+  assert.ok(header.indexOf("post-description") < header.indexOf("post-meta"))
+  assert.match(metadata, /<span class="post-label"[^>]*>Go<\/span>/)
+  assert.match(metadata, /<span class="post-label"[^>]*>Evergreen<\/span>/)
+  assert.match(
+    metadata,
+    /<span class="post-reading-time"[^>]*>\d+ min read<\/span>/,
+  )
+  assert.equal(metadata.match(/post-meta-separator/g)?.length, 1)
   assertReadableDate(metadata, "Planted")
   assertReadableDate(metadata, "Last tended")
   assertReadableDate(metadataWithoutUpdate, "Planted")

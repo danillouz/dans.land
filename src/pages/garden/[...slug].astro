@@ -47,47 +47,41 @@ const dateFormatter = new Intl.DateTimeFormat("en-GB", {
 <Garden title={entry.data.title} description={entry.data.description}>
   <article>
     <header class="post-header" data-link-preview-content>
-      <p class="post-meta" aria-label="Post details">
-        {
-          folder && (
-            <>
-              <span>{folder}</span>
-              <span class="post-meta-separator" aria-hidden="true">
-                •
-              </span>
-            </>
-          )
-        }
-        <span>{status}</span>
-        <span class="post-meta-separator" aria-hidden="true">•</span>
-        <span>{readingTime}</span>
-        <span class="post-meta-separator" aria-hidden="true">•</span>
-        <span>
-          Planted{" "}
-          <time datetime={created.toISOString().slice(0, 10)}>
-            {dateFormatter.format(created)}
-          </time>
-        </span>
-        {
-          updated && (
-            <>
-              <span class="post-meta-separator" aria-hidden="true">
-                •
-              </span>
-              <span>
-                Last tended{" "}
-                <time datetime={updated.toISOString().slice(0, 10)}>
-                  {dateFormatter.format(updated)}
-                </time>
-              </span>
-            </>
-          )
-        }
-      </p>
-
       <h1>{entry.data.title}</h1>
 
       <p class="post-description">{entry.data.description}</p>
+
+      <div class="post-meta" aria-label="Post details">
+        <div class="post-meta-summary">
+          {folder && <span class="post-label">{folder}</span>}
+          <span class="post-label">{status}</span>
+          <span class="post-reading-time">{readingTime}</span>
+        </div>
+
+        <p class="post-dates">
+          <span>
+            Planted{" "}
+            <time datetime={created.toISOString().slice(0, 10)}>
+              {dateFormatter.format(created)}
+            </time>
+          </span>
+          {
+            updated && (
+              <>
+                <span class="post-meta-separator" aria-hidden="true">
+                  •
+                </span>
+                <span>
+                  Last tended{" "}
+                  <time datetime={updated.toISOString().slice(0, 10)}>
+                    {dateFormatter.format(updated)}
+                  </time>
+                </span>
+              </>
+            )
+          }
+        </p>
+      </div>
     </header>
 
     <ToC
@@ -120,29 +114,54 @@ const dateFormatter = new Intl.DateTimeFormat("en-GB", {
   }
 
   .post-meta {
-    display: flex;
-    flex-wrap: wrap;
+    margin-top: 1.5rem;
+    color: rgb(var(--garden-description));
+    font-size: 0.9375rem;
   }
 
-  .post-meta {
-    align-items: baseline;
+  .post-meta-summary,
+  .post-dates {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     gap: 0.25rem 0.5rem;
-    justify-content: flex-start;
-    margin: 0 0 2rem;
-    color: rgb(var(--garden-description));
-    font-size: 1rem;
+  }
+
+  .post-label {
+    padding: 0.125rem 0.5rem;
+    border: 1px solid rgb(var(--garden-border));
+    border-radius: var(--garden-radius);
+    background: rgb(var(--color-base));
+    color: rgb(var(--color-text));
+    line-height: 1.4;
+  }
+
+  .post-reading-time,
+  .post-dates > span:not(.post-meta-separator) {
+    white-space: nowrap;
+  }
+
+  .post-dates {
+    margin: 0.625rem 0 0;
   }
 
   .post-meta-separator {
     color: rgb(var(--color-text));
   }
 
-  .post-meta > span:not(.post-meta-separator) {
-    white-space: nowrap;
-  }
-
   .post-description {
     color: rgb(var(--color-text));
+  }
+
+  @media (max-width: 32rem) {
+    .post-dates {
+      display: grid;
+      gap: 0.125rem;
+    }
+
+    .post-meta-separator {
+      display: none;
+    }
   }
 
   .post-content {
