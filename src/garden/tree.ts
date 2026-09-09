@@ -7,7 +7,7 @@ export interface GardenTreeNode {
   name: string
 }
 
-/** Builds the folder hierarchy used by the garden catalog. */
+/** Builds the folder hierarchy used by the garden's compact all-posts view. */
 export function gardenTree(
   entries: CollectionEntry<"garden">[],
 ): GardenTreeNode {

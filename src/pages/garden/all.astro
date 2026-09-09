@@ -1,0 +1,87 @@
+---
+import Banner from "../../components/Banner.astro"
+import Graph from "../../components/Graph.astro"
+import Tree from "../../components/Tree.astro"
+import { getPublishedGardenEntries } from "../../garden/collection"
+import { gardenGraph } from "../../garden/graph"
+import { gardenTree } from "../../garden/tree"
+import Garden from "../../layouts/Garden.astro"
+
+const entries = [...(await getPublishedGardenEntries())].sort((a, b) =>
+  a.id.localeCompare(b.id),
+)
+const graph = await gardenGraph(entries)
+const tree = gardenTree(entries)
+---
+
+<Garden
+  title="All Garden Posts"
+  description="Explore every published post in Dan's digital garden."
+>
+  <h1 class="sr-only">All garden posts</h1>
+
+  <div class="all-view">
+    <Banner>
+      You discover a quiet clearing in the garden, then look up to find the
+      knowledge below reflected in the stars above…
+    </Banner>
+
+    <div class="all-map">
+      <Graph {graph} />
+    </div>
+  </div>
+
+  <div class="all-tree" aria-label="All garden posts">
+    <Tree showRoot tree={tree} />
+  </div>
+
+  <noscript>
+    <style is:inline>
+      .all-map {
+        display: none;
+      }
+
+      .all-tree {
+        display: block;
+      }
+    </style>
+  </noscript>
+</Garden>
+
+<style>
+  .all-view {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+  }
+
+  .all-view :global(.banner) {
+    margin: 0 auto;
+  }
+
+  .all-map {
+    width: min(calc(100vw - 3rem), 69rem);
+    flex: none;
+    margin-inline-start: 50%;
+    transform: translateX(-50%);
+  }
+
+  .all-map :global(.garden-graph) {
+    margin: 0;
+  }
+
+  .all-tree {
+    display: none;
+    margin-top: 2rem;
+  }
+
+  @media (width <= 40rem) {
+    .all-view {
+      display: none;
+    }
+
+    .all-tree {
+      display: block;
+    }
+  }
+</style>

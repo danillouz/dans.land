@@ -240,6 +240,7 @@ test("Astro emits all pages and deployment files", async () => {
     "dist/index.html",
     "dist/about.html",
     "dist/404.html",
+    "dist/garden/all.html",
     "dist/_headers",
     "dist/_redirects",
     "dist/robots.txt",
@@ -280,9 +281,17 @@ test("each main page only loads its own component styles", async () => {
   assert.doesNotMatch(notFoundCss, /\.portrait/)
 })
 
-test("the existing redirect remains unchanged", async () => {
+test("redirects legacy paths to their canonical routes", async () => {
   const redirects = await readFile("dist/_redirects", "utf8")
   assert.equal(redirects, "/about/ /about 301\n")
+})
+
+test("the all-posts page replaces the separate garden views", async () => {
+  await Promise.all([
+    assert.rejects(readFile("dist/garden/catalog.html", "utf8")),
+    assert.rejects(readFile("dist/garden/graph.html", "utf8")),
+    assert.rejects(readFile("dist/garden/observatory.html", "utf8")),
+  ])
 })
 
 test("the homepage points its garden links at the local garden", async () => {
@@ -307,7 +316,7 @@ test("every page shares the full header and footer shell", async () => {
     "dist/about.html",
     "dist/404.html",
     "dist/garden.html",
-    "dist/garden/catalog.html",
+    "dist/garden/all.html",
     "dist/garden/cache-stampeding.html",
   ]) {
     const { document } = await builtPage(path)
@@ -346,11 +355,11 @@ test("every page shares the full header and footer shell", async () => {
 
 test("garden routes only load their own styles", async () => {
   const landing = await builtPage("dist/garden.html")
-  const catalog = await builtPage("dist/garden/catalog.html")
+  const all = await builtPage("dist/garden/all.html")
   const post = await builtPage("dist/garden/cache-stampeding.html")
-  const [landingCss, catalogCss, postCss] = await Promise.all([
+  const [landingCss, allCss, postCss] = await Promise.all([
     builtStyles(landing.document),
-    builtStyles(catalog.document),
+    builtStyles(all.document),
     builtStyles(post.document),
   ])
 
@@ -366,12 +375,16 @@ test("garden routes only load their own styles", async () => {
   assert.doesNotMatch(landingCss, /\.backlinks/)
   assert.doesNotMatch(landingCss, /\.toc-rail/)
 
-  assert.match(catalogCss, /\.tree/)
-  assert.doesNotMatch(catalogCss, /\.garden-about/)
-  assert.doesNotMatch(catalogCss, /\.frame-corner/)
-  assert.doesNotMatch(catalogCss, /\.recent-list/)
-  assert.doesNotMatch(catalogCss, /\.post-content/)
-  assert.doesNotMatch(catalogCss, /\.toc-rail/)
+  assert.match(allCss, /\.garden-graph/)
+  assert.match(allCss, /\.all-tree/)
+  assert.match(allCss, /\.tree/)
+  assert.doesNotMatch(allCss, /@keyframes twinkle/)
+  assert.match(allCss, /prefers-reduced-motion:reduce/)
+  assert.doesNotMatch(allCss, /\.garden-about/)
+  assert.doesNotMatch(allCss, /\.frame-corner/)
+  assert.doesNotMatch(allCss, /\.recent-list/)
+  assert.doesNotMatch(allCss, /\.post-content/)
+  assert.doesNotMatch(allCss, /\.toc-rail/)
 
   assert.match(postCss, /\.site-header/)
   assert.match(postCss, /\.site-footer/)
@@ -400,7 +413,7 @@ test("the generated sitemap contains every public route", async () => {
       "https://dans.land",
       "https://dans.land/about",
       "https://dans.land/garden",
-      "https://dans.land/garden/catalog",
+      "https://dans.land/garden/all",
       ...gardenUrls,
     ].sort(),
   )

@@ -4,13 +4,56 @@ import test from "node:test"
 
 import { parseFrontmatter } from "@astrojs/markdown-remark"
 
-test("renders the folder tree in the garden catalog", async () => {
-  const catalog = await readFile("dist/garden/catalog.html", "utf8")
-  assert.match(catalog, /<h1[^>]*>Catalog<\/h1>/)
-  assert.match(catalog, /<strong[^>]*>Garden<\/strong>/)
-  assert.match(catalog, /class="folder"[^>]*>computer networks<\/strong>/)
-  assert.match(catalog, /href="\/garden\/computer-networks\/dns"[^>]*>DNS<\/a>/)
-  assert.match(catalog, /class="folder"[^>]*>go<\/strong>/)
+test("renders the folder tree as the compact all-posts view", async () => {
+  const all = await readFile("dist/garden/all.html", "utf8")
+  assert.match(all, /<h1 class="sr-only"[^>]*>All garden posts<\/h1>/)
+  assert.match(all, /class="all-tree"/)
+  assert.match(all, /<strong[^>]*>Garden<\/strong>/)
+  assert.match(all, /class="folder"[^>]*>computer networks<\/strong>/)
+  assert.match(all, /href="\/garden\/computer-networks\/dns"[^>]*>DNS<\/a>/)
+  assert.match(all, /class="folder"[^>]*>go<\/strong>/)
+})
+
+test("renders the public wikilink star map on the all-posts page", async () => {
+  const page = await readFile("dist/garden/all.html", "utf8")
+  const payload = page.match(
+    /<script type="application\/json" data-graph-data>(.*?)<\/script>/,
+  )?.[1]
+
+  assert.match(page, /class="garden-graph"[^>]*data-garden-graph/)
+  assert.match(page, /Graph\.astro_astro_type_script/)
+  assert.match(page, /aria-label="Garden constellations"/)
+  assert.match(page, /<svg[^>]*height="600"/)
+  assert.ok(page.indexOf('class="banner"') < page.indexOf("data-garden-graph"))
+  assert.match(page, /data-graph-zoom="0\.75"/)
+  assert.match(page, /data-graph-reset/)
+  assert.match(page, /data-graph-zoom="1\.25"/)
+  assert.doesNotMatch(page, /data-graph-caption/)
+  assert.ok(payload)
+
+  const graph = JSON.parse(payload)
+  assert.ok(graph.nodes.length > 0)
+  assert.ok(graph.edges.length > 0)
+  assert.deepEqual(
+    graph.edges.find(
+      (edge: { source: string; target: string }) =>
+        edge.source === "go/building-proxies" &&
+        edge.target === "go/http-handlers",
+    ),
+    { source: "go/building-proxies", target: "go/http-handlers" },
+  )
+  assert.ok(
+    graph.nodes.some(
+      (node: { href: string; title: string }) =>
+        node.href === "/garden/go/http-handlers" &&
+        node.title === "HTTP handlers",
+    ),
+  )
+  assert.ok(
+    graph.nodes.every(
+      (node: { id: string }) => !node.id.startsWith("_drafts/"),
+    ),
+  )
 })
 
 test("renders recently tended posts in date order", async () => {
@@ -25,6 +68,7 @@ test("renders recently tended posts in date order", async () => {
     landing.indexOf('id="recent-posts"') <
       landing.indexOf('class="garden-about garden-prose"'),
   )
+  assert.match(landing, /href="\/garden\/all"[^>]*>All<\/a>/)
 
   const items = [...recent.matchAll(/<li\b[^>]*>([\s\S]*?)<\/li>/g)].map(
     (match) => match[1],
