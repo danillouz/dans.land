@@ -44,7 +44,7 @@ const structuredData = {
 ---
 
 <Page
-  title="About Daniël Illouz"
+  title="Daniël Illouz"
   share={{
     description,
     openGraphType: "profile",
@@ -96,7 +96,7 @@ const structuredData = {
   </Intro>
 
   <div class="profile-copy">
-    <p>Hi, I'm Daniël Illouz.</p>
+    <p>Hi, I'm Dan.</p>
 
     <p>I used to fly commercial jets, but moved into software in 2012.</p>
 
@@ -125,7 +125,7 @@ const structuredData = {
     </figure>
 
     <aside class="placard" aria-labelledby="portrait-title">
-      <h2 id="portrait-title">Daniël and Silvester Stallion</h2>
+      <h2 id="portrait-title">Daniël Illouz and Silvester Stallion</h2>
 
       <p class="placard-medium">Tokens on pixels</p>
 
@@ -136,7 +136,7 @@ const structuredData = {
 
       <p>
         Of noble polyester lineage, Sil was famed for his blistering top speed
-        of 0 km/h and was bested only by stairs.
+        of 0 km/h and rumored to be bested only by stairs.
       </p>
 
       <p>
@@ -157,6 +157,8 @@ const structuredData = {
   }
 
   .portrait-exhibit {
+    --placard-width: 23rem;
+
     display: grid;
     gap: 2rem;
     align-items: center;
@@ -179,7 +181,7 @@ const structuredData = {
 
   .placard {
     box-sizing: border-box;
-    width: min(100%, 20rem);
+    width: min(100%, var(--placard-width));
     justify-self: center;
     padding: 1.5rem;
     border: 1px solid rgb(var(--color-subtle) / 0.45);
@@ -216,7 +218,7 @@ const structuredData = {
   @media (min-width: 800px) {
     .portrait-exhibit {
       width: min(60rem, calc(100vw - 2.5rem));
-      grid-template-columns: minmax(0, 1fr) 20rem;
+      grid-template-columns: minmax(0, 1fr) var(--placard-width);
       align-self: center;
     }
   }

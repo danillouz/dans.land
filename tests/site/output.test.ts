@@ -24,7 +24,7 @@ const pages = [
   },
   {
     path: "dist/about.html",
-    title: "About Daniël Illouz",
+    title: "Daniël Illouz",
     description:
       "Daniël Illouz is a backend engineer at Framer specializing in Go, high-performance backend systems, networking, and large-scale web infrastructure.",
     canonical: "https://dans.land/about",
