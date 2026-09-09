@@ -151,6 +151,11 @@ test("renders a heading rail for longer posts", async () => {
   assert.match(article, /data-toc-link="handler--servemux"/)
   assert.match(article, /data-toc-link="mentioned-in"/)
   assert.match(footnoteArticle, /data-toc-link="footnote-label"/)
+  assert.match(footnoteArticle, /<h2 id="footnote-label">/)
+  assert.doesNotMatch(
+    footnoteArticle,
+    /<h2 class="sr-only" id="footnote-label">/,
+  )
   assert.doesNotMatch(shortArticle, /<nav class="toc-rail"/)
 })
 
@@ -202,11 +207,13 @@ test("renders Mermaid diagrams only on pages that use them", async () => {
 })
 
 test("renders backlinks from the shared content index", async () => {
-  const [article, comments, audioTranscoding] = await Promise.all([
-    readFile("dist/garden/low-latency-high-availability.html", "utf8"),
-    readFile("dist/garden/go/comments.html", "utf8"),
-    readFile("dist/garden/lambda/audio-transcoding.html", "utf8"),
-  ])
+  const [article, articleWithFootnotes, comments, audioTranscoding] =
+    await Promise.all([
+      readFile("dist/garden/low-latency-high-availability.html", "utf8"),
+      readFile("dist/garden/go/http-handlers.html", "utf8"),
+      readFile("dist/garden/go/comments.html", "utf8"),
+      readFile("dist/garden/lambda/audio-transcoding.html", "utf8"),
+    ])
   assert.match(
     article,
     /<h2 id="mentioned-in"[^>]*><a class="heading-link" href="#mentioned-in"[^>]*>Mentioned in<\/a><\/h2>/,
@@ -220,6 +227,10 @@ test("renders backlinks from the shared content index", async () => {
     /rel="canonical" href="https:\/\/dans\.land\/garden\/low-latency-high-availability"/,
   )
   assert.doesNotMatch(article, /Part of/)
+  assert.match(
+    articleWithFootnotes,
+    /class="backlinks backlinks--after-footnotes"/,
+  )
   assert.doesNotMatch(comments, /<section class="backlinks"/)
   assert.doesNotMatch(audioTranscoding, /<section class="backlinks"/)
   assert.match(comments, /class="wikilink" href="#lists"/)

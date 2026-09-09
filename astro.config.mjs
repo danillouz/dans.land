@@ -27,6 +27,8 @@ export default defineConfig({
   ],
   markdown: {
     processor: unified({
+      // Keep the generated "Footnotes" heading visible.
+      remarkRehype: { footnoteLabelProperties: {} },
       remarkPlugins: [
         remarkWikiLink,
         [remarkGardenLinks, { gardenRoot }],

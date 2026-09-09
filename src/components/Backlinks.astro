@@ -6,14 +6,21 @@ interface Backlink {
 
 interface Props {
   backlinks: Backlink[]
+  followsFootnotes?: boolean
 }
 
-const { backlinks } = Astro.props
+const { backlinks, followsFootnotes = false } = Astro.props
 ---
 
 {
   backlinks.length > 0 && (
-    <section class="backlinks" aria-labelledby="mentioned-in">
+    <section
+      class:list={[
+        "backlinks",
+        { "backlinks--after-footnotes": followsFootnotes },
+      ]}
+      aria-labelledby="mentioned-in"
+    >
       <h2 id="mentioned-in">
         <a class="heading-link" href="#mentioned-in">
           Mentioned in
@@ -42,6 +49,12 @@ const { backlinks } = Astro.props
 
   .backlinks h2 {
     margin-top: 0;
+  }
+
+  .backlinks--after-footnotes {
+    margin-top: 3rem;
+    padding-top: 0;
+    border-top: 0;
   }
 
   .backlinks ul {
