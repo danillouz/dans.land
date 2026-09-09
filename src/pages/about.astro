@@ -129,8 +129,6 @@ const structuredData = {
     <aside class="placard" aria-labelledby="portrait-title">
       <h2 id="portrait-title">Daniël Illouz and Silvester Stallion</h2>
 
-      <p class="placard-medium">Tokens on pixels</p>
-
       <p>
         Painted at the height of his reign, this portrait shows the High Warden
         with his faithful warhorse.
@@ -159,7 +157,7 @@ const structuredData = {
   }
 
   .portrait-exhibit {
-    --placard-width: 23rem;
+    --placard-width: 18rem;
 
     display: grid;
     gap: 2rem;
@@ -196,25 +194,16 @@ const structuredData = {
     line-height: 1.5rem;
   }
 
-  .placard p {
-    margin: 1rem 0 0;
-  }
-
-  .placard .placard-medium {
-    margin-top: 0.25rem;
-    color: rgb(var(--color-caption));
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-
-  .placard .placard-medium::after {
+  .placard h2::after {
     content: "";
     display: block;
     width: 3rem;
     margin-top: 1rem;
     border-top: 2px solid rgb(var(--color-iris) / 0.75);
+  }
+
+  .placard p {
+    margin: 1rem 0 0;
   }
 
   @media (min-width: 800px) {

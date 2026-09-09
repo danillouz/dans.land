@@ -1,4 +1,5 @@
 :root {
+  --garden-divider-spacing: 3rem;
   --garden-radius: 0.25rem;
 }
 
@@ -240,8 +241,8 @@ h3 {
 }
 
 .garden-prose .footnotes {
-  margin-top: 4rem;
-  padding-top: 2rem;
+  margin-top: var(--garden-divider-spacing);
+  padding-top: var(--garden-divider-spacing);
   border-top: 1px solid rgb(var(--garden-border));
 }
 
