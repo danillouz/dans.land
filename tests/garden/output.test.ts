@@ -126,7 +126,7 @@ test("renders full-post previews for garden links and backlinks", async () => {
     /class="garden-prose post-content"[^>]*data-link-preview-content/,
   )
   assert.match(article, /data-link-preview-popover/)
-  assert.match(article, /fetch\(/)
+  assert.match(article, /data-link-preview-summary/)
   assert.match(backlinks, /class="backlinks"[\s\S]*?data-garden-link/)
 })
 
@@ -394,6 +394,21 @@ test("emits every article image through Astro's asset pipeline", async () => {
     [...page.matchAll(/<img[^>]+src="([^"]+)"/g)].map((match) => match[1]),
   )
   assert.equal(sources.length, expectedImageCount)
+  for (const page of pages) {
+    for (const [image] of page.matchAll(/<img[^>]+>/g)) {
+      assert.match(
+        image,
+        /sizes="min\(calc\(70ch - 80px\), calc\(100vw - 2.5rem - 80px\)\)"/,
+      )
+      const srcset = image.match(/srcset="([^"]+)"/)?.[1]
+      assert.ok(srcset, "Article images need responsive candidates")
+      for (const candidate of srcset.split(",")) {
+        const [path, width] = candidate.trim().split(/\s+/)
+        assert.match(width, /^\d+w$/)
+        await readFile(`dist${path}`)
+      }
+    }
+  }
   for (const source of sources) {
     assert.match(source, /^\/assets\/.+\.(?:avif|png|webp)$/)
     await readFile(`dist${source}`)

@@ -118,6 +118,8 @@ const structuredData = {
       <Picture
         src={portrait}
         formats={["avif", "webp"]}
+        widths={[320, 480, 560, 672, 960, portrait.width]}
+        sizes="(min-width: 800px) min(35rem, calc(100vw - 27.5rem)), min(70ch, calc(100vw - 2.5rem))"
         class="portrait-image"
         alt="Painting of Daniël Illouz in armor riding Silvester Stallion, a toy horse"
         priority

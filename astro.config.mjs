@@ -19,6 +19,10 @@ const gardenRoot = fileURLToPath(new URL("./data/garden", import.meta.url))
 export default defineConfig({
   site: "https://dans.land",
   trailingSlash: "never",
+  image: {
+    layout: "constrained",
+    breakpoints: [320, 480, 672, 960, 1344],
+  },
   integrations: [
     expressiveCode(),
     sitemap({

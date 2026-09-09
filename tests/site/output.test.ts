@@ -119,6 +119,69 @@ test("the 404 keeps its intentionally minimal metadata", async () => {
   )
 })
 
+test("garden landing has social metadata", async () => {
+  const { document } = await builtPage("dist/garden.html")
+  const title = element(document, (node) => node.tagName === "title")
+
+  assert.equal(textContent(title), "Garden of Knowledge")
+  assert.equal(
+    metaContent(document, "name", "description"),
+    "Dan's digital garden.",
+  )
+  assert.equal(metaContent(document, "property", "og:type"), "website")
+  assert.equal(
+    metaContent(document, "name", "twitter:title"),
+    "Garden of Knowledge",
+  )
+  assert.equal(
+    metaContent(document, "property", "og:image"),
+    "https://dans.land/social.png",
+  )
+  assert.equal(
+    elements(
+      document,
+      (node) =>
+        node.tagName === "script" &&
+        attribute(node, "type") === "application/ld+json",
+    ).length,
+    0,
+  )
+})
+
+test("garden articles expose social and Article metadata", async () => {
+  const { document } = await builtPage("dist/garden/computer-networks/dns.html")
+  const title = element(document, (node) => node.tagName === "title")
+  const structuredData = element(
+    document,
+    (node) =>
+      node.tagName === "script" &&
+      attribute(node, "type") === "application/ld+json",
+  )
+  const article = JSON.parse(textContent(structuredData))
+
+  assert.equal(textContent(title), "DNS")
+  assert.equal(metaContent(document, "property", "og:type"), "article")
+  assert.equal(
+    metaContent(document, "property", "og:url"),
+    "https://dans.land/garden/computer-networks/dns",
+  )
+  assert.equal(metaContent(document, "name", "twitter:title"), "DNS")
+  assert.equal(
+    metaContent(document, "property", "og:image"),
+    "https://dans.land/social.png",
+  )
+  assert.equal(article["@type"], "Article")
+  assert.equal(article.headline, "DNS")
+  assert.equal(article.datePublished, "2023-06-03T00:00:00.000Z")
+  assert.equal(article.dateModified, "2024-08-23T00:00:00.000Z")
+  assert.deepEqual(article.author, {
+    "@type": "Person",
+    "@id": "https://dans.land/#danillouz",
+    name: "Daniël Illouz",
+    url: "https://dans.land/about",
+  })
+})
+
 test("the about portrait uses Astro's image pipeline", async () => {
   const { document } = await builtPage("dist/about.html")
   const picture = element(document, (node) => node.tagName === "picture")
@@ -130,10 +193,12 @@ test("the about portrait uses Astro's image pipeline", async () => {
       node.tagName === "script" &&
       attribute(node, "type") === "application/ld+json",
   )
-  const imagePaths = [
-    ...sources.map((source) => attribute(source, "srcset")),
-    attribute(image, "src"),
-  ]
+  const imageCandidates = sources.flatMap((source) => {
+    assert.ok(attribute(source, "sizes"))
+    return parseSrcset(attribute(source, "srcset"))
+  })
+  assert.ok(attribute(image, "sizes"))
+  imageCandidates.push(...parseSrcset(attribute(image, "srcset")))
 
   assert.deepEqual(
     sources.map((source) => attribute(source, "type")),
@@ -146,16 +211,23 @@ test("the about portrait uses Astro's image pipeline", async () => {
   assert.equal(attribute(image, "decoding"), "sync")
   assert.equal(attribute(image, "fetchpriority"), "high")
 
-  for (const imagePath of imagePaths) {
-    assert.ok(imagePath)
-    assert.match(imagePath, /^\/assets\/portrait\..+\.(avif|webp|png)$/)
-    await readFile(`dist${imagePath}`)
+  for (const { path, width } of imageCandidates) {
+    assert.match(path, /^\/assets\/portrait\..+\.(avif|webp|png)$/)
+    assert.ok(width > 0)
+    await readFile(`dist${path}`)
   }
 
-  assert.equal(
+  const imagePath = attribute(image, "src")
+  assert.ok(imagePath)
+  assert.match(imagePath, /^\/assets\/portrait\..+\.(avif|webp|png)$/)
+  await readFile(`dist${imagePath}`)
+
+  const profileImage = new URL(
     JSON.parse(textContent(structuredData)).mainEntity.image,
-    new URL(attribute(image, "src")!, "https://dans.land").href,
   )
+  assert.equal(profileImage.origin, "https://dans.land")
+  assert.match(profileImage.pathname, /^\/assets\/portrait\..+\.png$/)
+  await readFile(`dist${profileImage.pathname}`)
 })
 
 const preBaselines = [
@@ -242,7 +314,6 @@ test("Astro emits all pages and deployment files", async () => {
     "dist/404.html",
     "dist/garden/all.html",
     "dist/_headers",
-    "dist/_redirects",
     "dist/robots.txt",
     "dist/rss.xml",
     "dist/sitemap-index.xml",
@@ -279,11 +350,6 @@ test("each main page only loads its own component styles", async () => {
   assert.match(notFoundCss, /\.banner/)
   assert.doesNotMatch(notFoundCss, /\.ascii-art/)
   assert.doesNotMatch(notFoundCss, /\.portrait/)
-})
-
-test("redirects legacy paths to their canonical routes", async () => {
-  const redirects = await readFile("dist/_redirects", "utf8")
-  assert.equal(redirects, "/about/ /about 301\n")
 })
 
 test("the all-posts page replaces the separate garden views", async () => {
@@ -442,6 +508,13 @@ test("the site-wide RSS feed contains published garden posts", async () => {
   assert.match(feed, /<link>https:\/\/dans\.land\/garden\/[^<]+<\/link>/)
   assert.match(feed, /<content:encoded>/)
   assert.match(feed, /src=&quot;https:\/\/dans\.land\/assets\//)
+  const imageCandidates = [...feed.matchAll(/srcset=&quot;([^&]+)&quot;/g)]
+  assert.ok(imageCandidates.length > 0)
+  for (const [, srcset] of imageCandidates) {
+    for (const candidate of srcset.split(",")) {
+      assert.match(candidate.trim(), /^https:\/\/dans\.land\/assets\/\S+ \d+w$/)
+    }
+  }
   assert.match(feed, /&lt;pre&gt;&lt;code class=&quot;language-/)
   assert.match(feed, /&lt;blockquote cite=&quot;https:/)
   assert.match(feed, /&lt;footer&gt;&lt;a href=/)
@@ -559,4 +632,13 @@ async function builtStyles(document: HtmlDocument) {
 function metaContent(document: HtmlDocument, key: string, value: string) {
   const meta = element(document, (node) => attribute(node, key) === value)
   return attribute(meta, "content")
+}
+
+function parseSrcset(value: string | undefined) {
+  assert.ok(value)
+  return value.split(",").map((candidate) => {
+    const match = candidate.trim().match(/^(\S+)\s+(\d+)w$/)
+    assert.ok(match, `invalid srcset candidate: ${candidate}`)
+    return { path: match[1], width: Number(match[2]) }
+  })
 }

@@ -4,8 +4,16 @@
   aria-hidden="true"
   hidden
 >
-  <div class="link-preview-inner" data-link-preview-inner inert></div>
+  <div
+    class="link-preview-inner"
+    data-link-preview-inner
+    inert
+    aria-hidden="true"
+  >
+  </div>
 </div>
+<span class="sr-only" data-link-preview-summary id="link-preview-summary"
+></span>
 
 <style>
   .link-preview {
@@ -88,6 +96,9 @@
   const previewInner = preview?.querySelector<HTMLElement>(
     "[data-link-preview-inner]",
   )
+  const previewSummary = document.querySelector<HTMLElement>(
+    "[data-link-preview-summary]",
+  )
   const links =
     document.querySelectorAll<HTMLAnchorElement>("[data-garden-link]")
   const wideViewport = window.matchMedia("(min-width: 48rem)")
@@ -97,8 +108,12 @@
     const cache = new Map<string, Promise<HTMLTemplateElement | null>>()
     let activeLink: HTMLAnchorElement | null = null
     let hideTimer = 0
+    let intentTimer = 0
     let positionFrame = 0
     let requestVersion = 0
+    let dismissedLink: HTMLAnchorElement | null = null
+    let describedLink: HTMLAnchorElement | null = null
+    let describedLinkAttribute: string | null = null
 
     const normalizeUrlAttribute = (
       element: Element,
@@ -267,25 +282,74 @@
       hideTimer = 0
     }
 
+    const cancelIntent = () => {
+      window.clearTimeout(intentTimer)
+      intentTimer = 0
+    }
+
+    const clearSummary = () => {
+      if (describedLink) {
+        if (describedLinkAttribute === null) {
+          describedLink.removeAttribute("aria-describedby")
+        } else {
+          describedLink.setAttribute("aria-describedby", describedLinkAttribute)
+        }
+      }
+      describedLink = null
+      describedLinkAttribute = null
+      if (previewSummary) previewSummary.textContent = ""
+    }
+
+    const setSummary = (
+      link: HTMLAnchorElement,
+      template: HTMLTemplateElement,
+    ) => {
+      if (!previewSummary) return
+
+      clearSummary()
+      const title = template.content
+        .querySelector<HTMLElement>(".post-header h1")
+        ?.textContent?.trim()
+      const description = template.content
+        .querySelector<HTMLElement>(".post-description")
+        ?.textContent?.trim()
+      const summary = [title, description].filter(Boolean).join(". ")
+      if (!summary) return
+
+      describedLink = link
+      describedLinkAttribute = link.getAttribute("aria-describedby")
+      const describedBy = [describedLinkAttribute, previewSummary.id]
+        .filter(Boolean)
+        .join(" ")
+      link.setAttribute("aria-describedby", describedBy)
+      previewSummary.textContent = `Preview: ${summary}`
+    }
+
     const hidePreview = () => {
       cancelHide()
+      cancelIntent()
       requestVersion += 1
       activeLink = null
       preview.removeAttribute("data-visible")
       preview.hidden = true
       previewInner.replaceChildren()
+      clearSummary()
     }
 
     const scheduleHide = () => {
       cancelHide()
       hideTimer = window.setTimeout(() => {
-        if (!activeLink?.matches(":hover") && !preview.matches(":hover")) {
+        if (
+          !activeLink?.matches(":hover") &&
+          activeLink !== document.activeElement &&
+          !preview.matches(":hover")
+        ) {
           hidePreview()
         }
       }, 100)
     }
 
-    const showPreview = async (link: HTMLAnchorElement) => {
+    const showPreview = async (link: HTMLAnchorElement, fromFocus = false) => {
       if (!wideViewport.matches) {
         return
       }
@@ -311,6 +375,7 @@
         return
       }
 
+      if (fromFocus) setSummary(link, template)
       previewInner.replaceChildren(template.content.cloneNode(true))
       preview.hidden = false
       preview.scrollTop = 0
@@ -328,15 +393,54 @@
       preview.setAttribute("data-visible", "")
     }
 
+    const schedulePreview = (link: HTMLAnchorElement) => {
+      if (!wideViewport.matches || dismissedLink === link) return
+
+      cancelHide()
+      cancelIntent()
+      if (describedLink && describedLink !== link) clearSummary()
+      activeLink = link
+      requestVersion += 1
+      intentTimer = window.setTimeout(() => {
+        intentTimer = 0
+        void showPreview(link)
+      }, 200)
+    }
+
     for (const link of links) {
       link.addEventListener("pointerenter", (event) => {
-        if (event.pointerType !== "touch") void showPreview(link)
+        if (event.pointerType !== "touch") schedulePreview(link)
       })
-      link.addEventListener("pointerleave", scheduleHide)
+      link.addEventListener("pointerleave", () => {
+        cancelIntent()
+        if (dismissedLink === link) dismissedLink = null
+        scheduleHide()
+      })
+      link.addEventListener("focusin", () => {
+        dismissedLink = null
+        cancelIntent()
+        void showPreview(link, true)
+      })
+      link.addEventListener("focusout", (event) => {
+        if (dismissedLink === link) dismissedLink = null
+        const nextTarget = event.relatedTarget
+        if (
+          nextTarget instanceof Node &&
+          (link.contains(nextTarget) || preview.contains(nextTarget))
+        ) {
+          return
+        }
+        scheduleHide()
+      })
     }
 
     preview.addEventListener("pointerenter", cancelHide)
     preview.addEventListener("pointerleave", scheduleHide)
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape" || !activeLink) return
+      dismissedLink = activeLink
+      hidePreview()
+    })
     window.addEventListener("scroll", schedulePosition, { passive: true })
     window.addEventListener("resize", schedulePosition)
     wideViewport.addEventListener("change", () => {

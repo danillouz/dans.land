@@ -1,10 +1,16 @@
 <script>
-  import mermaid from "mermaid"
-
   const diagrams = document.querySelectorAll<HTMLElement>("pre.mermaid")
+  let rendering: Promise<void> | undefined
 
-  if (diagrams.length > 0) {
-    await document.fonts.ready
+  function renderDiagrams() {
+    return (rendering ??= render())
+  }
+
+  async function render() {
+    const [{ default: mermaid }] = await Promise.all([
+      import("mermaid"),
+      document.fonts.ready,
+    ])
 
     const styles = getComputedStyle(document.documentElement)
     const color = (name: string) => {
@@ -32,5 +38,19 @@
     })
 
     await mermaid.run({ nodes: diagrams })
+  }
+
+  if (diagrams.length > 0) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return
+        observer.disconnect()
+        void renderDiagrams().catch((error) => {
+          console.error("Could not render Mermaid diagrams", error)
+        })
+      },
+      { rootMargin: "300px" },
+    )
+    diagrams.forEach((diagram) => observer.observe(diagram))
   }
 </script>

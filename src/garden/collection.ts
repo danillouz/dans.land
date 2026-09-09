@@ -30,5 +30,6 @@ export async function renderGardenEntry(entry: CollectionEntry<"garden">) {
     ...rendered,
     graph,
     readingTime,
+    hasMermaid: rendered.remarkPluginFrontmatter.hasMermaid === true,
   }
 }

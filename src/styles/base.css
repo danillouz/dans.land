@@ -7,6 +7,7 @@
   --focus: var(--color-focus);
   --nav-link: var(--color-text);
   --banner-accent: var(--color-text);
+  --shell-muted: var(--color-caption);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -26,6 +27,13 @@ body {
   padding: 0;
   font-family: var(--font-body);
   font-size: 1rem;
+  background-color: rgb(var(--color-surface));
+  color: rgb(var(--color-text));
+}
+
+a {
+  color: rgb(var(--color-link));
+  text-underline-offset: 0.25em;
 }
 
 :is(code, kbd, pre, samp) {

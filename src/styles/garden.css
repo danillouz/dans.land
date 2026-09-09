@@ -1,5 +1,4 @@
 :root {
-  --shell-muted: var(--color-subtle);
   --garden-radius: 0.25rem;
 }
 
@@ -8,14 +7,7 @@
 }
 
 body {
-  background: rgb(var(--color-surface));
-  color: rgb(var(--color-text));
   line-height: 1.65;
-}
-
-a {
-  color: rgb(var(--color-link));
-  text-underline-offset: 0.25em;
 }
 
 a[data-garden-link] {
@@ -105,11 +97,12 @@ h3 {
 .garden-prose .callout-title {
   margin: 0;
   padding: 0;
-  color: rgb(var(--garden-callout));
+  color: rgb(var(--color-text));
   font-weight: 700;
 }
 
 .garden-prose .callout-icon {
+  color: rgb(var(--garden-callout));
   display: inline-block;
   width: 1rem;
   margin-inline-end: 0.125rem;

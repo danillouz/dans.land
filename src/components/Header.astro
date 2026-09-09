@@ -57,7 +57,14 @@ function current(href: string) {
 
   @media (max-width: 40rem) {
     nav {
-      flex-direction: column;
+      flex-wrap: wrap;
+      gap: 0.25rem 1.5rem;
+    }
+
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 2.75rem;
     }
   }
 </style>

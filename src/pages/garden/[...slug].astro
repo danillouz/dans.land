@@ -25,8 +25,8 @@ export async function getStaticPaths() {
 }
 
 const { entry } = Astro.props
-const { Content, graph, headings, readingTime } = await renderGardenEntry(entry)
-const hasMermaid = /(^|\n)```mermaid(?:\s|$)/.test(entry.body ?? "")
+const { Content, graph, headings, readingTime, hasMermaid } =
+  await renderGardenEntry(entry)
 const hasFootnotes = headings.some(({ slug }) => slug === "footnote-label")
 const created = entry.data.created
 const updated = entry.data.updated
@@ -45,7 +45,11 @@ const dateFormatter = new Intl.DateTimeFormat("en-GB", {
 })
 ---
 
-<Garden title={entry.data.title} description={entry.data.description}>
+<Garden
+  title={entry.data.title}
+  description={entry.data.description}
+  article={{ created, updated }}
+>
   <article>
     <header class="post-header" data-link-preview-content>
       <h1>{entry.data.title}</h1>

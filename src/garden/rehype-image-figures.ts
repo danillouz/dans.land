@@ -39,8 +39,14 @@ function wrapImages(node: HastNode) {
   }
 
   node.children = node.children.map((child) => {
+    wrapImages(child)
     const figure = imageCaption(child)
     if (figure) {
+      figure.image.properties ??= {}
+      // The reading column is 70ch with 1.25rem page gutters; figures retain
+      // their native 40px margins on each side.
+      figure.image.properties.sizes ??=
+        "min(calc(70ch - 80px), calc(100vw - 2.5rem - 80px))"
       return {
         type: "element",
         tagName: "figure",
@@ -57,7 +63,6 @@ function wrapImages(node: HastNode) {
       }
     }
 
-    wrapImages(child)
     return child
   })
 }

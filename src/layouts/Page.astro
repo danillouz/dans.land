@@ -4,6 +4,7 @@ import { canonicalUrl } from "../urls"
 
 import Base from "./Base.astro"
 import Frame from "../components/Frame.astro"
+import ShareMetadata from "../components/ShareMetadata.astro"
 
 interface ShareMetadata {
   description: string
@@ -20,12 +21,6 @@ interface Props {
 const { title, share, robots } = Astro.props
 
 const canonical = share ? canonicalUrl(Astro.url, Astro.site) : undefined
-const socialImage = new URL("/social.png", Astro.site)
-const socialImageAlt =
-  "Postcard reading “I finally visited Dan’s Land! The garden was my favorite. Wish you were here…” beside castle and cinnamon-bun stamps."
-const structuredData = share
-  ? JSON.stringify(share.structuredData).replaceAll("<", "\\u003c")
-  : undefined
 ---
 
 <Base
@@ -37,34 +32,7 @@ const structuredData = share
   <Fragment slot="head">
     {
       share && canonical && (
-        <>
-          <meta property="og:type" content={share.openGraphType} />
-          <meta property="og:url" content={canonical} />
-          <meta property="og:title" content={title} />
-          <meta property="og:description" content={share.description} />
-          <meta property="og:site_name" content="Dan's Land" />
-          <meta property="og:image" content={socialImage} />
-          <meta property="og:image:type" content="image/png" />
-          <meta property="og:image:width" content="1200" />
-          <meta property="og:image:height" content="630" />
-          <meta property="og:image:alt" content={socialImageAlt} />
-
-          <meta name="twitter:card" content="summary_large_image" />
-          <meta name="twitter:title" content={title} />
-          <meta name="twitter:description" content={share.description} />
-          <meta name="twitter:image" content={socialImage} />
-          <meta name="twitter:image:alt" content={socialImageAlt} />
-        </>
-      )
-    }
-
-    {
-      share && structuredData && (
-        <script
-          is:inline
-          type="application/ld+json"
-          set:html={structuredData}
-        />
+        <ShareMetadata {...share} title={title} canonical={canonical} />
       )
     }
   </Fragment>

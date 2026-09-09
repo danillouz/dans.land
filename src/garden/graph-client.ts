@@ -1,0 +1,259 @@
+/**
+ * Keep D3 and the graph renderer in a separate module so Graph.astro can load
+ * them only when the map has a nonzero width. On mobile, the map is hidden in
+ * favor of the static tree, so downloading D3 and running its layout is wasted
+ * work. Graph.astro watches for size changes to load this module if the map
+ * becomes visible and redraws it when its container is resized.
+ */
+
+import type { GardenGraphData, GardenGraphNode } from "./graph"
+import {
+  forceCenter,
+  forceCollide,
+  forceLink,
+  forceManyBody,
+  forceSimulation,
+  forceX,
+  forceY,
+  type SimulationLinkDatum,
+  type SimulationNodeDatum,
+} from "d3-force"
+import { select } from "d3-selection"
+import { zoom, zoomIdentity, type D3ZoomEvent } from "d3-zoom"
+
+interface GraphNode extends GardenGraphNode, SimulationNodeDatum {}
+
+interface GraphEdge extends SimulationLinkDatum<GraphNode> {
+  source: string | GraphNode
+  target: string | GraphNode
+}
+
+type PositionedGraphEdge = GraphEdge & {
+  source: GraphNode
+  target: GraphNode
+}
+
+function nodeRadius(connections: number) {
+  if (connections === 0) {
+    return 5
+  }
+
+  return 4 + Math.min(Math.sqrt(connections) * 2.25, 6)
+}
+
+function collisionRadius(node: GraphNode) {
+  return Math.max(
+    nodeRadius(node.connections) + 11,
+    Math.min(115, 16 + node.title.length * 3.4),
+  )
+}
+
+function labelHalfWidth(node: GraphNode) {
+  return node.title.length * 3.75
+}
+
+function graphBounds(nodes: GraphNode[]) {
+  if (nodes.length === 0) {
+    return { maxX: 0, maxY: 0, minX: 0, minY: 0 }
+  }
+
+  const bounds = {
+    maxX: -Infinity,
+    maxY: -Infinity,
+    minX: Infinity,
+    minY: Infinity,
+  }
+
+  for (const node of nodes) {
+    const x = node.x ?? 0
+    const y = node.y ?? 0
+    const radius = nodeRadius(node.connections)
+    const halfLabel = labelHalfWidth(node)
+    bounds.maxX = Math.max(bounds.maxX, x + halfLabel + 12)
+    bounds.maxY = Math.max(bounds.maxY, y + radius + 28)
+    bounds.minX = Math.min(bounds.minX, x - halfLabel - 12)
+    bounds.minY = Math.min(bounds.minY, y - radius - 12)
+  }
+
+  return bounds
+}
+
+export function drawGraph(root: HTMLElement, graph: GardenGraphData) {
+  const svg = root.querySelector("svg")
+  if (!svg) return
+
+  const width = Math.round(root.getBoundingClientRect().width)
+  if (!width) return
+
+  const height = svg.height.baseVal.value
+  const nodes: GraphNode[] = graph.nodes.map((node) => ({ ...node }))
+  const edges: GraphEdge[] = graph.edges.map((edge) => ({ ...edge }))
+  const layoutScale = Math.max(1, Math.sqrt(nodes.length / 25))
+  const layoutWidth = width * layoutScale
+  const layoutHeight = height * layoutScale
+  const neighbours = new Map(
+    nodes.map((node) => [node.id, new Set<string>()]),
+  )
+
+  for (const edge of graph.edges) {
+    neighbours.get(edge.source)?.add(edge.target)
+    neighbours.get(edge.target)?.add(edge.source)
+  }
+
+  forceSimulation(nodes)
+    .force(
+      "link",
+      forceLink<GraphNode, GraphEdge>(edges)
+        .id((node) => node.id)
+        .distance(135)
+        .strength(0.55),
+    )
+    .force("charge", forceManyBody().strength(-215))
+    .force("center", forceCenter(layoutWidth / 2, layoutHeight / 2))
+    .force("x", forceX(layoutWidth / 2).strength(0.035))
+    .force("y", forceY(layoutHeight / 2).strength(0.05))
+    .force(
+      "collide",
+      forceCollide<GraphNode>().radius(collisionRadius).iterations(3),
+    )
+    .stop()
+    .tick(320)
+
+  const positionedEdges = edges as PositionedGraphEdge[]
+
+  for (const node of nodes) {
+    const horizontalMargin = Math.max(40, labelHalfWidth(node) + 12)
+    const bottomMargin = nodeRadius(node.connections) + 40
+    node.x = Math.min(
+      Math.max(node.x ?? layoutWidth / 2, horizontalMargin),
+      layoutWidth - horizontalMargin,
+    )
+    node.y = Math.min(
+      Math.max(node.y ?? layoutHeight / 2, 40),
+      layoutHeight - bottomMargin,
+    )
+  }
+
+  const svgSelection = select<SVGSVGElement, unknown>(svg)
+  svgSelection
+    .attr("viewBox", `0 0 ${width} ${height}`)
+    .attr("height", height)
+    .select(".graph-viewport")
+    .remove()
+
+  const viewport = svgSelection.append("g").attr("class", "graph-viewport")
+  const edgeElements = viewport
+    .append("g")
+    .attr("class", "graph-edges")
+    .selectAll<SVGLineElement, PositionedGraphEdge>("line")
+    .data(positionedEdges)
+    .join("line")
+    .attr("x1", (edge) => edge.source.x ?? 0)
+    .attr("y1", (edge) => edge.source.y ?? 0)
+    .attr("x2", (edge) => edge.target.x ?? 0)
+    .attr("y2", (edge) => edge.target.y ?? 0)
+
+  function resetHighlight() {
+    nodeElements.attr("data-dimmed", null)
+    edgeElements.attr("data-connected", null).attr("data-dimmed", null)
+  }
+
+  function highlight(id: string) {
+    const adjacent = neighbours.get(id) ?? new Set<string>()
+    nodeElements.attr("data-dimmed", (node) =>
+      node.id !== id && !adjacent.has(node.id) ? "" : null,
+    )
+    edgeElements
+      .attr("data-connected", (edge) =>
+        edge.source.id === id || edge.target.id === id ? "" : null,
+      )
+      .attr("data-dimmed", (edge) =>
+        edge.source.id !== id && edge.target.id !== id ? "" : null,
+      )
+  }
+
+  const nodeElements = viewport
+    .append("g")
+    .attr("class", "graph-nodes")
+    .selectAll<SVGAElement, GraphNode>("a")
+    .data(nodes)
+    .join("a")
+    .attr("href", (node) => node.href)
+    .attr(
+      "aria-label",
+      (node) =>
+        `${node.title}, ${node.connections} ${node.connections === 1 ? "connection" : "connections"}`,
+    )
+    .attr("data-connected", (node) => (node.connections > 0 ? "" : null))
+    .on("pointerenter", (_, node) => highlight(node.id))
+    .on("pointerleave", resetHighlight)
+    .on("focus", (_, node) => highlight(node.id))
+    .on("blur", resetHighlight)
+
+  nodeElements
+    .append("circle")
+    .attr("class", "node-hit")
+    .attr("cx", (node) => node.x ?? 0)
+    .attr("cy", (node) => node.y ?? 0)
+    .attr("r", 16)
+  nodeElements
+    .append("circle")
+    .attr("cx", (node) => node.x ?? 0)
+    .attr("cy", (node) => node.y ?? 0)
+    .attr("r", (node) => nodeRadius(node.connections))
+  nodeElements
+    .append("text")
+    .attr("x", (node) => node.x ?? 0)
+    .attr("y", (node) => (node.y ?? 0) + nodeRadius(node.connections) + 14)
+    .attr("text-anchor", "middle")
+    .text((node) => node.title)
+
+  const bounds = graphBounds(nodes)
+  const fitPadding = 40
+  const contentWidth = Math.max(1, bounds.maxX - bounds.minX)
+  const contentHeight = Math.max(1, bounds.maxY - bounds.minY)
+  const fitScale = Math.min(
+    1,
+    (width - fitPadding * 2) / contentWidth,
+    (height - fitPadding * 2) / contentHeight,
+  )
+  const fitTransform = zoomIdentity
+    .translate(width / 2, height / 2)
+    .scale(fitScale)
+    .translate(
+      -(bounds.minX + bounds.maxX) / 2,
+      -(bounds.minY + bounds.maxY) / 2,
+    )
+  const minimumScale = fitScale * 0.6
+  const panMarginX = width / fitScale / 2
+  const panMarginY = height / fitScale / 2
+  const zoomBehaviour = zoom<SVGSVGElement, unknown>()
+    .scaleExtent([minimumScale, 4])
+    .extent([
+      [0, 0],
+      [width, height],
+    ])
+    .translateExtent([
+      [bounds.minX - panMarginX, bounds.minY - panMarginY],
+      [bounds.maxX + panMarginX, bounds.maxY + panMarginY],
+    ])
+    .clickDistance(5)
+    .on("zoom", (event: D3ZoomEvent<SVGSVGElement, unknown>) => {
+      viewport.attr("transform", event.transform.toString())
+    })
+
+  svgSelection.call(zoomBehaviour)
+  svgSelection.call(zoomBehaviour.transform, fitTransform)
+
+  const reset = root.querySelector<HTMLButtonElement>("[data-graph-reset]")
+  for (const button of root.querySelectorAll<HTMLButtonElement>(
+    "[data-graph-zoom]",
+  )) {
+    const factor = Number(button.dataset.graphZoom)
+    button.onclick = () => svgSelection.call(zoomBehaviour.scaleBy, factor)
+  }
+  if (reset) {
+    reset.onclick = () =>
+      svgSelection.call(zoomBehaviour.transform, fitTransform)
+  }
+}

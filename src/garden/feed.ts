@@ -78,6 +78,17 @@ function feedContent(html: string, base: URL) {
 
       if (isElement(node)) {
         removeEmptyAttribute(node, "srcset")
+        const srcset = node.attrs.find(
+          (candidate) => candidate.name === "srcset",
+        )
+        if (srcset) {
+          // Astro emits local image candidates with width descriptors.
+          srcset.value = srcset.value.replace(
+            /(^|,\s*)(\/[^\s,]+)/g,
+            (_match, separator, path) =>
+              `${separator}${new URL(path, base).href}`,
+          )
+        }
         absolutizeAttribute(node, "cite")
         absolutizeAttribute(node, "href")
         absolutizeAttribute(node, "src")

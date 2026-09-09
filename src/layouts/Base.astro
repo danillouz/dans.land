@@ -4,7 +4,6 @@ import "@fontsource/ia-writer-quattro/400.css"
 import "@fontsource/ia-writer-quattro/400-italic.css"
 import "@fontsource/ia-writer-quattro/700.css"
 import quattroRegular from "@fontsource/ia-writer-quattro/files/ia-writer-quattro-latin-400-normal.woff2?url"
-import quattroItalic from "@fontsource/ia-writer-quattro/files/ia-writer-quattro-latin-400-italic.woff2?url"
 import quattroBold from "@fontsource/ia-writer-quattro/files/ia-writer-quattro-latin-700-normal.woff2?url"
 
 interface Props {
@@ -24,6 +23,17 @@ const rssUrl = rssBase && new URL("/rss.xml", rssBase)
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta
+      name="theme-color"
+      content="#fffaf3"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#2a273f"
+      media="(prefers-color-scheme: dark)"
+    />
 
     <title>{title}</title>
 
@@ -51,13 +61,6 @@ const rssUrl = rssBase && new URL("/rss.xml", rssBase)
     <link
       rel="preload"
       href={quattroBold}
-      as="font"
-      type="font/woff2"
-      crossorigin="anonymous"
-    />
-    <link
-      rel="preload"
-      href={quattroItalic}
       as="font"
       type="font/woff2"
       crossorigin="anonymous"
