@@ -322,6 +322,30 @@ test("Astro emits all pages and deployment files", async () => {
   await Promise.all(paths.map((path) => readFile(path)))
 })
 
+test("article fonts and small styles are discoverable in the initial HTML", async () => {
+  const { document } = await builtPage("dist/garden/go/http-handlers.html")
+  const inlineStyles = elements(document, (node) => node.tagName === "style")
+    .map(textContent)
+    .join("\n")
+  const preloads = elements(
+    document,
+    (node) =>
+      node.tagName === "link" &&
+      attribute(node, "rel") === "preload" &&
+      attribute(node, "as") === "font",
+  )
+
+  for (const variant of ["400-normal", "400-italic", "700-normal"]) {
+    const font = preloads.find((node) =>
+      attribute(node, "href")?.includes(`latin-${variant}`),
+    )
+    assert.ok(font, `missing ${variant} font preload`)
+    assert.equal(attribute(font, "crossorigin"), "anonymous")
+    assert.ok(inlineStyles.includes(attribute(font, "href")!))
+  }
+  assert.match(inlineStyles, /\.post-description/)
+})
+
 test("each main page only loads its own component styles", async () => {
   const home = await builtPage("dist/index.html")
   const about = await builtPage("dist/about.html")

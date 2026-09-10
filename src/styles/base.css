@@ -103,8 +103,10 @@ a:focus-visible {
     --color-hll: 244 237 232;
     --color-hlm: 223 218 217;
     --color-hlh: 206 202 205;
-    --color-link: 172 88 113;
-    --color-caption: 116 112 142;
+    /* Readable love/subtle variants, targeting 4.6:1 on base and surface.
+       Derived with Expressive Code's contrast adjustment; palette stays intact. */
+    --color-link: 160 88 109;
+    --color-caption: 111 107 134;
     --color-focus: var(--color-pine);
     --banner-accent: var(--color-pine);
   }
@@ -128,8 +130,9 @@ a:focus-visible {
     --color-hll: 42 40 62;
     --color-hlm: 68 65 90;
     --color-hlh: 86 82 110;
+    /* Love already passes; only subtle needs the same contrast adjustment. */
     --color-link: var(--color-love);
-    --color-caption: 146 142 172;
+    --color-caption: 147 143 172;
     --color-focus: var(--color-gold);
     --banner-accent: var(--color-foam);
   }

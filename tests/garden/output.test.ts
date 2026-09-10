@@ -177,11 +177,11 @@ test("renders Obsidian callouts", async () => {
   assert.doesNotMatch(calloutArticle, /\[!note\]/i)
   assert.match(
     quotedArticle,
-    /<figure class="callout callout--quote" data-callout="quote">\s*<span aria-hidden="true" class="callout-icon">“<\/span>\s*<blockquote cite="https:\/\/docs\.aws\.amazon\.com\/lambda\/latest\/dg\/running-lambda-code\.html">/,
+    /<figure class="callout callout--quote" data-callout="quote">\s*<span aria-hidden="true" class="callout-icon">“<\/span>\s*<blockquote cite="https:\/\/docs\.aws\.amazon\.com\/lambda\/latest\/dg\/lambda-runtime-environment\.html">/,
   )
   assert.match(
     quotedArticle,
-    /<figcaption class="callout-citation"><cite><a href="https:\/\/docs\.aws\.amazon\.com\/lambda\/latest\/dg\/running-lambda-code\.html">https:\/\/docs\.aws\.amazon\.com\/lambda\/latest\/dg\/running-lambda-code\.html<\/a><\/cite><\/figcaption>/,
+    /<figcaption class="callout-citation"><cite><a href="https:\/\/docs\.aws\.amazon\.com\/lambda\/latest\/dg\/lambda-runtime-environment\.html">https:\/\/docs\.aws\.amazon\.com\/lambda\/latest\/dg\/lambda-runtime-environment\.html<\/a><\/cite><\/figcaption>/,
   )
   assert.match(
     denoQuoteArticle,
@@ -248,9 +248,6 @@ test("renders accessible, annotated Rosé Pine code blocks", async () => {
   const expressiveCodeStylesheet = assetNames.find((name) =>
     /^ec\..+\.css$/.test(name),
   )
-  const gardenStylesheet = assetNames.find((name) =>
-    /^Garden\..+\.css$/.test(name),
-  )
 
   assert.match(
     article,
@@ -273,10 +270,7 @@ test("renders accessible, annotated Rosé Pine code blocks", async () => {
     /<style>\s*\.expressive-code \.copy button \{\s*opacity: 0;/,
   )
   assert.ok(expressiveCodeStylesheet)
-  assert.ok(gardenStylesheet)
-
-  const gardenStyles = await readFile(`dist/assets/${gardenStylesheet}`, "utf8")
-  assert.match(gardenStyles, /\.frame:has\(pre:focus-visible\)/)
+  assert.match(article, /\.frame:has\(pre:focus-visible\)/)
 
   const styles = await readFile(
     `dist/assets/${expressiveCodeStylesheet}`,
@@ -350,7 +344,7 @@ test("keeps image-rich instructions in continuous ordered lists", async () => {
   assert.doesNotMatch(serverlessAuth, /<ol start=/)
   assert.match(
     eventLoop,
-    /<figcaption aria-hidden="true">State 19: the Promise callback is popped, leaving the stack and queue empty<\/figcaption>/,
+    /<figcaption aria-hidden="true">State 12: main has returned, its promise is fulfilled, and the timer promise is still pending<\/figcaption>/,
   )
   assert.match(
     serverlessAuth,

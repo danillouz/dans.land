@@ -58,4 +58,11 @@ export default defineConfig({
     assets: "assets",
     format: "file",
   },
+  vite: {
+    build: {
+      // Avoid a blocking request for small stylesheets; keep other asset defaults.
+      assetsInlineLimit: (filePath, content) =>
+        filePath.endsWith(".css") ? content.length < 8 * 1024 : undefined,
+    },
+  },
 })

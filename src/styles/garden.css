@@ -1,6 +1,7 @@
 :root {
   --garden-divider-spacing: 3rem;
   --garden-radius: 0.25rem;
+  --garden-description: var(--color-caption);
 }
 
 * {
@@ -253,7 +254,6 @@ h3 {
 @media (prefers-color-scheme: light) {
   :root {
     --garden-border: 223 218 217;
-    --garden-description: 116 112 142;
     --garden-inline-code: 242 233 225;
   }
 
@@ -265,7 +265,6 @@ h3 {
 @media (prefers-color-scheme: dark) {
   :root {
     --garden-border: 86 82 110;
-    --garden-description: 154 150 180;
     --garden-inline-code: 57 53 82;
   }
 }
