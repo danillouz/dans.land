@@ -2,18 +2,24 @@
 title: ZIP bomb countermeasures
 description: How to defend against ZIP bombs in Go.
 created: 2024-11-08
+updated: 2026-09-11
 status: sapling
 ---
 
-A ZIP bomb is a malicious [ZIP archive](https://support.pkware.com/pkzip/appnote) designed to crash the program or system reading it. When such a ZIP archive is extracted, it expands to terabytes or even petabytes of data[^1], which would quickly overwhelm most systems.
+A ZIP bomb is a malicious [ZIP archive](https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT) designed to crash the program or system reading it.
+When such a ZIP archive is extracted, it expands to terabytes or even petabytes of data[^1], which would quickly overwhelm most systems.
 
 [^1]: The notorious [42.zip](https://unforgettable.dk/) expands from 42 kilobytes to 4.5 petabytes.
 
-This is why ZIP bombs are often used in attacks to disable antivirus scanners, crash file processing services, or conduct denial-of-service attacks against systems that (automatically) extract archived files.
+This is why ZIP bombs are often used in attacks to disable antivirus scanners,
+crash file processing services,
+or conduct denial-of-service attacks against systems that (automatically) extract archived files.
 
 ## How it works
 
-ZIP is a container format (and not a compression algorithm). A ZIP archive contains a **central directory**, which is basically a list of headers that reference the actual files in the archive. The files in the ZIP archive are often compressed using [DEFLATE](https://en.wikipedia.org/wiki/Deflate).
+ZIP is a container format (and not a compression algorithm).
+A ZIP archive contains a **central directory**, which is basically a list of headers that reference the actual files in the archive.
+The files in the ZIP archive are often compressed using [DEFLATE](https://en.wikipedia.org/wiki/Deflate).
 
 ZIP bombs achieve extreme compression ratios by exploiting the container format:
 
@@ -49,16 +55,15 @@ const (
 )
 
 // ValidateZip validates a ZIP archive.
-func ValidateZip(r *ZIP.Reader) error {
+func ValidateZip(r *zip.Reader) error {
 	if len(r.File) > MaxZipFiles {
 		return fmt.Errorf("too many files")
 	}
 
 	for _, file := range r.File {
-		// NOTE: it should not be possible to tamper with the header.
-		// See: https://cs.opensource.google/go/go/+/refs/tags/go1.23.3:src/archive/zip/reader.go;l=357-375
-		// But even if possible, the most important safeguard is using [SafeZipFileReader]
-		// (because that limits reading the actual bytes).
+		// ZIP metadata is attacker-controlled: use it for early rejection only.
+		// A valid checksum does not authenticate the metadata.
+		// [ReadSafeZipFile] also limits the actual bytes read and propagates errors.
 		compSize := file.CompressedSize64
 		uncompSize := file.UncompressedSize64
 		if uncompSize > uint64(MaxZipFileUncompressedBytes) {
@@ -75,8 +80,36 @@ func ValidateZip(r *ZIP.Reader) error {
 	return nil
 }
 
-// SafeZipFileReader prevents reading a too large file in a ZIP.
-func SafeZipFileReader(r io.Reader) io.Reader {
-	return io.LimitReader(r, MaxZipFileUncompressedBytes)
+// ReadSafeZipFile reads a ZIP member while rejecting output over the limit.
+func ReadSafeZipFile(r io.Reader) ([]byte, error) {
+	limited := io.LimitReader(r, MaxZipFileUncompressedBytes+1)
+	b, err := io.ReadAll(limited)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(b) > MaxZipFileUncompressedBytes {
+		return nil, fmt.Errorf("file exceeds uncompressed size limit")
+	}
+
+	return b, nil
 }
+```
+
+Open each member and pass the returned reader to `ReadSafeZipFile`.
+Keep and handle the error so checksum failures and oversized output are rejected:
+
+```go
+fileReader, err := file.Open()
+if err != nil {
+	return err
+}
+defer fileReader.Close()
+
+contents, err := ReadSafeZipFile(fileReader)
+if err != nil {
+	return err
+}
+
+_ = contents
 ```
