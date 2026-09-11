@@ -2,17 +2,19 @@
 title: SQLite CLI
 description: Learning about the SQLite Command Line Interface.
 created: 2023-07-15
-updated: 2023-07-16
+updated: 2026-09-11
 status: evergreen
 ---
 
-[SQLite](https://www.sqlite.org/index.html) provides a [Command Line Interface](https://www.sqlite.org/cli.html) (CLI) program named `sqlite3`. And it's already installed on most operating systems.
+[SQLite](https://www.sqlite.org/index.html) provides a [Command Line Interface](https://www.sqlite.org/cli.html) (CLI) program named `sqlite3`.
+It is often already installed, or easy to install, on common operating systems.
 
 ## Basic usage
 
 The CLI can be run with or without command line options (flags).
 
-When a flag is provided, it must be prefixed with `-` or `--`. For example, `-version` and `--version` do the same thing:
+When a flag is provided, it must be prefixed with `-` or `--`.
+For example, `-version` and `--version` do the same thing:
 
 ```sh
 sqlite3 -version
@@ -55,7 +57,8 @@ To print all available dot commands (in interactive mode):
 sqlite> .help
 ```
 
-To see how to use a dot command (in interactive mode), and print available dot command flags, run `.help DOT_COMMAND`. For example:
+To see how to use a dot command (in interactive mode), and print available dot command flags, run `.help DOT_COMMAND`.
+For example:
 
 ```sh
 sqlite> .help .import
@@ -69,9 +72,11 @@ When a filename is provided to the `sqlite3` command, it will either create a ne
 sqlite3 mydb
 ```
 
-In interactive mode, a connection to a new or existing database can always be created via the `.open` dot command. And to connect to a temporary in-memory database, use `:memory:` as the database file name.
+In interactive mode, a connection to a new or existing database can always be created via the `.open` dot command.
+To connect to a temporary in-memory database, use `:memory:` as the database file name.
 
-To destroy any data in an existing database run `.open -new FILENAME`. For example:
+To destroy any data in an existing database run `.open -new FILENAME`.
+For example:
 
 ```sh
 sqlite> .open -new existingdb
@@ -127,11 +132,14 @@ sqlite> .read script.sql
 
 ### Pipe input
 
-If the argument to `.read` begins with the pipe symbol (`|`), then instead of opening the argument as a file, it runs the argument as a command, and uses the output of that command as its input. This can be useful to run scripts that generate SQL.
+If the argument to `.read` begins with the pipe symbol (`|`),
+then instead of opening the argument as a file, it runs the argument as a command and uses the output of that command as its input.
+This can be useful to run scripts that generate SQL.
 
 ## Write results to a file
 
-By default `sqlite3` sends all output to "standard output", but this can be changed via the `.output` and `.once` dot commands in interactive mode.
+By default `sqlite3` sends all output to "standard output",
+but this can be changed via the `.output` and `.once` dot commands in interactive mode.
 
 To output _all_ query results to a file:
 
@@ -150,7 +158,8 @@ To do the above just once, use the `.once` dot command instead.
 
 ### Pipe results
 
-If the argument to `.output` or `.once` begins with the pipe symbol (`|`), then it runs the argument as a command, and the output is sent to that command.
+If the argument to `.output` or `.once` begins with the pipe symbol (`|`),
+then it runs the argument as a command and the output is sent to that command.
 
 For example:
 
@@ -161,7 +170,8 @@ sqlite> SELECT * FROM books;
 
 ## Load file content into a table column
 
-The `readfile()` function loads file content as a `BLOB` in interactive mode. For example:
+The `readfile()` function loads file content as a `BLOB` in interactive mode.
+For example:
 
 ```sh
 sqlite> CREATE TABLE images(
@@ -176,7 +186,8 @@ sqlite> VALUES('icon','png',readfile('icon.png'));
 
 ## Write a table column to a file
 
-The `writefile()` function writes a column value to a file in interactive mode. For example:
+The `writefile()` function writes a column value to a file in interactive mode.
+For example:
 
 ```sh
 sqlite> SELECT writefile('icon.png',img) FROM images WHERE name='icon';
@@ -190,7 +201,8 @@ To import a CSV file into a table in interactive mode:
 sqlite> .import -csv file.csv tablename
 ```
 
-And to import into a table not part of the "main" database the `-schema` flag can be used. This specifies that the table is part of another "schema" (useful for attached databases or to import into a temporary table).
+To import into a table not part of the "main" database the `-schema` flag can be used.
+This specifies that the table is part of another "schema" (useful for attached databases or to import into a temporary table).
 
 ## Export results to CSV
 
@@ -222,7 +234,8 @@ zcat mydb.dump.gz | sqlite3 mydb
 
 ## Configuration
 
-An `.sqliterc` resource file can be created in the "home directory" to configure dot command settings. For example to change the output format for all queries:
+An `.sqliterc` resource file can be created in the "home directory" to configure dot command settings.
+For example to change the output format for all queries:
 
 ```ini title="~/.sqliterc"
 .mode box
