@@ -1,16 +1,17 @@
 ---
-title: S3 uploader high memory usage
+title: S3 upload memory
 description: How to prevent high memory usage when uploading many files via the Go S3 manager uploader.
 created: 2024-10-27
-updated: 2024-10-29
+updated: 2026-09-11
 status: evergreen
 ---
 
-> [!note] TL;DR
+> [!note]
 >
-> When using the S3 manager uploader, read the `Body` from an `io.ReadSeekerAt` (and not an `io.Reader`) to prevent high memory usage.
+> [`manager.Uploader`](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/feature/s3/manager#Uploader) is now deprecated in favor of `feature/s3/transfermanager`.
+> This post describes the SDK version used for the original investigation.
 
-There are 2 options to upload files to S3 using the [Go V2 AWS SDK](https://aws.github.io/aws-sdk-go-v2/) (besides using [presigned URLs](https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-presigned-url.html)):
+There are 2 options to upload files to S3 using the [Go V2 AWS SDK](https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/welcome.html) (besides using [presigned URLs](https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-presigned-url.html)):
 
 1. [S3 client put object](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/s3#Client.PutObject).
 2. [S3 manager uploader upload](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/feature/s3/manager#Uploader.Upload).
@@ -32,16 +33,14 @@ For example, uploading a zip archive with ~100 files caused the service memory u
 
 ### The code
 
-```go showLineNumbers {44,54}
+```go showLineNumbers {42,52}
 package s3
 
 import (
 	"archive/zip"
 	"context"
 	"fmt"
-	"io"
 	"mime"
-	"os"
 	"path/filepath"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -82,7 +81,7 @@ func (u *Uploader) uploadZipFile(ctx context.Context, file *zip.File) error {
 	}
 	defer zf.Close()
 
-	mimeType := detectMimeType(file)
+	mimeType := detectMimeType(file.Name)
 	_, err = u.uploader.Upload(ctx, &s3.PutObjectInput{
 		Bucket:      aws.String(u.bucket),
 		Key:         aws.String(file.Name),
@@ -99,6 +98,7 @@ func detectMimeType(fileName string) string {
 		// Use an allow list for improved security.
 		return mimeType
 	}
+
 	return "application/octet-stream"
 }
 ```
@@ -113,22 +113,39 @@ The S3 manager uploader memory behavior is controlled by the [PartSize](https://
 
 This is the interesting part: [by default](https://github.com/aws/aws-sdk-go-v2/blob/feature/s3/manager/v1.17.25/feature/s3/manager/upload.go#L461-L474) the uploader allocates the 5 MiB buffer for _every_ file being uploaded, _regardless_ of the file's actual size.
 
-This happens because the uploader needs to calculate part sizes before uploading, and with an `io.Reader` it can only do this by reading the entire content into memory first. But if an [io.ReadSeekerAt](https://github.com/aws/aws-sdk-go-v2/blob/feature/s3/manager/v1.17.25/feature/s3/manager/upload.go#L432-L459) is used, the uploader can figure out the number of parts needed without buffering the entire content in memory.
+With a plain `io.Reader`, the uploader buffers parts before uploading them:
+it does not need to hold the entire file in memory.
+If the body implements both `io.ReadSeeker` and `io.ReaderAt`[^1],
+the uploader can determine its size and read parts directly,
+[avoiding those buffers](https://github.com/aws/aws-sdk-go-v2/blob/feature/s3/manager/v1.17.25/feature/s3/manager/upload.go#L432-L459).
+
+[^1]: The AWS SDK calls this combined interface [`readSeekerAt`](https://github.com/aws/aws-sdk-go-v2/blob/feature/s3/manager/v1.17.25/feature/s3/manager/upload.go#L814-L817).
 
 ## The fix
 
-[Opening a zip file](https://pkg.go.dev/archive/zip#File.Open) returns an `io.ReadCloser`. So it must be "converted" to an `io.ReadSeekerAt` to prevent memory issues (while still using the S3 manager to upload files concurrently).
+[Opening a zip file](https://pkg.go.dev/archive/zip#File.Open) returns an `io.ReadCloser`. Writing it to a temporary file gives the uploader a body that implements both `io.ReadSeeker` and `io.ReaderAt`, which can prevent the extra buffering while still using the S3 manager to upload files concurrently.
 
 I think the simplest options to do this are (before uploading):
 
 1. Write each file in the zip archive to a temporary file.
 2. Read each file in the zip archive into memory using `io.ReadAll()` and `bytes.NewReader()`.
 
-After testing both, I found using option 1 to be the (slightly) better choice. While both methods had similar memory overhead, writing to a temporary file used (slightly) less CPU and had (slightly) less Garbage Collector (GC) overhead.
+After testing both, I found using option 1 to be the (slightly) better choice.
+While both methods had similar memory overhead, writing to a temporary file used (slightly) less CPU and had (slightly) less GC (Garbage Collector) overhead.
+
+> [!note]
+>
+> Each active upload has its own part concurrency.
+> For streaming bodies, buffers can use roughly `PartSize * Concurrency` per upload, so also limit the outer loop.
+> For example, with `group.SetLimit(8)` before starting the goroutines.
 
 ### The revised code
 
-```go {9-26, 32}
+> [!note]
+>
+> Add the `io` and `os` imports for the temporary-file approach below.
+
+```go {9-27, 33}
 func (u *Uploader) uploadZipFile(ctx context.Context, file *zip.File) error {
 	zf, err := file.Open()
 	if err != nil {
@@ -142,6 +159,7 @@ func (u *Uploader) uploadZipFile(ctx context.Context, file *zip.File) error {
 		return fmt.Errorf("creating temp file: %v", err)
 	}
 	defer func() {
+		_ = temp.Close()
 		if err := os.Remove(temp.Name()); err != nil {
 			// Log the error.
 		}
@@ -159,7 +177,7 @@ func (u *Uploader) uploadZipFile(ctx context.Context, file *zip.File) error {
 	mimeType := detectMimeType(file.Name)
 	_, err = u.uploader.Upload(ctx, &s3.PutObjectInput{
 		Bucket:      aws.String(u.bucket),
-		Key:         aws.String(key),
+		Key:         aws.String(file.Name),
 		Body:        temp,
 		ContentType: aws.String(mimeType),
 	})
@@ -170,4 +188,4 @@ func (u *Uploader) uploadZipFile(ctx context.Context, file *zip.File) error {
 ## Resources
 
 - [GitHub issue #2694](https://github.com/aws/aws-sdk-go-v2/issues/2694)
-- [PutObjectInput Body Field (io.ReadSeeker vs. io.Reader)](https://aws.github.io/aws-sdk-go-v2/docs/sdk-utilities/s3/#putobjectinput-body-field-ioreadseeker-vs-ioreader)
+- [PutObjectInput Body Field](https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/sdk-utilities-s3.html#putobjectinput-body-field-ioreadseeker-vs-ioreader)
