@@ -2,15 +2,18 @@
 title: Node.js event loop
 description: AWS Lambda can freeze and thaw its execution context, which can impact Node.js event loop behavior.
 created: 2019-05-30
-updated: 2024-08-17
+updated: 2026-09-11
 status: evergreen
 ---
 
 One of the more surprising things I learned recently while working with AWS Lambda is how it interacts with the Node.js event loop.
 
-Lambda is powered by a [virtualization technology](https://aws.amazon.com/blogs/aws/firecracker-lightweight-virtualization-for-serverless-computing). And to optimize performance it can "freeze" and "thaw" the execution context of your code so it can be reused.
+Lambda is powered by a [virtualization technology](https://aws.amazon.com/blogs/aws/firecracker-lightweight-virtualization-for-serverless-computing),
+and to optimize performance it can "freeze" and "thaw" the execution context of your code so it can be reused.
 
-This will make code run faster, but can impact the expected event loop behavior. We'll explore this in detail. But lets quickly refresh the Node.js concurrency model.
+This can avoid initialization work, but can also impact the expected event loop behavior.
+We'll explore this in detail.
+But let's quickly refresh the Node.js concurrency model.
 
 > [!note] Already familiar with the event loop?
 >
@@ -18,9 +21,7 @@ This will make code run faster, but can impact the expected event loop behavior.
 
 ## Concurrency model
 
-Node.js is _single threaded_ and the [event loop](https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick) is the concurrency model that allows non-blocking I/O operations to be performed[^1].
-
-[^1]: The event loop is what allows Node.js to perform non-blocking I/O operations (despite the fact that JavaScript is single-threaded) by offloading operations to the system kernel whenever possible.
+Node.js is _single threaded_ and the [event loop](https://nodejs.org/en/learn/asynchronous-work/event-loop-timers-and-nexttick) is the concurrency model that allows non-blocking I/O operations to be performed by offloading operations to the system kernel whenever possible.
 
 How? Well, we'll have to discuss the call stack and the task queue first.
 
@@ -28,13 +29,15 @@ How? Well, we'll have to discuss the call stack and the task queue first.
 
 Function calls form a _stack of frames_, where each frame represents a single function call.
 
-Every time a function is called, it's _pushed_ onto the stack (i.e. added to the stack). And when the function is done executing, it's _popped_ off the stack (i.e. removed from the stack).
+Every time a function is called, it's _pushed_ onto the stack (i.e. added to the stack).
+When the function is done executing, it's _popped_ off the stack (i.e. removed from the stack).
 
 The frames in a stack are popped off in <abbr title="Last In First Out">LIFO</abbr> order.
 
 ![Call stack frames are added last and removed first](../_assets/nodejs-event-loop/call-stack.png)
 
-Each frame stores information about the invoked function. Like the arguments the function was called with and any variables defined inside the called function's body.
+Each frame stores information about the invoked function.
+Like the arguments the function was called with and any variables defined inside the called function's body.
 
 When we execute the following code:
 
@@ -60,7 +63,7 @@ We can visualize the call stack over time like this.
 
 1. When the script starts executing, the call stack is empty.
 
-2. `main()` is called, and pushed onto the call stack:
+2. `main()` is called and pushed onto the call stack:
 
    ```js showLineNumbers {13}
    "use strict"
@@ -78,7 +81,7 @@ We can visualize the call stack over time like this.
    main()
    ```
 
-3. While executing `main`, `console.log("main start")` is called, and pushed onto the call stack:
+3. While executing `main`, `console.log("main start")` is called and pushed onto the call stack:
 
    ```js showLineNumbers {8}
    "use strict"
@@ -98,9 +101,9 @@ We can visualize the call stack over time like this.
 
    ![Call stack states 4-6: main, work above main, then console above both](../_assets/nodejs-event-loop/call-stack/2.png)
 
-4. `console.log` executes, prints `main start`, and is popped off the call stack.
+4. `console.log` executes, prints `main start` and is popped off the call stack.
 
-5. `main` continues executing, calls `work()`, and is pushed onto the call stack:
+5. `main` continues executing and calls `work()`, which is pushed onto the call stack:
 
    ```js showLineNumbers {9}
    "use strict"
@@ -118,7 +121,7 @@ We can visualize the call stack over time like this.
    main()
    ```
 
-6. While executing `work`, `console.log("do work")` is called, and pushed onto the call stack:
+6. While executing `work`, `console.log("do work")` is called and pushed onto the call stack:
 
    ```js showLineNumbers {4}
    "use strict"
@@ -138,11 +141,11 @@ We can visualize the call stack over time like this.
 
    ![Call stack states 7-9: work above main, main, then console above main](../_assets/nodejs-event-loop/call-stack/3.png)
 
-7. `console.log` executes, prints `do work`, and is popped off the call stack.
+7. `console.log` executes, prints `do work` and is popped off the call stack.
 
-8. `work` finishes executing, and is popped off the call stack.
+8. `work` finishes executing and is popped off the call stack.
 
-9. `main` continues executing, calls `console.log("main end")` and is pushed onto the call stack:
+9. `main` continues executing and calls `console.log("main end")`, which is pushed onto the call stack:
 
    ```js showLineNumbers {10}
    "use strict"
@@ -162,35 +165,39 @@ We can visualize the call stack over time like this.
 
    ![Call stack states 10-11: main, then an empty stack](../_assets/nodejs-event-loop/call-stack/4.png)
 
-10. `console.log` executes, prints `main end`, and is popped off the call stack.
+10. `console.log` executes, prints `main end` and is popped off the call stack.
 
-11. `main` finishes executing, and is popped off the call stack. The call stack is empty again and the script finishes executing.
+11. `main` finishes executing and is popped off the call stack. The call stack is empty again and the script finishes executing.
 
-This code didn't interact with any asynchronous (internal) APIs. But when it does (like when calling `setTimeout(callback)`) it makes use of the task queue.
+This code didn't interact with any asynchronous (internal) APIs.
+But when it does (like when calling `setTimeout(callback)`) it makes use of the task queue.
 
 ### Task queue
 
-Any asynchronous work in the runtime is represented as a task in a queue, or in other words, a _message queue_.
+In this simplified model, asynchronous work in the runtime is represented as a task in a queue. Or in other words, a _message queue_.
 
-Each message can be thought of as a function that will be called in <abbr title="First In First Out">FIFO</abbr> order to handle said work. For example, the callback provided to the `setTimeout` or `Promise` API.
+Each message can be thought of as a function that will be called in <abbr title="First In First Out">FIFO</abbr> order to handle said work.
+For example, the callback provided to `setTimeout`, once its delay has elapsed.
 
 ![Task queue processes tasks in first-in, first-out order](../_assets/nodejs-event-loop/queue.png)
 
-Additionally, each message is processed _completely_ before any other message is processed. This means that **whenever a function runs it can't be interrupted**. This behavior is called _run-to-completion_ and makes it easier to reason about our JavaScript programs.
+Additionally, each message is processed _completely_ before any other message is processed.
+This means that **whenever a function runs it can't be interrupted**.
+This behavior is called _run-to-completion_ and makes it easier to reason about our JavaScript programs.
 
 Messages get _enqueued_ (i.e. added to the queue) and at some point messages will be _dequeued_ (i.e. removed from the queue).
 
-When? How? This is handled by the Event Loop.
+When? How? This is handled by the event loop.
 
 ### Event loop
 
-The event loop can be literally thought of as a loop that runs forever, and where every cycle is referred to as a _tick_.
+The event loop can be thought of as a loop, where every cycle is referred to as a _tick_.
+The event loop checks if there's any work ready to run.
+If there is, it executes the corresponding callback, **but only if the call stack is empty**.
 
-On every tick the event loop will check if there's any work in the task queue. If there is, it will execute the task (i.e. call a function), **but only if the call stack is empty**.
+A simplified event loop can be described with the following pseudo code[^1]:
 
-The event loop can be described with the following pseudo code[^2]:
-
-[^2]: Taken from [MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/EventLoop#Event_loop).
+[^1]: Adapted from [MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model#job_queue_and_event_loop).
 
 ```js
 while (queue.waitForMessage()) {
@@ -201,8 +208,14 @@ while (queue.waitForMessage()) {
 To summarize:
 
 - When code executes, function calls are added to the call stack.
-- Whenever calls are made via asynchronous (internal) APIs (like `setTimeout` or `Promise`) the corresponding callbacks are eventually added to the task queue.
-- When the call stack is empty and the task queue contains one or more tasks, the event loop will remove a task on every tick and push it onto the call stack. The function will execute and this process will continue until all work is done.
+- Calls to asynchronous APIs like `setTimeout` register work whose callbacks can run later.
+- When the call stack is empty, ready callbacks can be pushed onto the call stack and executed. Node.js may process several callbacks in one tick.
+
+> [!warning]
+>
+> `new Promise(callback)` runs its callback (called the _executor_) immediately.
+> It's the handlers passed to `.then()` that run later.
+> See the [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/Promise) docs for more information.
 
 ![Event loop moves queued tasks to an empty call stack](../_assets/nodejs-event-loop/event-loop.png)
 
@@ -210,19 +223,23 @@ With that covered, we can explore how the AWS Lambda execution environment inter
 
 ## AWS Lambda
 
-AWS Lambda invokes a Lambda function via an exported handler function, e.g. `exports.handler`. When Lambda invokes this handler it calls it with 3 arguments:
+AWS Lambda invokes a Lambda function via an exported handler function, e.g. `exports.handler`.
+For callback-based handlers, Lambda calls it with 3 arguments:
 
 ```js
 handler(event, context, callback)
 ```
 
-The `callback` argument may be used to return information to the caller and to signal that the handler function has completed, so Lambda may end it. For that reason you don't have to call it explicitly. Meaning, if you don't call it Lambda will call it for you[^3].
+The `callback` argument may be used to return information to the caller and to signal that the handler function has completed, so Lambda may end it.
+Our handler is `async`, so we don't call `callback` ourselves.
+Lambda uses the handler's returned promise to determine when it has finished[^2].
 
-[^3]: When using Node.js version `8.10` or above, you may also return a `Promise` instead of using the callback function. In that case you can also make your handler `async`, because `async` functions return a `Promise`.
+[^2]: See the AWS [handler](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-handler.html#nodejs-handler-patterns) docs for the callback and async handler patterns.
 
 ### Baseline
 
-From here on we'll use a simple script as a "baseline" to reason about the event loop behavior. Create a file called `timeout.js` with the following contents:
+From here on we'll use a simple script as a "baseline" to reason about the event loop behavior.
+Create a file called `timeout.js` with the following contents:
 
 ```js title="timeout.js" showLineNumbers
 "use strict"
@@ -256,11 +273,12 @@ main end
 timeout cb fired after 5000 ms
 ```
 
-The last message takes 5 seconds to print, but the script does _not_ stop executing before it does.
+The last message takes ~5 seconds to print, but the script does _not_ stop executing before it does.
+The timer keeps the Node.js process alive, even though `main` has returned.
 
 ### What happens in Lambda, stays in Lambda
 
-Now lets modify the code from `timeout.js` so it's compatible with Lambda:
+Now let's modify the code from `timeout.js` so it's compatible with Lambda:
 
 ```js title="timeout.js" showLineNumbers {20}
 "use strict"
@@ -285,47 +303,39 @@ async function main() {
 exports.handler = main
 ```
 
-You can create a new function in the AWS Lambda console and paste in the code from above. Run it, sit back and enjoy.
+You can create a new function in the AWS Lambda console and paste in the code from above.
+Use a CommonJS file called `timeout.js`, configure the handler as `timeout.handler`, and give the function a timeout longer than five seconds.
+Run it, sit back and enjoy.
 
 ![First Lambda invocation ends before the timeout callback runs](../_assets/nodejs-event-loop/console/1.png)
 
-Wait, what? Lambda just ended the handler function _without_ printing the last message `timeout cb fired after 5000 ms`. Lets run it again.
+Wait, what? Lambda just ended the handler function _without_ printing the last message `timeout cb fired after 5000 ms`.
+Let's run it again.
 
 ![Second Lambda invocation runs the previous timeout callback first](../_assets/nodejs-event-loop/console/2.png)
 
-It now prints `timeout cb fired after 5000 ms` _first_ and then the other ones! So what's going on here?
+It now prints `timeout cb fired after 5000 ms` _first_ and then the other ones!
+So what's going on here?
 
 ### AWS Lambda execution model
 
-AWS Lambda takes care of provisioning and managing resources needed to run your functions. When a Lambda function is invoked, an execution context is created for you based on the configuration you provide. The execution context is a temporary runtime environment that initializes any external dependencies of your Lambda function.
+AWS Lambda takes care of provisioning and managing resources needed to run your functions.
+When a new execution context is needed, Lambda creates one for you based on the configuration you provide.
+The execution context is a temporary runtime environment that initializes any external dependencies of your Lambda function.
 
-After a Lambda function is called, Lambda maintains the execution context for some time in anticipation of another invocation of the Lambda function (for performance benefits). It freezes the execution context after a Lambda function completes and may choose to reuse (thaw) the same execution context when the Lambda function is called again (but it doesn't have to).
+After a Lambda function is called, Lambda maintains the execution context for some time in anticipation of another invocation of the Lambda function (for performance benefits).
+It freezes the execution context after a Lambda function completes and may choose to reuse (thaw) the same execution context when the Lambda function is called again (but it doesn't have to).
 
-In the AWS docs we can find the following regarding this subject:
+Our handler returns a promise because it's an `async` function.
+Lambda can complete the invocation when that promise settles.
+Calling `timeout(5e3)` creates a separate promise, which `main` ignores.
+Since `main` doesn't await it, the handler can finish before the timer fires.
 
-> [!quote]
->
-> Background processes or callbacks initiated by your Lambda function that did not complete when the function ended resume **if AWS Lambda chooses to** reuse the Execution Context.
->
-> [https://docs.aws.amazon.com/lambda/latest/dg/running-lambda-code.html](https://docs.aws.amazon.com/lambda/latest/dg/running-lambda-code.html)
+The [`callbackWaitsForEmptyEventLoop`](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-context.html) setting controls callback-based completion;
+it doesn't make this async handler wait for the ignored promise.
 
-As well as this somewhat hidden message:
-
-> [!quote]
->
-> When the callback is called (explicitly or implicitly), AWS Lambda continues the Lambda function invocation until the event loop is empty.
->
-> [https://docs.aws.amazon.com/lambda/latest/dg/nodejs-prog-model-handler.html](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-prog-model-handler.html)
-
-Looking further, there's some documentation about the context object. Specifically about a property called `callbackWaitsForEmptyEventLoop`. This is what it does:
-
-> [!quote]
->
-> The default value is `true`. This property is useful only to modify the default behavior of the callback. **By default, the callback will wait until the event loop is empty before freezing the process and returning the results to the caller.**
->
-> [https://docs.aws.amazon.com/lambda/latest/dg/nodejs-prog-model-context.html](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-prog-model-context.html)
-
-Okay, so with this information we can make sense of what happened when we executed the code in `timeout.js` before. Lets break it down and go over it step by step.
+Okay, so with this information we can make sense of what happened when we executed the code in `timeout.js` before.
+Let's break it down and go over it step by step.
 
 ![State 1: empty call stack and task queue](../_assets/nodejs-event-loop/lambda/1.png)
 
@@ -333,7 +343,7 @@ Okay, so with this information we can make sense of what happened when we execut
 
    ![State 2: main is pushed onto the call stack](../_assets/nodejs-event-loop/lambda/2.png)
 
-2. `main` is called, and pushed onto to the call stack:
+2. `main` is called and pushed onto the call stack:
 
    ```js title="timeout.js" showLineNumbers {20}
    "use strict"
@@ -360,7 +370,7 @@ Okay, so with this information we can make sense of what happened when we execut
 
    ![State 3: console is pushed above main](../_assets/nodejs-event-loop/lambda/3.png)
 
-3. While executing `main`, `console.log("main start")` is called, and pushed onto the call stack:
+3. While executing `main`, `console.log("main start")` is called and pushed onto the call stack:
 
    ```js title="timeout.js" showLineNumbers {15}
    "use strict"
@@ -387,11 +397,11 @@ Okay, so with this information we can make sense of what happened when we execut
 
    ![State 4: console is popped, leaving main](../_assets/nodejs-event-loop/lambda/4.png)
 
-4. `console.log` executes, prints `main start`, and is popped off the call stack.
+4. `console.log` executes, prints `main start` and is popped off the call stack.
 
    ![State 5: timeout is pushed above main](../_assets/nodejs-event-loop/lambda/5.png)
 
-5. `main` continues executing, calls `timeout(5e3)`, and is pushed onto the call stack:
+5. `main` continues executing and calls `timeout(5e3)`, which is pushed onto the call stack:
 
    ```js title="timeout.js" showLineNumbers {16}
    "use strict"
@@ -418,7 +428,7 @@ Okay, so with this information we can make sense of what happened when we execut
 
    ![State 6: console is pushed above timeout and main](../_assets/nodejs-event-loop/lambda/6.png)
 
-6. While executing `timeout`, `console.log("timeout start")` is called, and pushed onto the call stack:
+6. While executing `timeout`, `console.log("timeout start")` is called and pushed onto the call stack:
 
    ```js title="timeout.js" showLineNumbers {4}
    "use strict"
@@ -445,11 +455,11 @@ Okay, so with this information we can make sense of what happened when we execut
 
    ![State 7: console is popped, leaving timeout and main](../_assets/nodejs-event-loop/lambda/7.png)
 
-7. `console.log` executes, prints `timeout start`, and is popped off the call stack.
+7. `console.log` executes, prints `timeout start` and is popped off the call stack.
 
-   ![State 8: the Promise constructor is pushed onto the call stack](../_assets/nodejs-event-loop/lambda/8.png)
+   ![State 8: the Promise constructor immediately calls the executor](../_assets/nodejs-event-loop/lambda/8.png)
 
-8. `timeout` continues executing, calls `new Promise(callback)` on line 6, and is pushed onto the call stack:
+8. `timeout` continues executing and invokes the `Promise` constructor on line 6. The constructor immediately calls the executor (i.e. the callback), which is pushed onto the call stack:
 
    ```js title="timeout.js" showLineNumbers /new Promise/
    "use strict"
@@ -474,21 +484,40 @@ Okay, so with this information we can make sense of what happened when we execut
    exports.handler = main
    ```
 
-   ![State 9: the Promise API queues its callback](../_assets/nodejs-event-loop/lambda/9.png)
+   ![State 9: the executor calls setTimeout and registers the timer](../_assets/nodejs-event-loop/lambda/9.png)
 
-9. While `new Promise(callback)` executes, it interacts with the `Promise` API and passes the provided callback to it. The `Promise` API sends the callback to the task queue and now must wait until the call stack is empty before it can execute.
+9. The executor calls `setTimeout` on line 7, which registers the timer and its callback. After the delay, the timer callback can run when the call stack is empty:
 
-   ![State 10: the Promise constructor is popped](../_assets/nodejs-event-loop/lambda/10.png)
+   ```js title="timeout.js" showLineNumbers /setTimeout/
+   "use strict"
 
-10. `new Promise` finishes executing, and is popped of the call stack.
+   function timeout(ms) {
+     console.log("timeout start")
 
-    ![State 11: timeout is popped, leaving main](../_assets/nodejs-event-loop/lambda/11.png)
+     return new Promise((resolve) => {
+       setTimeout(() => {
+         console.log(`timeout cb fired after ${ms} ms`)
+         resolve()
+       }, ms)
+     })
+   }
 
-11. `timeout` finishes executing, and is popped off the call stack.
+   async function main() {
+     console.log("main start")
+     timeout(5e3)
+     console.log("main end")
+   }
 
-    ![State 12: console is pushed above main](../_assets/nodejs-event-loop/lambda/12.png)
+   exports.handler = main
+   ```
 
-12. `main` continues executing, calls `console.log("main end")`, and is pushed onto the call stack:
+   ![State 10: timeout returns a pending promise to main while the timer remains registered](../_assets/nodejs-event-loop/lambda/10.png)
+
+10. `setTimeout` returns, then the executor returns. The constructor returns a pending promise, and `timeout` returns that promise to `main`. Only `main` remains on the call stack. It ignores the returned promise and continues immediately.
+
+    ![State 11: console is pushed above main while the timer remains registered](../_assets/nodejs-event-loop/lambda/11.png)
+
+11. `main` continues executing and calls `console.log("main end")`:
 
     ```js title="timeout.js" showLineNumbers {17}
     "use strict"
@@ -513,72 +542,33 @@ Okay, so with this information we can make sense of what happened when we execut
     exports.handler = main
     ```
 
-    ![State 13: console is popped, leaving main](../_assets/nodejs-event-loop/lambda/13.png)
+    ![State 12: main has returned, its promise is fulfilled, and the timer promise is still pending](../_assets/nodejs-event-loop/lambda/12.png)
 
-13. `console.log` executes, prints `main end`, and is popped off the call stack.
+12. `console.log` prints `main end` and is popped off the call stack. Then `main` finishes executing and is popped off too. Its returned promise is fulfilled, while the promise returned by `timeout` is still pending.
 
-    ![State 14: main is popped, leaving the call stack empty](../_assets/nodejs-event-loop/lambda/14.png)
+At this point the call stack is empty and the timer callback isn't ready yet.
+The timer would keep a local Node.js process alive, but Lambda can complete this invocation because the handler's returned promise has fulfilled.
+So it can _freeze_ the process and return results to the caller!
 
-14. `main` finishes executing, and is popped off the call stack. The call stack is empty.
+The interesting part here is that Lambda doesn't immediately destroy its execution context.
+In my experiment, waiting for +5 seconds and running the Lambda again (like in the [[#What happens in Lambda, stays in Lambda|second run]]) printed the `setTimeout` callback's message first.
 
-    ![State 15: the Promise callback moves onto the call stack](../_assets/nodejs-event-loop/lambda/15.png)
+The execution context was still around, but JavaScript wasn't running while it was frozen.
+When Lambda reused it, the timer's delay had already elapsed, so its callback was ready to run:
 
-15. The `Promise` callback (step 9) can now be scheduled by the event loop, and is pushed onto the call stack.
+![Resumed execution context: the overdue timer callback is ready to run](../_assets/nodejs-event-loop/lambda/exec-context-1.png)
 
-    ![State 16: setTimeout is pushed above the Promise callback](../_assets/nodejs-event-loop/lambda/16.png)
-
-16. The `Promise` callback executes, calls `setTimeout(callback, timeout)` on line 7, and is pushed onto the call stack:
-
-    ```js title="timeout.js" showLineNumbers /setTimeout/
-    "use strict"
-
-    function timeout(ms) {
-      console.log("timeout start")
-
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          console.log(`timeout cb fired after ${ms} ms`)
-          resolve()
-        }, ms)
-      })
-    }
-
-    async function main() {
-      console.log("main start")
-      timeout(5e3)
-      console.log("main end")
-    }
-
-    exports.handler = main
-    ```
-
-    ![State 17: setTimeout schedules its callback with the timer API](../_assets/nodejs-event-loop/lambda/17.png)
-
-17. While `setTimeout(callback, timeout)` executes, it interacts with the `setTimeout` API and passes the corresponding callback and timeout to it.
-
-    ![State 18: setTimeout is popped while the timer counts down](../_assets/nodejs-event-loop/lambda/18.png)
-
-18. `setTimeout(callback, timeout)` finishes executing and is popped of the call stack. At the same time the `setTimeout` API starts counting down the timeout, to schedule the callback function in the future.
-
-    ![State 19: the Promise callback is popped, leaving the stack and queue empty](../_assets/nodejs-event-loop/lambda/19.png)
-
-19. The Promise callback finishes executing and is popped off the call stack. The call stack is empty again.
-
-At this point the call stack and task queue are both empty. At the same time a timeout is counting down (5 seconds), but the corresponding timeout callback has _not_ been scheduled yet. As far as Lambda is concerned, the event loop is empty. So it will _freeze_ the process and return results to the caller!
-
-The interesting part here is that Lambda doesn't immediately destroy its execution context. Because if we wait for +5 seconds and run the Lambda again (like in the [[#What happens in Lambda, stays in Lambda|second run]]) we see the console message printed from the `setTimeout` callback first.
-
-This happens because after the Lambda stopped executing, the execution context was still around. And after waiting for +5 seconds, the `setTimeout` API sent the corresponding callback to the task queue:
-
-![Frozen execution context: the timer callback enters the task queue after five seconds](../_assets/nodejs-event-loop/lambda/exec-context-1.png)
-
-When we execute the Lambda again (second run), the call stack is empty with a message in the task queue, which can immediately be scheduled by the event loop:
+The event loop could then push the callback onto the call stack:
 
 ![Thawed execution context: the timeout callback moves onto the call stack](../_assets/nodejs-event-loop/lambda/exec-context-2.png)
 
-This results in `timeout cb fired after 5000 ms` being printed first, because it executed before any of the code in our Lambda function:
+This resulted in `timeout cb fired after 5000 ms` being printed first, because in this run it executed before any of the code in our Lambda handler:
 
 ![Reused execution context: console runs above the previous timeout callback](../_assets/nodejs-event-loop/lambda/exec-context-3.png)
+
+Neither reuse nor this ordering is guaranteed.
+If Lambda discards the environment, that unfinished callback never runs.
+See the AWS [Lambda runtime environment](https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtime-environment.html) docs for more information.
 
 ### Doing it right
 
@@ -588,9 +578,9 @@ Like stated in the AWS docs, we need to make sure to complete processing _all_ c
 
 > [!quote]
 >
-> You should make sure any background processes or callbacks (in case of Node.js) in your code are complete before the code exits.
+> Make sure that any background processes or callbacks in your code are complete before the code exits.
 >
-> [https://docs.aws.amazon.com/lambda/latest/dg/running-lambda-code.html](https://docs.aws.amazon.com/lambda/latest/dg/running-lambda-code.html)
+> [https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtime-environment.html](https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtime-environment.html)
 
 Therefore we'll make the following change to the code in `timeout.js`:
 
@@ -599,7 +589,8 @@ Therefore we'll make the following change to the code in `timeout.js`:
 + await timeout(5e3);
 ```
 
-This change makes sure the handler function does _not_ stop executing until the `timeout` function finishes:
+This change makes sure the handler function does _not_ finish until the promise returned by `timeout` fulfills.
+The `timeout` function itself still returns immediately. But `await` makes `main` wait for the timer callback to call `resolve()`:
 
 ```js title="timeout.js" showLineNumbers {16}
 "use strict"
@@ -630,11 +621,14 @@ When we run our code with this change, all is well now.
 
 ## Macrotasks and microtasks
 
-I intentionally left out some details about the the task queue. There are actually _two_ task queues. One for _macrotasks_ (e.g. `setTimeout`) and one for _microtasks_ (e.g. `Promise`).
+I intentionally left out some details about the task queue.
+There are actually several queues.
+For example, one for macrotasks (e.g. `setTimeout` callbacks) and one for microtasks (e.g. `Promise` handlers like `.then()`).
 
-According to the [spec](https://html.spec.whatwg.org/multipage/webappapis.html#task-queue), one macrotask should get processed per tick. And after it finishes, all microtasks will be processed within the same tick. While these microtasks are processed they can enqueue more microtasks, **which will all be executed in the same tick**.
+Node.js processes the microtask queue before moving on to the next event loop callback.
+While these microtasks are processed they can enqueue more microtasks, **which will also be processed before moving on**.
 
-For more information see [this article from RisingStack](https://blog.risingstack.com/node-js-at-scale-understanding-node-js-event-loop) where they go more into detail.
+For more information see this [RisingStack article](https://blog.risingstack.com/node-js-at-scale-understanding-node-js-event-loop/) where they go into more detail.
 
 > [!note]
 >
