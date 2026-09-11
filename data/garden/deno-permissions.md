@@ -1,5 +1,5 @@
 ---
-title: Deno permissions and GitHub Actions
+title: Deno permissions
 description: Deno's permissions model can fail GitHub Actions jobs when creating job summaries.
 created: 2024-11-09
 status: evergreen
