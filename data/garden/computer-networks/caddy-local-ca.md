@@ -2,16 +2,26 @@
 title: Caddy local CA
 description: Firefox does not recognize Caddy's local Certificate Authority by default.
 created: 2023-06-23
+updated: 2026-09-10
 status: evergreen
 ---
 
-When running [Caddy](https://caddyserver.com/) locally, it will also generate its own local Certificate Authority (CA). Caddy will use this CA to sign certificates for [local HTTPS](https://caddyserver.com/docs/automatic-https#local-https).
+> [!note] Update
+>
+> Firefox 120+ [automatically](https://support.mozilla.org/en-US/kb/automatically-trust-third-party-certificates) trusts third-party root certificates installed in the operating system’s trust store, with this feature enabled by default.
+> So if Caddy’s CA is already trusted there, manually importing it into Firefox may no longer be necessary.
 
-This is pretty cool! But Caddy's local HTTPS does not work in Firefox by default. When running Caddy on `localhost`, Firefox will show the error code `SEC_ERROR_UNKNOWN_ISSUER` when visiting `https://localhost` (other browsers like Safari don't have this issue).
+When running [Caddy](https://caddyserver.com/) locally, it will also generate its own local Certificate Authority (CA).
+Caddy will use this CA to sign certificates for [local HTTPS](https://caddyserver.com/docs/automatic-https#local-https).
+
+This is pretty cool!
+But Caddy's local HTTPS does not work in Firefox by default.
+When running Caddy on `localhost`, Firefox will show the error code `SEC_ERROR_UNKNOWN_ISSUER` when visiting `https://localhost` (other browsers like Safari don't have this issue).
 
 ![SEC_ERROR_UNKNOWN_ISSUER](../_assets/caddy-local-ca/error.png)
 
-Turns out that Firefox [does not recognize](https://caddy.community/t/ocsp-stapling-error-certificate-not-trusted-by-the-web-browser/7691/2) Caddy's local CA by default. And you have to [manually import](https://support.mozilla.org/en-US/questions/1175296) Caddy's local root certificate into Firefox.
+Turns out that Firefox [does not recognize](https://caddy.community/t/ocsp-stapling-error-certificate-not-trusted-by-the-web-browser/7691/2) Caddy's local CA by default,
+and you have to [manually import](https://support.mozilla.org/en-US/questions/1175296) Caddy's local root certificate into Firefox.
 
 ## How to import Caddy's local root certificate into Firefox?
 
