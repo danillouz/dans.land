@@ -2,7 +2,7 @@
 title: Nagle's algorithm
 description: Nagle's algorithm solves the small-packet problem, but can cause problems.
 created: 2024-08-18
-updated: 2024-08-23
+updated: 2026-09-11
 aliases:
   - Nagling
   - TCP NODELAY
@@ -24,8 +24,8 @@ Nagle's algorithm solves the small-packet problem by essentially delaying (and b
 
 The algorithm can be described as:
 
-1. As long as the sender has a packet it received no ACK for.
-2. Keep buffering until it has a "full packet".
+1. If the sender has unacknowledged data, buffer new application data.
+2. Send it when the outstanding data is acknowledged, or when enough data is available for a full-sized segment.
 
 This is sometimes called "nagling" and is usually _enabled_ by default.
 
@@ -38,7 +38,7 @@ This is sometimes called "nagling" and is usually _enabled_ by default.
 
 A different solution for the same problem is to use ACK delays.
 
-ACK delays combine several ACK responses into a single one, by waiting for (usually) 200 milliseconds.
+ACK delays combine several ACK responses into a single one, by waiting for a short period that varies by implementation (e.g. 200 ms).
 
 This way it can either:
 
@@ -49,19 +49,27 @@ ACK delays are usually _also_ enabled by default.
 
 ## Nagle's algorithm and ACK delays
 
-Nagle's algorithm interacts badly with ACK delays. Because when both are enabled, packets won't be sent until an ACK is received, which are delayed.
+Nagle's algorithm can interact badly with delayed ACKs.
+When both are enabled, a small write can wait for an ACK or for enough data to fill a segment, while the ACK itself is delayed.
 
 This becomes problematic for latency-sensitive applications.
 
 > [!quote]
 >
-> ... after I put in Nagle's algorithm, Berkeley put in delayed ACKs. Delayed ACKs delay sending an empty ACK packet for a short, fixed period based on human typing speed, maybe 100ms. This was a hack Berkeley put in to handle large numbers of dumb terminals going in to time-sharing computers using terminal to Ethernet concentrators. Without delayed ACKs, each keystroke sent a datagram with one payload byte, and got a datagram back with no payload, just an ACK, followed shortly thereafter by a datagram with one echoed character. So they got a 30% load reduction for their TELNET application.
+> ... after I put in Nagle's algorithm, Berkeley put in delayed ACKs.
+> Delayed ACKs delay sending an empty ACK packet for a short, fixed period based on human typing speed, maybe 100ms.
+> This was a hack Berkeley put in to handle large numbers of dumb terminals going in to time-sharing computers using terminal to Ethernet concentrators.
+> Without delayed ACKs, each keystroke sent a datagram with one payload byte, and got a datagram back with no payload, just an ACK, followed shortly thereafter by a datagram with one echoed character.
+> So they got a 30% load reduction for their TELNET application.
 >
 > [https://news.ycombinator.com/item?id=34180239](https://news.ycombinator.com/item?id=34180239)
 
 ## Disabling Nagle's algorithm
 
-For most modern (latency-sensitive) applications Nagle's algorithm should be disabled. As it's not common to send single byte data like in the telnet days, and you most likely want to send data as soon as possible.
+For most modern (latency-sensitive) applications Nagle's algorithm should be disabled.
+As it's not common to send single byte data like in the telnet days and you most likely want to send data as soon as possible.
+
+But it depends on the use case: disabling Nagle can reduce latency, but can also increase the number of small packets
 
 For example, Go considers disabling Nagle's algorithm to be a sane default: [pkg.go.dev/net#TCPConn.SetNoDelay](https://pkg.go.dev/net#TCPConn.SetNoDelay).
 
