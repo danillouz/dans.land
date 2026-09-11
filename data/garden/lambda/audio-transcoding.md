@@ -2,11 +2,20 @@
 title: Audio transcoding
 description: Transcoding short audio files with AWS Lambda, Amazon Elastic Transcoder or FFmpeg.
 created: 2019-10-27
-updated: 2024-08-17
+updated: 2026-09-11
 status: evergreen
 ---
 
-For a side project I'm converting WebM audio files to MP3. I initially started doing this with [Amazon Elastic Transcoder](https://aws.amazon.com/elastictranscoder). But after doing the same with [FFmpeg](https://www.ffmpeg.org) and [Lambda Layers](https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html), my initial testing showed that the latter is around **10 times cheaper and 2 times faster for short audio** recordings (~3 minute / ~3 MB files).
+> [!warning] Historical walkthrough
+>
+> [Elastic Transcoder shut down on 13 November 2025](https://aws.amazon.com/blogs/media/support-for-amazon-elastic-transcoder-ending-soon/).
+> The Node.js 10 runtime, Serverless 1 configuration and AWS SDK v2 examples below also need migration before use today.
+> Prices, limits and billing increments refer to the original tests.
+
+For a side project I'm converting WebM audio files to MP3.
+I initially started doing this with [Amazon Elastic Transcoder](https://aws.amazon.com/blogs/media/support-for-amazon-elastic-transcoder-ending-soon/).
+But after doing the same with [FFmpeg](https://www.ffmpeg.org) and [Lambda Layers](https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html),
+my testing showed that the latter was **substantially cheaper and ~2 times faster for short audio** recordings (for ~3 minute, ~3 MB files).
 
 > [!note] Just want to read the code?
 >
@@ -14,11 +23,20 @@ For a side project I'm converting WebM audio files to MP3. I initially started d
 
 ## Use case
 
-My [side project](https://github.com/upstandfm/app) is a web app that allows users to record their voice so others can listen to it. In the app I use the [MediaStream Recording API](https://developer.mozilla.org/en-US/docs/Web/API/MediaStream_Recording_API) (aka Media Recording API) to easily record audio from the user's input device. It works really well, and you don't have to use any external libraries!
+My [side project](https://github.com/upstandfm/app) is a web app that allows users to record their voice so others can listen to it.
+In the app I use the [MediaStream Recording API](https://developer.mozilla.org/en-US/docs/Web/API/MediaStream_Recording_API) (aka Media Recording API) to easily record audio from the user's input device.
+It works really well, and you don't have to use any external libraries!
 
-There's one catch though. At the time of this writing it only works in Firefox, Chrome and Opera. And it "sort of" works in Safari[^1]. Even though that's a bit disappointing, I'm okay with that for my use case.
+There's one catch though.
+At the time of this writing it only works in Firefox, Chrome and Opera.
+It "sort of" works in Safari[^1].
+Even though that's a bit disappointing, I'm okay with that for my use case.
 
-[^1]: In Safari the Media Recording API is hidden behind a feature flag. And not all events are supported.
+> [!note]
+>
+> Safari has since [enabled MediaRecorder by default](https://webkit.org/blog/11353/mediarecorder-api/).
+
+[^1]: In Safari the Media Recording API is hidden behind a feature flag, but not all events are supported.
 
 So after I had built something functional that allowed me to record my voice, it turned out that the audio file I ended up with had to be _transcoded_ if I wanted to listen to it across a wide range of browsers and devices.
 
@@ -26,21 +44,33 @@ So after I had built something functional that allowed me to record my voice, it
 
 Before I can answer that, we need to explore _what_ an audio file is.
 
-We can think of an audio file like a stream of data elements wrapped in a container. This container is formally called a [media container format](https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Containers). And it's basically a _file format_ (think file type) that can store different types of data elements (i.e. bits).
+We can think of an audio file like a stream of data elements wrapped in a container.
+This container is formally called a [media container format](https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Containers).
+It's basically a _file format_ (think file type) that can store different types of data elements (i.e. bits).
 
-The container describes how this data "coexists" in a file. Some container formats only support audio, like [WAVE](https://en.wikipedia.org/wiki/WAV) (usually referred to as WAV). And others support both audio and video, like [WebM](https://www.webmproject.org).
+The container describes how this data "coexists" in a file.
+Some container formats only support audio, like [WAVE](https://en.wikipedia.org/wiki/WAV) (usually referred to as WAV).
+Others support both audio and video, like [WebM](https://www.webmproject.org).
 
-So a container "wraps" data to store it in a file, but information can be stored in different ways. And we'll also want to _compress_ the data to optimize for storage and/or bandwidth by _encoding_ it (i.e. converting it from one "form" to another).
+So a container "wraps" data to store it in a file, but information can be stored in different ways.
+We'll also want to _compress_ the data to optimize for storage and/or bandwidth by _encoding_ it (i.e. converting it from one "form" to another).
 
-This is where a _codec_ (**co**der/**dec**oder) comes into play. It handles all the processing that's required to _encode_ (compress) and _decode_ (decompress) the audio data.
+This is where a _codec_ (**co**der/**dec**oder) comes into play.
+It handles all the processing that's required to _encode_ (compress) and _decode_ (decompress) the audio data.
 
-Therefore, in order to define the format of an audio file (or a video file) we need both a container and a codec. For example, when the MPEG-1 Audio Layer 3 codec is used to store only audio data in an [MPEG-4](https://en.wikipedia.org/wiki/MPEG-4) container[^2], we get an [MP3](https://en.wikipedia.org/wiki/MP3) file (even though it's technically still an MPEG format file).
+So when describing an audio or video file, we usually need to specify both its container and its codec[^2].
+For example, AAC audio in an MP4 container is commonly stored as an `.m4a` file.
+An [MP3](https://en.wikipedia.org/wiki/MP3) file contains MPEG-1 or MPEG-2 Audio Layer III frames:
+it does not need an MP4 container.
 
 [^2]: A container is not always required. [WebRTC](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API) does not use a container at all. Instead, it streams the encoded audio and video tracks directly from one peer to another using `MediaStreamTrack` objects to represent each track.
 
-So what does transcoding mean? It's the process of converting one encoding into another. And if we convert one container format into another, this process is called _transmuxing_.
+So what does transcoding mean?
+It's the process of converting one encoding into another.
+If we convert one container format into another, this process is called _transmuxing_.
 
-There are a lot of codecs available. And each codec will have a different effect on the quality, size and/or compatibility of the audio file[^3].
+There are a lot of codecs available.
+Each codec will have a different effect on the quality, size and/or compatibility of the audio file[^3].
 
 [^3]: If you'd like to learn more about audio codecs, I recommend reading the [Mozilla web audio codec guide](https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Audio_codecs).
 
@@ -48,11 +78,14 @@ There are a lot of codecs available. And each codec will have a different effect
 
 You might be wondering (like I was), if we can record audio directly in the browser and immediately use the result in our app, why do we even have to transcode it?
 
-The answer is: to optimize for _compatibility_. Because the Media Recording API can _not_ record audio in all media formats.
+The answer is: to optimize for _compatibility_.
+Because the Media Recording API can _not_ record audio in all media formats.
 
-For example, MP3 has good compatibility across browsers and devices for playback, but is _not_ supported by the Media Recording API. What formats are supported depend on the browser's specific implementation of said API.
+For example, MP3 has good compatibility across browsers and devices for playback, but is _not_ supported by the Media Recording API.
+What formats are supported depend on the browser's specific implementation of said API.
 
-We can use the [isTypeSupported](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/isTypeSupported) method to figure out if we can record in a specific media type by calling it with a [MIME](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types) type. Run the following code in the web console (e.g. in Firefox) to see it in action:
+We can use the [isTypeSupported](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/isTypeSupported) method to figure out if we can record in a specific media type by calling it with a [MIME](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types) type.
+Run the following code in the web console (e.g. in Firefox) to see it in action:
 
 ```js
 MediaRecorder.isTypeSupported("audio/mpeg") // false
@@ -81,10 +114,11 @@ We'll explore two implementations that both convert a WebM audio file to MP3:
 
 For both implementations we'll use the [Serverless Framework](https://serverless.com) and [Node.js](https://nodejs.org/en) to write the code for the [Lambda](https://aws.amazon.com/lambda) function that converts an audio file.
 
-Before we get started, make sure you have Node.js installed. And then use [npm](https://www.npmjs.com) to install the Serverless Framework globally:
+Before we get started, make sure you have Node.js installed.
+Then use [npm](https://www.npmjs.com) to install the Serverless Framework globally:
 
 ```sh
-npm i -G serverless
+npm i -g serverless
 ```
 
 Additionally, we'll need two [S3](https://aws.amazon.com/s3) buckets to process and store the converted audio files:
@@ -96,15 +130,18 @@ Additionally, we'll need two [S3](https://aws.amazon.com/s3) buckets to process 
 
 Amazon Elastic Transcoder is a fully managed and highly scalable AWS service that can be used to transcode audio and video files.
 
-We can use this service to schedule a transcoding job in a pipeline. The pipeline knows from which bucket to read a file that needs to be converted, and to which bucket the converted file should be written. Whereas the job contains instructions on which file to transcode, and to what format it should be converted.
+We can use this service to schedule a transcoding job in a pipeline.
+The pipeline knows from which bucket to read a file that needs to be converted, and to which bucket the converted file should be written.
+Whereas the job contains instructions on which file to transcode, and to what format it should be converted.
 
-We'll create a Lambda function that will "listen" to the S3 input bucket. And whenever a new object is created in that bucket, Lambda will schedule a transcoder job to create the MP3 file.
+We'll create a Lambda function that will "listen" to the S3 input bucket.
+Whenever a new object is created in that bucket, Lambda will schedule a transcoder job to create the MP3 file.
 
 So the flow will be like this:
 
 - A WebM audio file is uploaded to the input bucket.
 - The Lambda function is triggered, and uses the key of the created S3 object to schedule a transcoder job.
-- A job is scheduled in the pipeline. And Amazon Elastic Transcoder:
+- A job is scheduled in the pipeline, where Amazon Elastic Transcoder:
   - Fetches the WebM audio file from the input bucket.
   - Transcodes the WebM audio file to MP3.
   - Uploads the MP3 file to the output bucket.
@@ -125,25 +162,33 @@ We'll go through the following steps to get it up and running:
 
 ### 1. Create a pipeline
 
-Navigate to the Elastic Transcoder service in the AWS web console. Select a region (we'll use `eu-west-1`), and click on "Create New Pipeline".
+Navigate to the Elastic Transcoder service in the AWS web console.
+Select a region (we'll use `eu-west-1`) and click on "Create New Pipeline".
 
 ![Elastic Transcoder pipeline configuration](../_assets/audio-transcoding/create-pipeline.png)
 
-Create the pipeline and take note of the ARN and Pipeline ID. We'll need both to configure the Lambda function later on.
+Create the pipeline and take note of the ARN and Pipeline ID.
+We'll need both to configure the Lambda function later on.
 
 ![Elastic Transcoder pipeline ARN and ID](../_assets/audio-transcoding/created-pipeline.png)
 
 ### 2. Choose a preset
 
-The pipeline we created in the previous step requires a [preset](https://docs.aws.amazon.com/elastictranscoder/latest/developerguide/working-with-presets.html) to work. Presets contain settings we want to be applied during the transcoding process. And lucky for us, AWS already has system presets to convert to MP3 files.
+The pipeline we created in the previous step requires a [preset](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/ElasticTranscoder.html#readPreset-property) to work.
+Presets contain settings we want to be applied during the transcoding process.
+Lucky for us, AWS already has system presets to convert to MP3 files.
 
-In the web console, click on "Presets" and filter on the keyword "MP3". Select one and take note of its ARN and Preset ID. We'll also need these to configure the Lambda function.
+In the web console, click on "Presets" and filter on the keyword "MP3".
+Select one and take note of its ARN and Preset ID.
+We'll also need these to configure the Lambda function.
 
 ![MP3 preset ARN and ID](../_assets/audio-transcoding/preset.png)
 
 ### 3. Create an IAM Policy
 
-AWS will already have created am IAM Role named `Elastic_Transcoder_Default_Role`. But in order for the pipeline to read objects from the input bucket and write objects to the output bucket, we need to make sure the role has the required permissions to do so.
+AWS will already have created an IAM Role named `Elastic_Transcoder_Default_Role`.
+But in order for the pipeline to read objects from the input bucket and write objects to the output bucket,
+we need to make sure the role has the required permissions to do so.
 
 Create a new IAM Policy with the following configuration:
 
@@ -170,11 +215,13 @@ Create a new IAM Policy with the following configuration:
 }
 ```
 
-Make sure the resource ARNs of your input and output buckets are named correctly. And after the Policy has been created, attach it to `Elastic_Transcoder_Default_Role`.
+Make sure the resource ARNs of your input and output buckets are named correctly.
+After the Policy has been created, attach it to `Elastic_Transcoder_Default_Role`.
 
 ### 4. Create a Serverless project
 
-Create a new project named "audio-transcoder". Move into this directory and create a Serverless manifest in the project root:
+Create a new project named "audio-transcoder".
+Move into this directory and create a Serverless manifest in the project root:
 
 ```yaml title="audio-transcoder/serverless.yml" showLineNumbers
 service: audio-transcoder
@@ -243,7 +290,8 @@ package:
     - src
 ```
 
-And finally, add the Lambda function definition. This Lambda will be executed whenever an object is created in the input bucket:
+Finally, add the Lambda function definition.
+This Lambda will be executed whenever an object is created in the input bucket:
 
 ```yaml title="audio-transcoder/serverless.yml" showLineNumbers {26-34}
 service: audio-transcoder
@@ -284,7 +332,8 @@ functions:
 
 ### 5. Implement the Lambda function
 
-In order to match the Lambda function definition in the Serverless manifest, create a file named `handler.js` in `src`. And export a method named `transcodeToMp3`:
+In order to match the Lambda function definition in the Serverless manifest,
+create a file named `handler.js` in `src`, and export a method named `transcodeToMp3`:
 
 ```js title="audio-transcoder/src/handler.js" showLineNumbers
 "use strict"
@@ -294,11 +343,14 @@ module.exports.transcodeToMp3 = async () => {
     // Implementation goes here.
   } catch (err) {
     console.log("Transcoder Error: ", err)
+    throw err
   }
 }
 ```
 
-In the previous step we configured the Lambda to be executed whenever an object is created in the input bucket. This means that AWS will call the Lambda with an `event` message that contains a list of `Records`. And each `Record` will contain an `s3` object with information about the `s3:ObjectCreated` event:
+In the previous step we configured the Lambda to be executed whenever an object is created in the input bucket.
+This means that AWS will call the Lambda with an `event` message that contains a list of `Records`.
+Each `Record` will contain an `s3` object with information about the `s3:ObjectCreated` event:
 
 ```js
 // "event" object:
@@ -314,13 +366,15 @@ In the previous step we configured the Lambda to be executed whenever an object 
 }
 ```
 
-The `s3` object will contain a property called `key`, which is the "name" of the file that was created in the input bucket. For example, if we upload a file named `test.webm` to the S3 bucket, the value of `key` will be the (URL encoded!) string `test.webm`.
+The `s3` object will contain a property called `key`, which is the "name" of the file that was created in the input bucket.
+For example, if we upload a file named `test.webm` to the S3 bucket, the value of `key` will be the (URL encoded!) string `test.webm`.
 
 You can see the entire event message structure in the [AWS S3 docs](https://docs.aws.amazon.com/AmazonS3/latest/dev/notification-content-structure.html).
 
-Also be aware that you can get **more than one** `Record`. So always process all of them:
+Also be aware that you can get **more than one** `Record`.
+So always process all of them:
 
-```js title="audio-transcoder/src/handler.js" showLineNumbers {5-18}
+```js title="audio-transcoder/src/handler.js" showLineNumbers {5}
 "use strict"
 
 module.exports.transcodeToMp3 = async (event) => {
@@ -337,18 +391,19 @@ module.exports.transcodeToMp3 = async (event) => {
         continue
       }
 
-      const decodedKey = decodeURIComponent(key)
+      const decodedKey = decodeURIComponent(key.replace(/\+/g, " "))
       // TODO: use "decodedKey" to schedule transcoder job.
     }
   } catch (err) {
     console.log("Transcoder Error: ", err)
+    throw err
   }
 }
 ```
 
-Finally, initialize the transcoder client. And schedule a transcoder job for every created object in the input bucket:
+Finally, initialize the transcoder client and schedule a transcoder job for every created object in the input bucket:
 
-```js title="audio-transcoder/src/handler.js" showLineNumbers {3-13, 30-43}
+```js title="audio-transcoder/src/handler.js" showLineNumbers {3-10, 27-40}
 "use strict"
 
 const ElasticTranscoder = require("aws-sdk/clients/elastictranscoder")
@@ -374,7 +429,7 @@ module.exports.transcodeToMp3 = async (event) => {
         continue
       }
 
-      const decodedKey = decodeURIComponent(key)
+      const decodedKey = decodeURIComponent(key.replace(/\+/g, " "))
       await transcoderClient
         .createJob({
           PipelineId: TRANSCODE_AUDIO_PIPELINE_ID,
@@ -383,7 +438,7 @@ module.exports.transcodeToMp3 = async (event) => {
           },
           Outputs: [
             {
-              Key: decodedKey.replace("webm", "mp3"),
+              Key: decodedKey.replace(/\.webm$/i, ".mp3"),
               PresetId: TRANSCODER_MP3_PRESET_ID,
             },
           ],
@@ -392,6 +447,7 @@ module.exports.transcodeToMp3 = async (event) => {
     }
   } catch (err) {
     console.log("Transcoder Error: ", err)
+    throw err
   }
 }
 ```
@@ -400,7 +456,8 @@ You can read more about the `createJob` API in the [AWS JavaScript SDK](https://
 
 ### 6. Release the Lambda function
 
-In order to upload the Lambda to AWS, make sure you have your [credentials configured](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html). And then run the following command from the project root to release the Lambda:
+In order to upload the Lambda to AWS, make sure you have your [credentials configured](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html).
+Then run the following command from the project root to release the Lambda:
 
 ```sh
 sls deploy --region eu-west-1 --stage prod
@@ -408,16 +465,20 @@ sls deploy --region eu-west-1 --stage prod
 
 ### 7. Schedule a job
 
-With everything up and running, we can now upload a WebM audio file to the input bucket to schedule a transcoder job. Navigate to the S3 service in the AWS web console:
+With everything up and running, we can now upload a WebM audio file to the input bucket to schedule a transcoder job.
+Navigate to the S3 service in the AWS web console:
 
 - Select your input bucket.
 - Click "Upload".
 - Add a WebM audio file.
 - Click on "Upload" again.
 
-This action will trigger an `s3:ObjectCreated` event. AWS will execute the Lambda function we deployed in the previous step, and it will schedule a transcoder job.
+This action will trigger an `s3:ObjectCreated` event.
+AWS will execute the Lambda function we deployed in the previous step, and it will schedule a transcoder job.
 
-To get more information about a scheduled job, navigate to the Elastic Transcoder service in the AWS web console. Click on "Jobs", select your pipeline and click "Search". Here you can select a job to get more details about it.
+To get more information about a scheduled job, navigate to the Elastic Transcoder service in the AWS web console.
+Click on "Jobs", select your pipeline and click "Search".
+Here you can select a job to get more details about it.
 
 ![Completed WebM-to-MP3 transcoding job](../_assets/audio-transcoding/created-job.png)
 
@@ -425,19 +486,25 @@ If it has status "Complete", there should be a file named `test.mp3` in the outp
 
 ## Using FFmpeg and Lambda Layers
 
-FFmpeg is a cross-platform solution that can be used to convert audio and video files. And since it's a binary, we'll use a Lambda Layer to execute it from the Lambda function.
+FFmpeg is a cross-platform solution that can be used to convert audio and video files.
+Since it's a binary, we'll use a Lambda Layer to execute it from the Lambda function.
 
 ### What's a Lambda Layer?
 
-Lambda Layers allow us to "pull in" extra dependencies into Lambda functions. A layer is basically a ZIP archive that contains some code. And in order to use a layer we first must create and publish one.
+Lambda Layers allow us to "pull in" extra dependencies into Lambda functions.
+A layer is basically a ZIP archive that contains some code.
+In order to use a layer we first must create and publish one.
 
-After we publish a layer we can configure any Lambda function to use it[^4]. AWS will then extract the layer to a special directory called `/opt`. And the Lambda function runtime will be able to execute it.
+After we publish a layer we can configure any Lambda function to use it[^4].
+AWS will then extract the layer to a special directory called `/opt`.
+The Lambda function runtime will be able to execute it.
 
 [^4]: At the time of this writing a Lambda function can use [up to 5 layers at a time](https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html).
 
 ### How different is this implementation?
 
-We're basically "swapping out" Amazon Elastic Transcoder with FFmpeg. Other than that the flow is still the same.
+We're basically "swapping out" Amazon Elastic Transcoder with FFmpeg.
+Other than that the flow is still the same.
 
 So since we're still converting a WebM audio file to MP3 whenever it's uploaded to the input bucket, we can reuse the Lambda from the [[#4. Create a Serverless project|previous implementation]] by making these changes:
 
@@ -458,7 +525,9 @@ We'll apply these changes by going through the following steps:
 
 ### 1. Create and publish FFmpeg Lambda Layer
 
-The Serverless Framework makes it very easy to work with layers. To get started create a new project named "lambda-layers". Move into this directory and create a Serverless manifest in the project root:
+The Serverless Framework makes it very easy to work with layers.
+To get started create a new project named "lambda-layers".
+Move into this directory and create a Serverless manifest in the project root:
 
 ```yaml title="lambda-layers/serverless.yml" showLineNumbers
 service: lambda-layers
@@ -482,7 +551,8 @@ layers:
     licenseInfo: GPL v2+, for more info see https://github.com/FFmpeg/FFmpeg/blob/master/LICENSE.md
 ```
 
-The layer is named `ffmpeg` and the `path` property dictates that the layer code will reside in a directory named `layers`. Match this structure in the project by creating that directory first.
+The layer is named `ffmpeg` and the `path` property dictates that the layer code will reside in a directory named `layers`.
+Match this structure in the project by creating that directory first.
 
 Move into the `layers` directory and download a static build of FFmpeg from [johnvansickle.com/ffmpeg](https://johnvansickle.com/ffmpeg)[^5].
 
@@ -506,7 +576,7 @@ Remove the downloaded archive:
 rm ffmpeg-git-amd64-static.tar.xz
 ```
 
-And rename the extracted directory to `ffmpeg`, so it matches the configured layer name in the Serverless manifest. For example:
+Rename the extracted directory to `ffmpeg`, so it matches the configured layer name in the Serverless manifest. For example:
 
 ```sh
 mv ffmpeg-git-20191029-amd64-static ffmpeg
@@ -534,7 +604,10 @@ Publish the layer by running the following command from the project root:
 sls deploy --region eu-west-1 --stage prod
 ```
 
-When Serverless finishes deploying, navigate to the Lambda service in the AWS web console and click on "Layers". Here you should see the published layer. Click on it and take note of the ARN. We'll need it in the next step.
+When Serverless finishes deploying, navigate to the Lambda service in the AWS web console and click on "Layers".
+Here you should see the published layer.
+Click on it and take note of the ARN.
+We'll need it in the next step.
 
 ![Published FFmpeg Lambda layer ARN](../_assets/audio-transcoding/published-layer.png)
 
@@ -542,7 +615,11 @@ When Serverless finishes deploying, navigate to the Lambda service in the AWS we
 
 We'll now be modifying the manifest file of the `audio-transcoder` project.
 
-First change the environment variables, and add the names of your input and output buckets. Then change the IAM permissions so the Lambda function can read from the input bucket and write to the output bucket. And finally, change the Lambda function to use the FFmpeg layer with the ARN from the previous step:
+First change the environment variables, and add the names of your input and output buckets.
+
+Then change the IAM permissions so the Lambda function can read from the input bucket and write to the output bucket.
+
+Finally, change the Lambda function to use the FFmpeg layer with the ARN from the previous step:
 
 ```yaml title="audio-transcoder/serverless.yml" showLineNumbers {7-8,10-17,36-37}
 service: audio-transcoder
@@ -586,9 +663,10 @@ functions:
 
 ### 3. Update the Lambda function
 
-Since we have to read from the input bucket and write to the output bucket, replace the Elastic Transcoder client with the S3 client. And use the `decodedKey` to get the WebM recording from the input bucket:
+Since we have to read from the input bucket and write to the output bucket, replace the Elastic Transcoder client with the S3 client.
+Use the `decodedKey` to get the WebM recording from the input bucket:
 
-```js title="audio-transcoder/src/handler.js" showLineNumbers {3-5, 22-27}
+```js title="audio-transcoder/src/handler.js" showLineNumbers {3-5, 21-27}
 "use strict"
 
 const S3 = require("aws-sdk/clients/s3")
@@ -609,7 +687,7 @@ module.exports.transcodeToMp3 = async (event) => {
         continue
       }
 
-      const decodedKey = decodeURIComponent(key)
+      const decodedKey = decodeURIComponent(key.replace(/\+/g, " "))
       const webmRecording = await s3Client
         .getObject({
           Bucket: S3_INPUT_BUCKET_NAME,
@@ -619,11 +697,13 @@ module.exports.transcodeToMp3 = async (event) => {
     }
   } catch (err) {
     console.log("Transcoder Error: ", err)
+    throw err
   }
 }
 ```
 
-The S3 client returns an object that contains a `Body` property. The value of `Body` is a blob, which we'll feed to the FFmpeg layer and convert it to MP3.
+The S3 client returns an object that contains a `Body` property.
+The value of `Body` is a blob, which we'll feed to the FFmpeg layer and convert it to MP3.
 
 We'll do this via a helper function that will spawn a [synchronous child process](https://nodejs.org/api/child_process.html#child_process_child_process_spawnsync_command_args_options) which allows us to execute the `ffmpeg` "command" (provided by the FFmpeg layer):
 
@@ -647,11 +727,13 @@ module.exports = {
 }
 ```
 
-The `ffmpeg` command requires the file system to do its magic. And we'll use a "special" directory called `/tmp`[^6] for this.
+For this implementation, we'll give `ffmpeg` files to read and write.
+We'll use a "special" directory called `/tmp`[^6] for this.
 
 [^6]: At the time of this writing the `/tmp` directory allows you to _temporarily_ store up to [512 MB](https://docs.aws.amazon.com/lambda/latest/dg/limits.html).
 
-First write the WebM blob to `/tmp` so FFmpeg can read it. And then tell it to write the produced MP3 file back to the same directory:
+First write the WebM blob to `/tmp` so FFmpeg can read it.
+Then tell it to write the produced MP3 file back to the same directory:
 
 ```js title="audio-transcoder/src/ffmpeg.js" showLineNumbers {4,8-18}
 "use strict"
@@ -676,32 +758,41 @@ module.exports = {
 }
 ```
 
-Now read the produced MP3 file from disk, clean `/tmp`, and return the MP3 blob:
+Now check that FFmpeg succeeded, read the produced MP3 file, and return the MP3 blob.
+Use a unique temporary directory and clean it in `finally`, so failures also release the temporary files:
 
-```js title="audio-transcoder/src/ffmpeg.js" showLineNumbers {18-23}
+```js title="audio-transcoder/src/ffmpeg.js" showLineNumbers
 "use strict"
 
 const { spawnSync } = require("child_process")
-const { readFileSync, writeFileSync, unlinkSync } = require("fs")
+const { mkdtempSync, readFileSync, writeFileSync, existsSync, unlinkSync, rmdirSync } =
+  require("fs")
 
 module.exports = {
   convertWebmToMp3(webmBlob) {
-    const now = Date.now()
-    const input = `/tmp/${now}.webm`
-    const output = `/tmp/${now}.mp3`
+    const directory = mkdtempSync("/tmp/transcode-")
+    const input = `${directory}/input.webm`
+    const output = `${directory}/output.mp3`
+    try {
+      writeFileSync(input, webmBlob)
 
-    writeFileSync(input, webmBlob)
+      const result = spawnSync("/opt/ffmpeg/ffmpeg", ["-i", input, output], {
+        stdio: "inherit",
+      })
+      if (result.error) {
+        throw result.error
+      }
+      if (result.status !== 0) {
+        throw new Error(`FFmpeg failed: ${result.signal || result.status}`)
+      }
 
-    spawnSync("/opt/ffmpeg/ffmpeg", ["-i", input, output], {
-      stdio: "inherit",
-    })
-
-    const mp3Blob = readFileSync(output)
-
-    unlinkSync(input)
-    unlinkSync(output)
-
-    return mp3Blob
+      return readFileSync(output)
+    } finally {
+      for (const file of [input, output]) {
+        if (existsSync(file)) unlinkSync(file)
+      }
+      rmdirSync(directory)
+    }
   },
 }
 ```
@@ -730,7 +821,7 @@ module.exports.transcodeToMp3 = async (event) => {
         continue
       }
 
-      const decodedKey = decodeURIComponent(key)
+      const decodedKey = decodeURIComponent(key.replace(/\+/g, " "))
       const webmRecording = await s3Client
         .getObject({
           Bucket: S3_INPUT_BUCKET_NAME,
@@ -742,7 +833,7 @@ module.exports.transcodeToMp3 = async (event) => {
       await s3Client
         .putObject({
           Bucket: S3_OUTPUT_BUCKET_NAME,
-          Key: decodedKey.replace("webm", "mp3"),
+          Key: decodedKey.replace(/\.webm$/i, ".mp3"),
           ContentType: "audio/mpeg",
           Body: mp3Blob,
         })
@@ -750,9 +841,15 @@ module.exports.transcodeToMp3 = async (event) => {
     }
   } catch (err) {
     console.log("Transcoder Error: ", err)
+    throw err
   }
 }
 ```
+
+Rethrowing errors lets Lambda treat failed work as a failure and apply its [asynchronous retry behavior](https://docs.aws.amazon.com/lambda/latest/dg/invocation-async-error-handling.html).
+S3 events can be delivered more than once, and a retry can repeat records already processed by this handler.
+A production version should make repeated processing safe, especially when scheduling a paid transcoding job.
+The `finally` block handles ordinary failures, but cannot run if Lambda terminates the invocation on timeout.
 
 ### 4. Release the updated Lambda function
 
@@ -782,9 +879,14 @@ Here you should see the logs of the Lambda function.
 
 The logs tell us that FFmpeg is executing (hooray!) but that it doesn't complete (boo!).
 
-In the middle of the transcoding process the logs just say `END`. And on the last line we see that the Lambda had a duration of `6006.17 ms`.
+In the middle of the transcoding process the logs just say `END`.
+On the last line we see that the Lambda had a duration of `6006.17 ms`.
 
-What's happening? The Lambda function takes "too long" to finish executing. By default Lambda has a timeout of 6 seconds[^7]. And after 6 seconds the Lambda function is still not done transcoding, so AWS _terminates_ it.
+What's happening?
+The Lambda function takes "too long" to finish executing.
+This Serverless setup defaults to a timeout of 6 seconds[^7]:
+AWS Lambda itself defaults to [3 seconds](https://docs.aws.amazon.com/lambda/latest/dg/configuration-timeout.html).
+After 6 seconds the Lambda function is still not done transcoding, so AWS _terminates_ it.
 
 [^7]: At the time of this writing the maximum timeout is [900 seconds](https://docs.aws.amazon.com/lambda/latest/dg/limits.html).
 
@@ -792,7 +894,9 @@ How do we solve this? By optimizing the Lambda function!
 
 ### 6. Optimize the Lambda function
 
-First let's just set the timeout to a larger value. For example 180 seconds. This way we can see how long it would actually take to complete the transcoding process:
+First let's just set the timeout to a larger value.
+For example 180 seconds.
+This way we can see how long it would actually take to complete the transcoding process:
 
 ```yaml title="audio-transcoder/serverless.yml"
 functions:
@@ -800,21 +904,30 @@ functions:
     timeout: 180
 ```
 
-Deploy again. When Serverless is done, upload another WebM audio file, and check the logs.
+Deploy again.
+When Serverless is done, upload another WebM audio file, and check the logs.
 
 ![CloudWatch logs for the completed FFmpeg invocation](../_assets/audio-transcoding/logs-complete.png)
 
-This time we see FFmpeg completes the transcoding process and that the Lambda had a duration of `7221.95 ms`. If we check the output bucket now, we'll see the MP3 file!
+This time we see FFmpeg completes the transcoding process and that the Lambda had a duration of `7221.95 ms`.
+If we check the output bucket now, we'll see the MP3 file!
 
 #### Optimizing further
 
-Transcoding the audio file in ~7 seconds isn't bad. Actually, it's very similar to Amazon Elastic Transcoder. But we can do better.
+Transcoding the audio file in ~7 seconds isn't bad. Actually, it's very similar to Amazon Elastic Transcoder.
+But we can do better.
 
-Something that's very important when working with Lambda, is to _always_ performance tune your functions. Or in other words, always make sure that a Lambda function has the _optimum_ memory size configured.
+Something that's very important when working with Lambda, is to _always_ performance tune your functions.
+Or in other words, always make sure that a Lambda function has the _optimum_ memory size configured.
 
-This is important because when you choose a higher memory setting, AWS will also give you an equivalent resource boost (like CPU). And this will usually positively impact the Lambda function's runtime duration. Which means you'll pay less money.
+This is important because when you choose a higher memory setting, AWS will also give you an equivalent resource boost (like CPU).
+This can reduce the Lambda function's runtime duration.
+But cost depends on both allocated memory and billed duration, so faster execution only saves money if it outweighs the higher memory allocation.
 
-By default a Lambda function has a memory setting of 128 MB. So lets increase it and compare results. A good strategy is usually to keep doubling memory and measure the duration. But for the sake of brevity, I'm jumping ahead to 2048 MB:
+By default a Lambda function has a memory setting of 128 MB.
+So lets increase it and compare results.
+A good strategy is usually to keep doubling memory and measure the duration.
+But for the sake of brevity, I'm jumping ahead to 2048 MB:
 
 ```yaml title="audio-transcoder/serverless.yml"
 functions:
@@ -822,11 +935,15 @@ functions:
     memorySize: 2048
 ```
 
-Deploy again. And when Serverless is done, upload another WebM audio file and check the logs.
+Deploy again.
+When Serverless is done, upload another WebM audio file and check the logs.
 
 ![CloudWatch logs after increasing Lambda memory to 2048 MB](../_assets/audio-transcoding/logs-double-memory.png)
 
-Great, it's even faster now! Does this mean we can just keep increasing the memory and reap the benefits? Sadly, no. There's a tipping point where increasing the memory wont make it run faster.
+Great, it's even faster now!
+Does this mean we can just keep increasing the memory and reap the benefits?
+Sadly, no.
+There's a tipping point where increasing the memory wont make it run faster.
 
 For example, increasing the memory to 3008 MB (the maximum [memory limit](https://docs.aws.amazon.com/lambda/latest/dg/limits.html) at the time of this writing) will result in a similar runtime duration:
 
@@ -850,17 +967,25 @@ For example, increasing the memory to 3008 MB (the maximum [memory limit](https:
 | 4        | `3662,68 ms` | `3700 ms`       | -                   |
 | 5        | `3717,01 ms` | `3800 ms`       | -                   |
 
-When done optimizing, make sure to apply a sensible value for the Lambda timeout. In this case, the default of 6 seconds would be a good one.
+When done optimizing, make sure to apply a sensible value for the Lambda timeout.
+In this case, 6 seconds covered these test runs, though production needs headroom for slower inputs and cold starts.
 
 ## Comparing costs
 
-To compare costs between both implementation, I did a couple of test runs converting a 3 minute (2,8 MB) WebM audio file to MP3.
+To compare costs between both implementations, I did a couple of test runs converting a 3 minute (2,8 MB) WebM audio file to MP3.
 
-The following comparison is by no means very extensive, and your mileage may vary. But in my opinion I think it's good enough to get a decent impression of the cost range.
+> [!warning]
+>
+> The following comparison uses the 2019 rates and measured billed durations (including the 100 ms billing increments used then).
+> It is by no means very extensive, and your mileage may vary.
+> The free-tier calculations assume the monthly allowances are available to this workload.
+> S3 storage and request costs are excluded.
 
 ### Amazon Elastic Transcoder costs
 
-The [pricing](https://aws.amazon.com/elastictranscoder/pricing) page tells us we pay per minute (with 20 free minutes every month). And when we only transcode audio in region `eu-west-1`, we'll currently pay `$0,00522` per minute transcoding time.
+Elastic Transcoder [charged per minute of output audio](https://aws.amazon.com/elastictranscoder/pricing/) (rounded up to whole minutes) with 20 free audio minutes per month.
+The rate used for these calculations in `eu-west-1` was `$0,00522` per output minute.
+Processing time affects how soon the file is ready, but is not the billing unit.
 
 These are the timing results of the test runs:
 
@@ -885,32 +1010,35 @@ So the average transcoding time of the audio file would be:
 7378,3 / 1000 = 7,3783 sec
 ```
 
-Lets say we would be transcoding `100 000` of these audio files per month, that would amount to a total transcoding time of:
+Lets say we would be transcoding `100 000` of these audio files per month, with each output exactly 3 minutes long.
+That would amount to:
 
 ```txt
-7,3783 * 100 000 = 737 830 sec
-737 830 / 60 = 12 297,166 666 667 min
+3 * 100 000 = 300 000 output minutes
 ```
 
 Since we pay `$0,00522` per minute, the costs without free tier would be:
 
 ```txt
-12 297,166 666 667 * 0,00522 = $64,191 21
+300 000 * 0,00522 = $1 566
 ```
 
 And with free tier it would cost:
 
 ```txt
-(12 297,166 666 667 - 20) * 0,00522 = $64,086 81
+(300 000 - 20) * 0,00522 = $1 565,8956
 ```
 
 #### What about Lambda costs?
 
-We're using Lambda to schedule Amazon Elastic Transcoder jobs. So we also have to calculate those (minor if not negligible) costs.
+We're using Lambda to schedule Amazon Elastic Transcoder jobs.
+So we also have to calculate those (minor if not negligible) costs.
 
 The Lambda [pricing](https://aws.amazon.com/lambda/pricing) page tells us we pay for the **number of requests** and the **duration** (which depends on memory setting).
 
-We get 1 million requests for free every month, and after that you pay `$0,20` per 1 million requests. Since we're only doing 1/10th of that in this example, I'm _not_ including number of requests in the calculations. I'm only focusing on duration costs here.
+The request rate was `$0,20` per million requests, with 1 million requests free each month.
+For `100 000` invocations, that's `$0,02` without free tier, or zero with an unused allowance.
+We'll calculate duration costs below and include the request charge in the final totals.
 
 These are the Lambda durations (with 128 MB memory) for the accompanying transcoder test runs:
 
@@ -935,16 +1063,18 @@ The average billed duration would be:
 270 / 1000 = 0,27 sec
 ```
 
-In region `eu-west-1`, we'll currently pay `$0,000 016 6667` for every GB per second (GB/sec). That means we first have to calculate "how much" memory the Lambda function uses for its runtime duration.
+In `eu-west-1` we pay `$0,000 016 6667` for every GB-second (GB-s).
+That means we first have to calculate "how much" memory the Lambda function uses for its runtime duration.
 
 For `100 000` transcoding jobs per month (with 128 MB memory) that would be:
 
 ```txt
 100 000 * 0,27 = 27000 sec
-(128 / 1024) * 27000 = 3375 GB/sec
+(128 / 1024) * 27000 = 3375 GB-s
 ```
 
-Currently you get `400 000` GB/sec for free every month, so depending on your scale you may or may not have to include it in your calculations. But without free tier it would cost:
+The free tier included `400 000` GB-s every month, so depending on your scale you may or may not have to include it in your calculations.
+But without free tier it would cost:
 
 ```txt
 3375 * 0,000 016 6667 = $0,056 250 113
@@ -975,11 +1105,12 @@ The average _billed duration_ would be:
 3910 / 1000 = 3,91 sec
 ```
 
-In region `eu-west-1`, we'll currently pay `$0,000 016 6667` for every GB/sec. For `100 000` transcoding jobs (with 2048 MB memory) that would be:
+In `eu-west-1` we pay `$0,000 016 6667` for every GB-s.
+For `100 000` transcoding jobs (with 2048 MB memory) that would be:
 
 ```txt
 100 000 * 3,91 = 391 000 sec
-(2048 / 1024) * 391 000 = 782 000 GB/sec
+(2048 / 1024) * 391 000 = 782 000 GB-s
 ```
 
 Without free tier it would cost:
@@ -1002,7 +1133,7 @@ With free tier it would cost:
 >
 > [https://aws.amazon.com/lambda/pricing](https://aws.amazon.com/lambda/pricing)
 
-Otherwise, data transferred into and out of Lambda functions will be charged at the [EC2 data transfer rates](https://aws.amazon.com/ec2/pricing/on-demand) as listed under the “Data transfer” section.
+Otherwise data transferred into and out of Lambda functions will be charged at the [EC2 data transfer rates](https://aws.amazon.com/ec2/pricing/on-demand) as listed under the “Data transfer” section.
 
 ### Putting it all together
 
@@ -1010,5 +1141,5 @@ Costs of transcoding `100 000` 3 minute (2,8 MB) WebM audio files to MP3 per mon
 
 | Implementation            | Cost without free tier | Cost with free tier |
 | :------------------------ | :--------------------- | :------------------ |
-| Amazon Elastic Transcoder | ~ $64                  | ~ $64               |
-| FFmpeg and Lambda Layers  | ~ $13                  | ~ $6                |
+| Amazon Elastic Transcoder | $1 566,08              | $1 565,90           |
+| FFmpeg and Lambda Layers  | $13,05                 | $6,37               |
