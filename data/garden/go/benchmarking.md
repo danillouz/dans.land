@@ -2,6 +2,7 @@
 title: Benchmarking
 description: How to write benchmarks in Go.
 created: 2024-08-24
+updated: 2026-09-11
 status: sapling
 ---
 
@@ -13,13 +14,18 @@ Test functions look like this:
 func TestSomething(t *testing.T)
 ```
 
-And benchmark functions look like this:
+Benchmark functions look like this:
 
 ```go
 func BenchmarkSomething(b *testing.B)
 ```
 
 ## How it works
+
+> [!warning] Use `b.Loop()`
+>
+> Go 1.24 added [`b.Loop()`](https://go.dev/blog/testing-b-loop).
+> The `b.N` examples in this post still work, but have some [gotcha's](#gotchas)
 
 A benchmark has some "code under test":
 
@@ -31,11 +37,13 @@ func BenchmarkSomething(b *testing.B) {
 }
 ```
 
-The code under test in the benchmark will be executed `b.N` times, where Go automatically adjusts the value of `b.N` until the benchmark lasts long enough to be timed reliably.
+The code under test in the benchmark will be executed `b.N` times,
+where Go automatically adjusts the value of `b.N` until the benchmark lasts long enough to be timed reliably.
 
 ## Running benchmarks
 
-Like test functions, benchmark functions live in `*_test.go` files, and are run via the Go [test command](https://pkg.go.dev/cmd/go#hdr-Test_packages). But to run benchmarks, the `-bench` [test flag](https://pkg.go.dev/cmd/go#hdr-Testing_flags) must be provided.
+Like test functions, benchmark functions live in `*_test.go` files and are run via the Go [test command](https://pkg.go.dev/cmd/go#hdr-Test_packages).
+But to run benchmarks, the `-bench` [test flag](https://pkg.go.dev/cmd/go#hdr-Testing_flags) must be provided.
 
 For example:
 
@@ -47,7 +55,8 @@ go test ./... -bench .
 go test ./... -bench BenchmarkSomething
 ```
 
-By default tests _also_ run when running benchmarks. To prevent this use the `-run ^$` test flag to run "no tests".
+By default tests _also_ run when running benchmarks.
+To prevent this use the `-run ^$` test flag to run "no tests".
 
 For example:
 
@@ -62,11 +71,15 @@ go test ./... -run ^$ -bench BenchmarkSomething
 > 1. **Directory mode** is in effect when `go test` is run without package arguments (e.g. `go test`). Here Go compiles source and test files in the current directory.
 > 2. **Package list mode** is in effect when `go test` is run with package arguments (e.g. `go test ./...`). Here Go compiles source and test files for the listed packages.
 >
-> Only in mode 2 will Go cache successful package test results to avoid running tests unnecessarily in repeated tests. When tests are cached, `go test` prints `(cached)` instead of the elapsed time in the summary. To disable caching use the flag `-count=1`.
+> Only in mode 2 will Go cache successful package test results to avoid running tests unnecessarily in repeated tests.
+> When tests are cached, `go test` prints `(cached)` instead of the elapsed time in the summary.
+> To disable caching use the flag `-count=1`.
 
 ### Controlling count
 
-By default a benchmark runs once. But this can be controlled with the `-count` test flag. It can be useful to run a benchmark multiple times to (better) verify it produces consistent results.
+By default a benchmark runs once.
+But this can be controlled with the `-count` test flag.
+It can be useful to run a benchmark multiple times to (better) verify it produces consistent results.
 
 For example:
 
@@ -116,7 +129,7 @@ BenchmarkGetClientEncoding-12	24113084	46.17 ns/op
 
 The [benchstat](https://pkg.go.dev/golang.org/x/perf/cmd/benchstat) command can be used to compare multiple benchmark results.
 
-> [!warning] Important to keep in mind
+> [!warning] Keep in mind
 >
 > - Each benchmark should be run at least 10 times to gather a statistically significant sample of results.
 >   - Pick a number of benchmark runs (at least 10, ideally 20) and stick to it.
@@ -157,7 +170,7 @@ geomean                 2.295µ        2.090µ        -8.94%
 
 Can be interpreted as follows:
 
-- `±` percentage indicates "variation". The lower the better: a high variation means unreliable samples, and that the benchmark needs to be re-run.
+- `±` percentage indicates "variation". The lower the better: a high variation means unreliable samples and that the benchmark needs to be re-run.
 - A negative percentage (`-17.20%`) means a benchmark was faster. A positive percentage means slower.
 - `p=` value measures how likely the differences were due to random chance.
 - `~` means there was no statistically significant difference between the two inputs.
@@ -183,30 +196,10 @@ The output `.prof` file can then be used to generate a report with `go tool ppro
 
 ## Tips
 
-### Control the timer when doing setup
-
-By default the _entire_ run time of a benchmark function is measured. Go executes the benchmark many times, and divides total execution time by `b.N`. This means that doing some sort of (expensive) setup can affect benchmark results.
-
-To prevent misleading benchmark results, the timer can be controlled with the following functions:
-
-- [b.StopTimer()](https://pkg.go.dev/testing#B.StopTimer) and [b.StartTimer()](https://pkg.go.dev/testing#B.StartTimer)
-- [b.ResetTimer()](https://pkg.go.dev/testing#B.ResetTimer)
-
-For example:
-
-```go
-func BenchmarkSomething(b *testing.B) {
-	// Do some (expensive) setup here..
-	b.ResetTimer()
-	for range b.N {
-		// Code under test.
-	}
-}
-```
-
 ### Benchmark with multiple inputs
 
-Like with regular test functions, you can use table-driven benchmarks and sub-benchmarks by invoking [b.Run(name, f)](https://pkg.go.dev/testing#B.Run). Each `b.Run` call creates and runs a separate benchmark.
+Like with regular test functions, you can use table-driven benchmarks and sub-benchmarks by invoking [b.Run(name, f)](https://pkg.go.dev/testing#B.Run).
+Each `b.Run` call creates and runs a separate benchmark.
 
 For example:
 
@@ -239,11 +232,42 @@ go test ./... -run ^$ -bench BenchmarkSomething/Two
 
 ## Gotcha's
 
-### 1. Compiler optimizations
+> [!warning] Use `b.Loop()`
+>
+> Go 1.24 added [`b.Loop()`](https://go.dev/blog/testing-b-loop), which:
+> - Automatically excludes setup and cleanup code from benchmark timing.
+> - Prevents unwanted compiler optimizations within the benchmark loop.
 
-It may happen that the compiler optimizes code under test in a benchmark. When this happens, the benchmark will seem faster that it really is.
+### 1. Control the timer when doing setup and cleanup
 
-This may happen with non-changing function inputs, and/or unused values.
+By default the _entire_ run time of a benchmark function is measured.
+Go executes the benchmark many times, and divides total execution time by `b.N`.
+This means that doing some sort of (expensive) setup and cleanup can affect benchmark results.
+
+To prevent misleading benchmark results, the timer can be controlled with the following functions:
+
+- [b.StopTimer()](https://pkg.go.dev/testing#B.StopTimer) and [b.StartTimer()](https://pkg.go.dev/testing#B.StartTimer)
+- [b.ResetTimer()](https://pkg.go.dev/testing#B.ResetTimer)
+
+For example:
+
+```go
+func BenchmarkSomething(b *testing.B) {
+	// Do some (expensive) setup here..
+	b.ResetTimer()
+
+	for range b.N {
+		// Code under test.
+	}
+}
+```
+
+### 2. Compiler optimizations
+
+It may happen that the compiler optimizes code under test in a benchmark.
+When this happens, the benchmark will seem faster that it really is.
+
+This may happen with non-changing function inputs and unused values.
 
 For example:
 
@@ -252,6 +276,7 @@ func isTrueOrFalse(n int) bool {
 	if n == 0 {
 		return false
 	}
+
 	return true
 }
 
@@ -262,34 +287,23 @@ func BenchmarkWrong(b *testing.B) {
 }
 ```
 
-Ways to mitigate this are by:
-
-- Using [runtime.KeepAlive()](https://pkg.go.dev/runtime#KeepAlive).
-- Assigning to a global exported value.
-
-For example:
+Use an input that varies between iterations and keep the result observable:
 
 ```go
-func BenchmarkOkay(b *testing.B) {
-	var result bool
-	for range b.N {
-		result = isTrueOrFalse(0)
-	}
-	runtime.KeepAlive(result)
-}
-```
-
-Or:
-
-```go
-var Sink bool
+var sink bool
 
 func BenchmarkOkay(b *testing.B) {
-	for range b.N {
-		Sink = isTrueOrFalse(0)
+	for i := 0; i < b.N; i++ {
+		sink = isTrueOrFalse(i)
 	}
 }
 ```
+
+> [!note]
+>
+> [`runtime.KeepAlive()`](https://pkg.go.dev/runtime#KeepAlive) is for keeping an object reachable until a point in the program,
+> usually so a finalizer does not run too early.
+> It does not prevent constant folding or make an otherwise unused calculation observable.
 
 ## Resources:
 
