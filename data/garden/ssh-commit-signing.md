@@ -1,5 +1,5 @@
 ---
-title: Signing Git commits with SSH
+title: SSH commit signing
 description: How to sign Git commits with SSH on macOS.
 created: 2025-01-05
 status: evergreen
