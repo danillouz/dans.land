@@ -173,7 +173,7 @@ test("garden articles expose social and Article metadata", async () => {
   assert.equal(article["@type"], "Article")
   assert.equal(article.headline, "DNS")
   assert.equal(article.datePublished, "2023-06-03T00:00:00.000Z")
-  assert.equal(article.dateModified, "2024-08-23T00:00:00.000Z")
+  assert.equal(article.dateModified, "2026-09-11T00:00:00.000Z")
   assert.deepEqual(article.author, {
     "@type": "Person",
     "@id": "https://dans.land/#danillouz",

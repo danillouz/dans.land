@@ -104,7 +104,7 @@ test("renders canonical wikilinks instead of literal Obsidian syntax", async () 
   const article = await readFile("dist/garden/cache-stampeding.html", "utf8")
   assert.match(
     article,
-    /href="\/garden\/low-latency-high-availability#constant-work"[^>]*>constant work<\/a>/,
+    /href="\/garden\/low-latency-ha#constant-work"[^>]*>constant work<\/a>/,
   )
   assert.doesNotMatch(article, /__garden_wikilink__/)
   assert.doesNotMatch(article, /\[\[/)
@@ -163,7 +163,7 @@ test("renders Obsidian callouts", async () => {
   const [calloutArticle, quotedArticle, denoQuoteArticle] = await Promise.all([
     readFile("dist/garden/cache-stampeding.html", "utf8"),
     readFile("dist/garden/lambda/nodejs-event-loop.html", "utf8"),
-    readFile("dist/garden/deno-gh-actions.html", "utf8"),
+    readFile("dist/garden/deno-permissions.html", "utf8"),
   ])
 
   assert.match(
@@ -209,7 +209,7 @@ test("renders Mermaid diagrams only on pages that use them", async () => {
 test("renders backlinks from the shared content index", async () => {
   const [article, articleWithFootnotes, comments, audioTranscoding] =
     await Promise.all([
-      readFile("dist/garden/low-latency-high-availability.html", "utf8"),
+      readFile("dist/garden/low-latency-ha.html", "utf8"),
       readFile("dist/garden/go/http-handlers.html", "utf8"),
       readFile("dist/garden/go/comments.html", "utf8"),
       readFile("dist/garden/lambda/audio-transcoding.html", "utf8"),
@@ -224,7 +224,7 @@ test("renders backlinks from the shared content index", async () => {
   )
   assert.match(
     article,
-    /rel="canonical" href="https:\/\/dans\.land\/garden\/low-latency-high-availability"/,
+    /rel="canonical" href="https:\/\/dans\.land\/garden\/low-latency-ha"/,
   )
   assert.doesNotMatch(article, /Part of/)
   assert.match(
@@ -240,7 +240,7 @@ test("renders accessible, annotated Rosé Pine code blocks", async () => {
   const [article, highlighted, diff, benchmarking, assetNames] =
     await Promise.all([
       readFile("dist/garden/go/http-handlers.html", "utf8"),
-      readFile("dist/garden/go/s3-high-memory.html", "utf8"),
+      readFile("dist/garden/go/s3-upload-memory.html", "utf8"),
       readFile("dist/garden/lambda/nodejs-event-loop.html", "utf8"),
       readFile("dist/garden/go/benchmarking.html", "utf8"),
       readdir("dist/assets"),
@@ -293,7 +293,7 @@ test("renders accessible, annotated Rosé Pine code blocks", async () => {
 test("renders post context, dates, and reading time", async () => {
   const [article, articleWithoutUpdate] = await Promise.all([
     readFile("dist/garden/go/http-handlers.html", "utf8"),
-    readFile("dist/garden/computer-networks/caddy-local-ca.html", "utf8"),
+    readFile("dist/garden/computer-networks/example-com.html", "utf8"),
   ])
   const header = article.match(/<header class="post-header".*?<\/header>/)?.[0]
   const metadata = article.match(
