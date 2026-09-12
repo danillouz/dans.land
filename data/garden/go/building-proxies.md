@@ -2,10 +2,12 @@
 title: Building proxies
 description: What I learned so far (and some musings) about building proxies in Go.
 created: 2024-08-23
+updated: 2026-09-12
 status: seedling
 ---
 
-It's pretty easy to start building a [[Proxies|proxy]] in Go. The most simple example to create a (reverse) proxy looks something like:
+It's pretty easy to start building a [[Proxies|proxy]] in Go.
+The simplest example to create a (reverse) proxy looks something like:
 
 ```go
 proxy := httputil.NewSingleHostReverseProxy(targetURL)
@@ -13,11 +15,13 @@ proxy := httputil.NewSingleHostReverseProxy(targetURL)
 
 But one thing that's not obvious to me yet, is the best way to work with upstreams (i.e. targets to proxy to) that are not known beforehand.
 
-For example, Caddy has support for [dynamic upstreams](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy#dynamic-upstreams). But it looks like you do need to known them beforehand?
+For example, Caddy has support for [dynamic upstreams](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy#dynamic-upstreams).
+But it looks like you do need to know them beforehand?
 
-So I'm not sure yet what the "best practice approach" is to proxy to a different target for different requests (e.g. performance wise). But I guess it depends on the exact use-case(s).
+So I'm not sure yet what the "best practice approach" is to proxy to a different target for different requests (e.g. performance wise).
+But I guess it depends on the exact use-case(s).
 
-I did learn that you can use `httputil.ReverseProxy` and `Director` to do something more custom per request:
+I did learn that you can use `httputil.ReverseProxy` and `Rewrite` to do something more custom per request:
 
 ```go
 func NewProxy() *httputil.ReverseProxy {
@@ -27,30 +31,27 @@ func NewProxy() *httputil.ReverseProxy {
 			MaxIdleConnsPerHost: 32,
 			MaxIdleConns:        100,
 		},
-		Director: func(req *http.Request) {
-			var rawTarget string
-			if t, ok := FromTargetContext(req.Context()); ok {
-				rawTarget = t
+		Rewrite: func(pr *httputil.ProxyRequest) {
+			target, ok := ValidatedTargetFromContext(pr.In.Context())
+			if !ok {
+				// Leave no outbound target, so the transport fails closed.
+				pr.Out.URL = &url.URL{}
+				return
 			}
-			if rawTarget != "" {
-				if target, err := url.Parse(rawTarget); err != nil {
-					// Do nothing?
-				} else {
-					req.Host = target.Host
-					req.URL.Scheme = target.Scheme
-					req.URL.Host = target.Host
-					req.URL.Path = target.Path
-					req.URL.RawPath = target.EscapedPath()
-				}
-			}
+			pr.SetURL(target)
+			pr.Out.Host = target.Host
 		},
 	}
 }
 ```
 
-For example, by using the request context (`FromTargetContext`). But this doesn't feel great (haven't explored how performance looks like when using this yet though).
+Here `ValidatedTargetFromContext` only returns a parsed `*url.URL` after checking its scheme and host against an explicit allowlist (or other policy).
+Parsing alone is not sufficient; otherwise this can become an SSRF/open-proxy endpoint.
 
-Maybe it's better to implement a "non-standard" (i.e. not using `ServeHTTP`) [[HTTP handlers|handler]], and just pass extra information to it?
+For example, by using the request context (`ValidatedTargetFromContext`).
+But this doesn't feel great (haven't explored how performance looks like when using this yet though).
+
+Maybe it's better to implement a "non-standard" (i.e. not using `ServeHTTP`) [[HTTP handlers|handler]] and just pass extra information to it?
 
 Something like:
 
