@@ -1,11 +1,6 @@
 ---
 import "../styles/base.css"
-import "@fontsource/ia-writer-quattro/400.css"
-import "@fontsource/ia-writer-quattro/400-italic.css"
-import "@fontsource/ia-writer-quattro/700.css"
-import quattroRegular from "@fontsource/ia-writer-quattro/files/ia-writer-quattro-latin-400-normal.woff2?url"
-import quattroItalic from "@fontsource/ia-writer-quattro/files/ia-writer-quattro-latin-400-italic.woff2?url"
-import quattroBold from "@fontsource/ia-writer-quattro/files/ia-writer-quattro-latin-700-normal.woff2?url"
+import { Font } from "astro:assets"
 
 interface Props {
   title: string
@@ -38,8 +33,9 @@ const rssUrl = rssBase && new URL("/rss.xml", rssBase)
 
     <title>{title}</title>
 
-    {robots && <meta name="robots" content={robots} />}
     {description && <meta name="description" content={description} />}
+    {robots && <meta name="robots" content={robots} />}
+
     {canonical && <link rel="canonical" href={canonical} />}
     {
       rssUrl && (
@@ -52,28 +48,7 @@ const rssUrl = rssBase && new URL("/rss.xml", rssBase)
       )
     }
 
-    <link
-      rel="preload"
-      href={quattroRegular}
-      as="font"
-      type="font/woff2"
-      crossorigin="anonymous"
-    />
-    <link
-      rel="preload"
-      href={quattroBold}
-      as="font"
-      type="font/woff2"
-      crossorigin="anonymous"
-    />
-    <!-- Discover the italic face early so emphasized text does not load it late. -->
-    <link
-      rel="preload"
-      href={quattroItalic}
-      as="font"
-      type="font/woff2"
-      crossorigin="anonymous"
-    />
+    <Font cssVariable="--font-body" preload />
 
     <slot name="head" />
   </head>

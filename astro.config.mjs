@@ -1,4 +1,4 @@
-import { defineConfig } from "astro/config"
+import { defineConfig, fontProviders } from "astro/config"
 import { fileURLToPath } from "node:url"
 
 import { rehypeHeadingIds, unified } from "@astrojs/markdown-remark"
@@ -19,6 +19,40 @@ const gardenRoot = fileURLToPath(new URL("./data/garden", import.meta.url))
 export default defineConfig({
   site: "https://dans.land",
   trailingSlash: "never",
+  fonts: [
+    {
+      name: "iA Writer Quattro",
+      cssVariable: "--font-body",
+      provider: fontProviders.local(),
+      // Generate system-font fallbacks with metrics matched to Quattro.
+      fallbacks: ["system-ui"],
+      options: {
+        variants: [
+          {
+            src: [
+              "@fontsource/ia-writer-quattro/files/ia-writer-quattro-latin-400-normal.woff2",
+            ],
+            weight: 400,
+            style: "normal",
+          },
+          {
+            src: [
+              "@fontsource/ia-writer-quattro/files/ia-writer-quattro-latin-400-italic.woff2",
+            ],
+            weight: 400,
+            style: "italic",
+          },
+          {
+            src: [
+              "@fontsource/ia-writer-quattro/files/ia-writer-quattro-latin-700-normal.woff2",
+            ],
+            weight: 700,
+            style: "normal",
+          },
+        ],
+      },
+    },
+  ],
   image: {
     layout: "constrained",
     breakpoints: [320, 480, 672, 960, 1344],

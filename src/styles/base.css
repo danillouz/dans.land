@@ -1,6 +1,5 @@
 :root {
   color-scheme: light dark;
-  --font-body: "iA Writer Quattro", ui-sans-serif, system-ui, sans-serif;
   --font-code:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
     monospace;

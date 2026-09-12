@@ -335,13 +335,23 @@ test("article fonts and small styles are discoverable in the initial HTML", asyn
       attribute(node, "as") === "font",
   )
 
+  const preloadedFiles = await Promise.all(
+    preloads.map(async (font) => {
+      const href = attribute(font, "href")!
+      // Both an empty crossorigin attribute and "anonymous" enable font CORS.
+      assert.ok(["", "anonymous"].includes(attribute(font, "crossorigin")!))
+      assert.ok(inlineStyles.includes(attribute(font, "href")!))
+      return readFile(`dist${href}`)
+    }),
+  )
   for (const variant of ["400-normal", "400-italic", "700-normal"]) {
-    const font = preloads.find((node) =>
-      attribute(node, "href")?.includes(`latin-${variant}`),
+    const source = await readFile(
+      `node_modules/@fontsource/ia-writer-quattro/files/ia-writer-quattro-latin-${variant}.woff2`,
     )
-    assert.ok(font, `missing ${variant} font preload`)
-    assert.equal(attribute(font, "crossorigin"), "anonymous")
-    assert.ok(inlineStyles.includes(attribute(font, "href")!))
+    assert.ok(
+      preloadedFiles.some((file) => file.equals(source)),
+      `missing ${variant} font preload`,
+    )
   }
   assert.match(inlineStyles, /\.post-description/)
 })
