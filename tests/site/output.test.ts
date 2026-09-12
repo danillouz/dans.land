@@ -500,7 +500,7 @@ test("the generated sitemap contains every public route", async () => {
   assert.deepEqual(
     urls,
     [
-      "https://dans.land",
+      "https://dans.land/",
       "https://dans.land/about",
       "https://dans.land/garden",
       "https://dans.land/garden/all",

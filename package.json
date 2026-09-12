@@ -16,7 +16,7 @@
     "@astrojs/check": "^0.9.10",
     "@astrojs/markdown-remark": "^7.3.0",
     "@astrojs/rss": "^4.0.19",
-    "@astrojs/sitemap": "3.7.3",
+    "@astrojs/sitemap": "^3.7.4",
     "@expressive-code/plugin-line-numbers": "^0.44.2",
     "@flowershow/remark-wiki-link": "3.4.0",
     "@fontsource/ia-writer-quattro": "^5.3.0",
