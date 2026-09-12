@@ -2,7 +2,7 @@
 title: Cache stampeding
 description: How to prevent cache stampedes.
 created: 2025-01-04
-updated: 2026-09-11
+updated: 2026-09-12
 status: evergreen
 ---
 
@@ -12,7 +12,7 @@ Cached data can for example be the result of a previous (expensive) computation,
 
 When a system using a cache comes under high (concurrent) load, a specific type of failure can happen when a cache miss occurs.
 
-In that cache miss scenario, a lot of (concurrent) request will try to revalidate the cache at the same time.
+In that cache miss scenario, a lot of (concurrent) requests will try to revalidate the cache at the same time.
 For example, by fetching data from an origin, like a database.
 
 This can lead to congestion and/or resource issues, taking down the system, and is called a cache stampede (also known as a "cache thundering herd" or "cache dog piling").
@@ -29,7 +29,7 @@ These are some techniques to prevent cache stampedes.
 
 By using a "cache lock", only 1 request will revalidate the cache, while the other requests wait (or return stale data, or a "not found").
 
-This is for example [what Cloudflare does](https://developers.cloudflare.com/cache/concepts/revalidation/#example-2).
+This is for example [what Cloudflare does](https://developers.cloudflare.com/cache/concepts/default-cache-behavior/#request-collapsing).
 
 This approach works well in most cases.
 But the main downside is that it typically requires a "lock service", which adds latency (and fallibility).

@@ -2,7 +2,7 @@
 title: ZIP bomb countermeasures
 description: How to defend against ZIP bombs in Go.
 created: 2024-11-08
-updated: 2026-09-11
+updated: 2026-09-12
 status: sapling
 ---
 
@@ -23,7 +23,7 @@ The files in the ZIP archive are often compressed using [DEFLATE](https://en.wik
 
 ZIP bombs achieve extreme compression ratios by exploiting the container format:
 
-1. **Recursive ZIP bombs** contain nested ZIP files within ZIP files, that create a chain reaction when extracted. But this only works if the program can read ZIP archives recursively.
+1. **Recursive ZIP bombs** contain nested ZIP files within ZIP files that create a chain reaction when extracted. But this only works if the program can read ZIP archives recursively.
 
 2. **Non-recursive ZIP bombs** [overlap compressed files in the ZIP archive](https://www.bamsoftware.com/hacks/zipbomb/). This works by first creating a highly compressed file (e.g. a long string of repeated bytes), and then making (all) the headers in the ZIP's central directory reference that compressed file. This technique can achieve compression ratios over 28 million, far beyond [DEFLATE's compression ratio of 1032](https://www.zlib.net/zlib_tech.html).
 
@@ -69,9 +69,10 @@ func ValidateZip(r *zip.Reader) error {
 		if uncompSize > uint64(MaxZipFileUncompressedBytes) {
 			return fmt.Errorf("file %s too large", file.Name)
 		}
-		if compSize > 0 && uncompSize > 0 {
-			ratio := uncompSize / compSize
-			if ratio > MaxZipFileCompressionRatio {
+		if compSize > 0 && uncompSize > compSize {
+			// compSize is smaller than the already-limited uncompSize,
+			// so this multiplication cannot overflow.
+			if uncompSize > uint64(MaxZipFileCompressionRatio)*compSize {
 				return fmt.Errorf("suspiciously high compression ratio")
 			}
 		}

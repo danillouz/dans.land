@@ -4,14 +4,16 @@ description: The X-Forwarded-For header contains the IP address of a client conn
 created: 2024-08-18
 aliases:
   - X-Forwarded-For
-updated: 2026-09-10
+updated: 2026-09-12
 status: seedling
 ---
 
 The `X-Forwarded-For` (XFF) HTTP request header is a **de-facto standard** header that contains the IP address of a client that connects to a server via a [[Proxies|proxy server]].
 
-When a client make a request to a server, it sends its IP address to the server.
-But when a proxy sits in between, the client IP is lost because the server only sees the "final" IP address of the proxy.
+When a client makes a request to a server, the server observes the source IP address of the connection.
+But when a proxy sits in between,
+the server sees the proxy's address as its connection peer,
+where the proxy may preserve the original client address in this header.
 
 > [!note]
 >

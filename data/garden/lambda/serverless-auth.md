@@ -2,7 +2,7 @@
 title: Serverless auth
 description: Protecting AWS API Gateway endpoints with AWS Lambda and Auth0.
 created: 2019-06-19
-updated: 2026-09-11
+updated: 2026-09-12
 status: evergreen
 ---
 
@@ -98,7 +98,7 @@ Content-Type: application/json
 
 When the Account API receives a request with the bearer token, it will have to verify the token with the help of Auth0. In order to do that, we first have to register our API with them:
 
-1. [Sign up](https://auth0.com/signup) and setup your tenant.
+1. [Sign up](https://auth0.com/signup) and set up your tenant.
 2. In the Auth0 dashboard, navigate to "APIs" and click on "Create API".
 3. Follow the [instructions](https://auth0.com/docs/get-started/apis) and provide a "Name" and "Identifier". For example `Account API` and `https://api.danillouz.dev/account`[^2].
 4. Use `RS256` as the signing algorithm (more on that later).
@@ -340,7 +340,7 @@ Now you can install the following required npm dependencies:
 npm i jsonwebtoken jwks-rsa
 ```
 
-The [jsonwebtoken](https://github.com/auth0/node-jsonwebtoken) library will help use decode the bearer token (a JWT) and verify its signature, issuer and audience claims.
+The [jsonwebtoken](https://github.com/auth0/node-jsonwebtoken) library will help us decode the bearer token (a JWT) and verify its signature, issuer and audience claims.
 The [jwks-rsa](https://github.com/auth0/node-jwks-rsa) library will help us fetch the JWKS from Auth0.
 
 We'll use the Serverless Framework to configure and upload the Lambda to AWS, so install it as a dev dependency:
@@ -484,7 +484,7 @@ module.exports = function getToken(event) {
 Here we're only interested in `TOKEN` events because we're implementing a [[#What's a Lambda Authorizer?|token based authorizer]].
 We can access the value of the `Authorization` request header via the `event.authorizationToken` property.
 
-Then `require` and call the helper in the Lambda with the APIG HTTP input [event](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format) as an argument:
+Then `require` and call the helper in the Lambda with the APIG Lambda authorizer input [event](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-lambda-authorizer-input.html) as an argument:
 
 ```js title="lambda-authorizers/src/auth0.js" showLineNumbers {3,7}
 "use strict"
@@ -536,6 +536,7 @@ module.exports = async function verifyToken(
 
   // Step 3.
   return verifyJwt(token, signingKey, {
+    algorithms: ["RS256"],
     issuer,
     audience,
   })
@@ -594,7 +595,7 @@ module.exports.verifyBearer = async (event) => {
 
 To fetch the public key from Auth0 (step 2) we'll use the `jwks-rsa` library.
 It exposes a client with `getSigningKey` method to fetch the key.
-Pas a "promisified" version of this method as the third argument when calling the helper:
+Pass a "promisified" version of this method as the third argument when calling the helper:
 
 ```js title="lambda-authorizers/src/auth0.js" showLineNumbers {3,5,10,11-17,22}
 "use strict"
@@ -1359,5 +1360,5 @@ resources:
 ```
 
 When the Lambda Authorizer throws an error or returns a "Deny" policy, APIG will _not_ execute any Lambda handlers.
-This means that the CORS settings you added to the Lambda handler wont be applied.
+This means that the CORS settings you added to the Lambda handler won't be applied.
 That's why we must define additional APIG response resources, to make sure we always return the proper CORS headers.

@@ -2,6 +2,7 @@
 title: Comments
 description: Learning new things about Go doc comments.
 created: 2024-08-19
+updated: 2026-09-12
 aliases:
   - Go Doc
 status: seedling
@@ -22,7 +23,7 @@ This makes it possible to use semantic linefeeds:
 ```go
 // This is a paragraph.
 // Each sentence can be placed on a separate line.
-// And it wont be rewrapped by gofmt.
+// And it won't be rewrapped by gofmt.
 ```
 
 > [!note] Semantic linefeeds?
@@ -33,7 +34,7 @@ This makes it possible to use semantic linefeeds:
 
 ## Headings
 
-Headings are lines that begins with `#` followed by a space and text. Headings must be unindented and followed by a blank line:
+Headings are lines that begin with `#` followed by a space and text. Headings must be unindented and followed by a blank line:
 
 ```go
 // # This is a heading
@@ -81,7 +82,7 @@ Code blocks are indented lines that are not a [[#Lists|list]]:
 
 ## Lists
 
-List are indented lines that begin with a decimal number and/or special character.
+Lists are indented lines that begin with a decimal number and/or special character.
 
 ### Numbered lists
 

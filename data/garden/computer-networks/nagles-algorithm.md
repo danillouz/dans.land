@@ -2,17 +2,17 @@
 title: Nagle's algorithm
 description: Nagle's algorithm solves the small-packet problem, but can cause problems.
 created: 2024-08-18
-updated: 2026-09-11
+updated: 2026-09-12
 aliases:
   - Nagling
   - TCP NODELAY
-  - AKC delay
+  - Delayed ACKs
 status: seedling
 ---
 
 Sending small packets has a large overhead that can cause network congestion.
 
-For example, sending 1 byte of data over the network results in a 41 bytes packet (20 bytes for TCP and 20 bytes for IPv4 headers).
+For example, sending 1 byte of data over the network results in a 41-byte packet (20 bytes for TCP and 20 bytes for IPv4 headers).
 
 This is called the "small-packet problem" and for example happens in telnet sessions, where every single character is sent over the network as it's typed.
 
@@ -34,20 +34,20 @@ This is sometimes called "nagling" and is usually _enabled_ by default.
 > Nagle's algorithm is controlled via `TCP_NODELAY`.
 > Enabling `TCP_NODELAY` _disables_ Nagle's algorithm.
 
-## ACK delays
+## Delayed ACKs
 
-A different solution for the same problem is to use ACK delays.
+A different solution for the same problem is to use delayed acknowledgments (delayed ACKs).
 
-ACK delays combine several ACK responses into a single one, by waiting for a short period that varies by implementation (e.g. 200 ms).
+Delayed ACKs combine several ACK responses into a single one, by waiting for a short period that varies by implementation (e.g. 200 ms).
 
 This way it can either:
 
 - Combine multiple ACKs.
 - Include the ACK in data it needs to send anyways (this is called "piggybacking").
 
-ACK delays are usually _also_ enabled by default.
+Delayed ACKs are usually _also_ enabled by default.
 
-## Nagle's algorithm and ACK delays
+## Nagle's algorithm and delayed ACKs
 
 Nagle's algorithm can interact badly with delayed ACKs.
 When both are enabled, a small write can wait for an ACK or for enough data to fill a segment, while the ACK itself is delayed.
@@ -66,10 +66,11 @@ This becomes problematic for latency-sensitive applications.
 
 ## Disabling Nagle's algorithm
 
-For most modern (latency-sensitive) applications Nagle's algorithm should be disabled.
-As it's not common to send single byte data like in the telnet days and you most likely want to send data as soon as possible.
+For some modern latency-sensitive applications, Nagle's algorithm should be disabled.
+But it depends on the write pattern and latency requirements if it should be disabled or not:
+batching can improve efficiency, while small interactive writes may benefit from sending data immediately.
 
-But it depends on the use case: disabling Nagle can reduce latency, but can also increase the number of small packets
+So disabling Nagle can reduce latency, but can also increase the number of small packets.
 
 For example, Go considers disabling Nagle's algorithm to be a sane default: [pkg.go.dev/net#TCPConn.SetNoDelay](https://pkg.go.dev/net#TCPConn.SetNoDelay).
 

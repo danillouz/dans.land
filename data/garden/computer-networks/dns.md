@@ -2,7 +2,7 @@
 title: DNS
 description: What I learned about the Domain Name System so far.
 created: 2023-06-03
-updated: 2026-09-11
+updated: 2026-09-12
 aliases:
   - The Domain Name System
 status: evergreen
@@ -40,10 +40,11 @@ and instead of using mail addresses to deliver mail to the correct destination,
 
 [^1]: The IP protocol is basically the addressing system of the internet, but there's more needed to deliver packets from source to destination. The exact details are out of scope for this page, but there's also a transport protocol needed to define rules _how_ data is sent and received. Ultimately there are multiple protocols needed which are "layered" on top of each other, like [TCP/IP](https://en.wikipedia.org/wiki/Internet_protocol_suite).
 
-IP addresses are unique identifiers.
+IP addresses identify network interfaces or destinations, but they are not universally unique device identifiers:
+private addresses are reused, and anycast addresses can represent multiple interfaces.
 For example, if a device wants to visit this website it must (at the time of this writing) go to IP address `188.114.96.0` or `188.114.97.0`[^2].
 
-[^2]: This is an IPv4 address, and IP version 4 has been around since 1983. It works great, but we're running out of unique IPv4 addresses because nowadays even toasters must connect to the internet. This is where IPv6 comes in: IPv6 uses more characters to make sure all toasters all covered! For example, `2a06:98c1:3120::` is an IPv6 address. But IPv6 is not completely adopted yet, so it's still common to use IPv4.
+[^2]: This is an IPv4 address, and IP version 4 has been around since 1983. It works great, but we're running out of unique IPv4 addresses because nowadays even toasters must connect to the internet. This is where IPv6 comes in: IPv6 expands an address from 32 bits to 128 bits to make sure all toasters are covered! For example, `2a06:98c1:3120::` is an IPv6 address. But IPv6 is not completely adopted yet, so it's still common to use IPv4.
 
 IP addresses work great for machines and robots because they _love_ numbers.
 But us humans usually have difficulty remembering them and we prefer using a more memorable **domain name** instead.
@@ -77,7 +78,7 @@ This hierarchy is reflected in domain names themselves:
 - Each label represents a node in the tree, and is a "sublevel" in the naming hierarchy.
 - The root of the tree is the "nameless" label `.` (dot), also called the **root domain**[^4].
 
-[^4]: The root domain is typically not specified. For example, you'd usually type `github.com` in your browser instead of `github.com.` (note the trailing dot). But you can absolutely do this! And when you do explicitly provide the root, the domain name is referred to as a **Fully Qualified Domain Name** (FQDN).
+[^4]: The root domain is typically not specified. For example, you'd usually type `github.com` in your browser instead of `github.com.` (note the trailing dot). But you can absolutely include it! Strictly speaking, a **Fully Qualified Domain Name** (FQDN) includes the root and is written with that trailing dot. In everyday use though, `github.com` is often still called an FQDN without it.
 
 For example, the labels of the domain names:
 
@@ -110,7 +111,7 @@ And depending on what "level" these labels sit in the tree, they are referred to
 
 When reading a domain name from left-to-right:
 
-- The right-most label is called the **top-level domain** (TLD). There are different kind of TLDs[^5], but the most notable are:
+- The right-most label is called the **top-level domain** (TLD). There are different kinds of TLDs[^5], but the most notable are:
   - Generic top-level domains (gTLDs), like `com` or `org`.
   - Country code top-level domains (ccTLDs), like `uk` or `nl`.
 - The label before the TLD is called the **second-level domain** (2LD). The label before that is called the **third-level domain** (3LD). This can go on and on: fourth-level, fifth-level, etc. But often all labels before the 2LD are just called a **subdomain**.
@@ -130,7 +131,7 @@ Each label in the domain name space will usually have some information associate
 This information is represented by **resource records** (usually called DNS records).
 A zone file is one text-file representation of those records, and DNS servers that serve resource records are called **name servers**.
 
-There are different kind of resource records, and I won't cover all of them on this page, but 3 important ones are:
+There are different kinds of resource records, and I won't cover all of them on this page, but 3 important ones are:
 
 - **NS records** store the name server of a domain name.
 - **A records** store the IPv4 address of a domain name.
@@ -154,18 +155,19 @@ To make sure the system as a whole scales and runs reliably, each zone has an op
 
 Name servers only store part of the domain name space, so how can DNS retrieve information for every name in the domain name space?
 Most name servers just point to _other_ name servers,
-and its up to a different kind of DNS server called a **resolver** (also called a recursor) to follow these "pointers" and retrieve resource records.
+and it's up to a **recursive resolver** (also called a recursor) to follow these "pointers" and retrieve resource records.
+A browser or operating system usually has a **stub resolver**, which forwards its query to a recursive resolver instead of following the chain itself.
 
 ## How does DNS work?
 
-So far we've covered the main components of DNS, but to understand how it works we first need to explicitly identify the different kind of DNS servers and how they interact with each other.
+So far we've covered the main components of DNS, but to understand how it works we first need to explicitly identify the different kinds of DNS servers and how they interact with each other.
 
-There are 4 different kind of servers needed to make DNS work:
+There are 4 different kinds of servers needed to make DNS work:
 
 - **Root name servers** are the name servers that serve the **DNS root zone**. This is a special DNS zone that contains _all_ TLDs of the domain name space. The DNS root zone consists of 13 root name servers[^6], and each root name server contains the [root zone database](https://www.iana.org/domains/root/db). This contains NS records that delegate TLDs to their name servers, and may include glue records with their IP addresses. Such lists are published as plain text files called **DNS zone files** (like the [root zone file](https://www.internic.net/domain/root.zone)).
 - **TLD name servers** serve a TLD zone that contains delegations for 2LDs (for a specific TLD). These delegations return NS records naming the authoritative name servers, and may include glue records with their IP addresses.
-- **Authoritative name servers** have complete information for a domain name, and are the "authority" for that part of the domain name space.
-- **Resolvers** receive requests from a client (e.g. a web browser) to find resource records (e.g. an IP address). Resolvers send **queries** to name servers and receive resource record(s) back as an **answer**. Depending on the query type (i.e. what resource record is being queried), a resolver might need to query multiple name servers, but (for uncached queries) it will always start with one of the root name servers. That's why every resolver stores a [hard-coded list](https://www.internic.net/domain/named.root) of all 13 root name servers. By default the resolver of your Internet Service Provider (ISP) is used when you browse the internet[^7].
+- **Authoritative name servers** are authoritative for a zone: they serve the resource records for that administratively managed portion of the domain name space.
+- **Recursive resolvers** receive requests from stub resolvers to find resource records (e.g. an IP address). They send **queries** to name servers and receive resource record(s) back as an **answer**. A recursive resolver that queries the DNS hierarchy itself uses a [hard-coded list](https://www.internic.net/domain/named.root) of the 13 root name servers as its starting point. It can also use cached data or forward the query to another recursive resolver. Clients often use the recursive resolver provided by their network or Internet Service Provider (ISP)[^7].
 
 [^6]: There are 13 clusters of hundreds of physical DNS root servers, distributed all over the globe. You can see them (and their location) on [root-servers.org](https://root-servers.org/).
 
@@ -175,21 +177,21 @@ There are 4 different kind of servers needed to make DNS work:
 >
 > I used to be confused about what authoritative name servers are and how they differ from other name servers.
 >
-> But an authoritative name server is just the name server that "knows" the information being queried by a resolver.
-> So it actually depends on the query type which name server is authoritative.
+> But an authoritative name server is just a name server that serves authoritative data for a zone.
+> So it depends on the queried name and its zone which name server is authoritative.
 >
 > For example, root name servers are authoritative for the root zone,
 > TLD name servers are authoritative for a TLD zone,
 > and when querying the A record for a domain name,
-> the name server that stores the IPv4 address is authoritative.
+> the name server serving the zone that contains the record is authoritative.
 
 With that covered, we can finally answer the question below.
 
 ### What happens when you visit a website in your browser?
 
-The following occurs when a browser uses DNS to look up the IP address of a domain name:
+The following simplified example assumes the recursive resolver has nothing useful cached and queries the DNS hierarchy itself:
 
-1. The browser sends a request to a resolver to find the A record of the entered domain name.
+1. The browser's stub resolver sends a request to a recursive resolver to find the A record of the entered domain name.
 2. The resolver sends a query to one of the 13 root name servers to find the TLD name server of the domain name. When found, the root name server sends an NS record back (with the name of the TLD name server) as the answer to the resolver.
 3. The resolver sends a query to the TLD name server to find the authoritative name server of the 2LD of the domain name. When found, the TLD name server sends an NS record back (with the name of the authoritative name server) as the answer to the resolver.
 4. The resolver sends a query to the authoritative name server to find the A record of the domain name. When found, the authoritative name server sends an A record back (with the IP address of the domain name) as the answer to the resolver.
@@ -198,7 +200,7 @@ The following occurs when a browser uses DNS to look up the IP address of a doma
 
 > [!note] The steps above are for uncached queries
 >
-> Since there can be a lot steps needed to look up information for a domain name, resolvers will cache the results of queries.
+> Since there can be a lot of steps needed to look up information for a domain name, resolvers will cache the results of queries.
 >
 > For example, when a query is made for a domain name that was recently looked up,
 > the resolver can skip (some of) the steps above and return the cached result(s) immediately.
@@ -217,8 +219,8 @@ And who oversees all of this?
 
 ICANN helps with administration, oversight and maintenance. But delegates some of this to IANA (which is part of ICANN).
 
-For example, ICANN helps make technical decisions on the internet, coordinates adding [new TLDs](https://newgtlds.icann.org/en/about/program) and operates 1 of the 13 DNS root name servers.
-While IANA maintains what protocols are used on the internet, coordinates IP addresses globally and manages the DNS root zone.
+For example, ICANN coordinates DNS policy and adding [new TLDs](https://newgtlds.icann.org/en/about/program), and operates 1 of the 13 DNS root name servers.
+IANA maintains shared lists of the numbers and names used by internet protocols (such as port numbers and DNS record types), coordinates global IP-address allocations through the regional Internet registries, and manages the DNS root zone.
 
 ### Domain name registries and registrars
 
@@ -257,6 +259,6 @@ where for some operations registrars also pay registries (and ICANN) a fee[^11].
 ## Resources
 
 - [RFC 1034: Domain names concepts and facilities](https://datatracker.ietf.org/doc/rfc1034/)
-- [RFC 8499: DNS Terminology](https://datatracker.ietf.org/doc/rfc8499/)
+- [RFC 9499: DNS Terminology](https://datatracker.ietf.org/doc/rfc9499/)
 - [What is DNS?](https://www.cloudflare.com/learning/dns/what-is-dns/)
 - [What does ICANN do?](https://www.icann.org/resources/pages/what-2012-02-25-en/)

@@ -2,7 +2,7 @@
 title: S3 upload memory
 description: How to prevent high memory usage when uploading many files via the Go S3 manager uploader.
 created: 2024-10-27
-updated: 2026-09-11
+updated: 2026-09-12
 status: evergreen
 ---
 
@@ -18,7 +18,7 @@ There are 2 options to upload files to S3 using the [Go V2 AWS SDK](https://docs
 
 Both accept [PutObjectInput](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/s3#PutObjectInput), where the `Body` must be an `io.Reader`.
 
-From what I understand, option 2 is recommended when uploading many (large) files, because it:
+At the time, option 2 was recommended when uploading many (large) files, because it:
 
 - Safely uploads files concurrently across goroutines.
 - Buffers large files into smaller chunks and uploads them in parallel.

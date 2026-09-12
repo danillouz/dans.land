@@ -2,7 +2,7 @@
 title: Obsidian web clipper
 description: My bookmarklet to clip web pages to Obsidian.
 created: 2023-06-18
-updated: 2026-09-10
+updated: 2026-09-12
 status: evergreen
 ---
 
@@ -39,13 +39,13 @@ so it does pretty much the same thing, but with these differences:
 - npm dependencies are loaded as ECMAScript modules from [jsDelivr](https://www.jsdelivr.com/?docs=esm).
 - Clippings of entire webpages, and clippings of selections are stored in _separate_ Obsidian folders: `Clippings` and `Clippings/Quotes`.
 - Clippings of selections (quotes) of the same webpage are _appended_ to the same Obsidian note.
-- Quotes include the selected [text fragment](https://web.dev/text-fragments/) in the source link. So visiting the quote's source link will scroll you to, and highlight, the clipped text on the webpage. This only works natively in Chromium and Safari, but [this browser extension](https://github.com/GoogleChromeLabs/link-to-text-fragment#installation) can be installed to polyfill the functionality.
+- Quotes include the selected [text fragment](https://web.dev/text-fragments/) in the source link. So visiting the quote's source link will scroll you to, and highlight, the clipped text on the webpage. This works natively in current Chromium and Safari, and in Firefox 131 and later. For older or unsupported browsers, [this browser extension](https://github.com/GoogleChromeLabs/link-to-text-fragment#installation) can be installed to polyfill the functionality.
 - An alert dialog will show when clipping fails.
 
 > [!note]
 >
 > [Firefox 131 added native text-fragment support](https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/131),
-> so the browser-support limitation above no longer applies to current Firefox versions.
+> while older Firefox versions still need a polyfill.
 
 ### How to use it?
 

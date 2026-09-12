@@ -2,6 +2,7 @@
 title: Proxies
 description: What I learned about proxies so far.
 created: 2024-08-18
+updated: 2026-09-12
 aliases:
   - Reverse Proxy
   - Forward Proxy
@@ -12,7 +13,7 @@ A proxy is an "intermediary" between a client making an HTTP request, and a serv
 
 Generally speaking there are 2 types of proxies:
 
-1. **Forward proxies** sit between the client and "the internet" (also called tunnels or gateways).
+1. **Forward proxies** sit between the client and "the internet".
 2. **Reverse proxies** sit between "the internet" and a server.
 
 ## Resources

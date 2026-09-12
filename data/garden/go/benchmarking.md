@@ -2,7 +2,7 @@
 title: Benchmarking
 description: How to write benchmarks in Go.
 created: 2024-08-24
-updated: 2026-09-11
+updated: 2026-09-12
 status: sapling
 ---
 
@@ -25,7 +25,7 @@ func BenchmarkSomething(b *testing.B)
 > [!warning] Use `b.Loop()`
 >
 > Go 1.24 added [`b.Loop()`](https://go.dev/blog/testing-b-loop).
-> The `b.N` examples in this post still work, but have some [gotcha's](#gotchas)
+> The `b.N` examples in this post still work, but have some [gotchas](#gotchas)
 
 A benchmark has some "code under test":
 
@@ -87,7 +87,8 @@ For example:
 go test ./... -run ^$ -bench BenchmarkSomething -count 10
 ```
 
-Alternatively, the actual number of iteration can be controlled by using the syntax `Nx`. For example, this runs the benchmark for exactly 100 iterations:
+Alternatively, the actual number of iterations can be controlled by using the syntax `Nx`.
+For example, this runs the benchmark for exactly 100 iterations:
 
 ```sh
 go test ./... -run ^$ -bench BenchmarkSomething -benchtime 100x
@@ -95,9 +96,11 @@ go test ./... -run ^$ -bench BenchmarkSomething -benchtime 100x
 
 ### Controlling duration
 
-By default `b.N` iterations for a benchmark are run for a duration of 1 second. But this may not be enough to produce a good enough sample size.
+By default `b.N` iterations for a benchmark are run for a duration of 1 second.
+But this may not be enough to produce a good enough sample size.
 
-To increase benchmark duration use the `-benchtime` test flag. It guarantees that a benchmark will run for at least that amount of time.
+To increase benchmark duration use the `-benchtime` test flag.
+It guarantees that a benchmark will run for at least that amount of time.
 
 For example:
 
@@ -107,7 +110,7 @@ go test ./... -run ^$ -bench BenchmarkSomething -benchtime 10s
 
 ## How to read benchmark results
 
-Benchmark result have the following format:
+Benchmark results have the following format:
 
 ```text
 <name> <iterations> <value> <unit> [<value> <unit>...]
@@ -178,13 +181,15 @@ Can be interpreted as follows:
 
 ## Profiling benchmarks
 
-Memory allocations can be printed in the results by providing the `-benchmem` test flag. For example:
+Memory allocations can be printed in the results by providing the `-benchmem` test flag.
+For example:
 
 ```sh
 go test ./... -run ^$ -bench BenchmarkSomething -benchmem
 ```
 
-But it's also possible to produce `pprof` compatible profiles. For example:
+But it's also possible to produce `pprof` compatible profiles.
+For example:
 
 ```sh
 go test ./... -run ^$ -bench BenchmarkSomething -cpuprofile cpu.prof
@@ -230,7 +235,7 @@ For example:
 go test ./... -run ^$ -bench BenchmarkSomething/Two
 ```
 
-## Gotcha's
+## Gotchas
 
 > [!warning] Use `b.Loop()`
 >
@@ -265,7 +270,7 @@ func BenchmarkSomething(b *testing.B) {
 ### 2. Compiler optimizations
 
 It may happen that the compiler optimizes code under test in a benchmark.
-When this happens, the benchmark will seem faster that it really is.
+When this happens, the benchmark will seem faster than it really is.
 
 This may happen with non-changing function inputs and unused values.
 

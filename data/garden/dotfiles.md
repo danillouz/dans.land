@@ -2,7 +2,7 @@
 title: Dotfiles
 description: Collection of my dotfiles and configuration setup on macOS.
 created: 2025-01-05
-updated: 2026-09-11
+updated: 2026-09-12
 status: evergreen
 ---
 
@@ -307,7 +307,7 @@ Config:
 ```ini
 setopt auto_cd
 
-# Enables case-insensitve tab-completion.
+# Enables case-insensitive tab completion.
 # See: https://stackoverflow.com/a/69014927
 zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}' 'r:|=*' 'l:|=* r:|=*'
 autoload -Uz compinit && compinit

@@ -2,7 +2,7 @@
 title: Audio transcoding
 description: Transcoding short audio files with AWS Lambda, Amazon Elastic Transcoder or FFmpeg.
 created: 2019-10-27
-updated: 2026-09-11
+updated: 2026-09-12
 status: evergreen
 ---
 
@@ -705,7 +705,7 @@ module.exports.transcodeToMp3 = async (event) => {
 The S3 client returns an object that contains a `Body` property.
 The value of `Body` is a blob, which we'll feed to the FFmpeg layer and convert it to MP3.
 
-We'll do this via a helper function that will spawn a [synchronous child process](https://nodejs.org/api/child_process.html#child_process_child_process_spawnsync_command_args_options) which allows us to execute the `ffmpeg` "command" (provided by the FFmpeg layer):
+We'll do this via a helper function that will spawn a [synchronous child process](https://nodejs.org/api/child_process.html#child_processspawnsynccommand-args-options) which allows us to execute the `ffmpeg` "command" (provided by the FFmpeg layer):
 
 ```js title="audio-transcoder/src/ffmpeg.js" showLineNumbers
 "use strict"
@@ -865,7 +865,7 @@ When Serverless is done deploying, upload another WebM audio file to the input b
 
 But nothing happens... Where's the MP3 file?
 
-Lets find out why this is happening by checking the Lambda function's log files in the AWS web console:
+Let's find out why this is happening by checking the Lambda function's log files in the AWS web console:
 
 - Go to the Lambda service.
 - Click on the `audio-transcoder-prod-transcodeToMp3` function.
@@ -943,7 +943,7 @@ When Serverless is done, upload another WebM audio file and check the logs.
 Great, it's even faster now!
 Does this mean we can just keep increasing the memory and reap the benefits?
 Sadly, no.
-There's a tipping point where increasing the memory wont make it run faster.
+There's a tipping point where increasing the memory won't make it run faster.
 
 For example, increasing the memory to 3008 MB (the maximum [memory limit](https://docs.aws.amazon.com/lambda/latest/dg/limits.html) at the time of this writing) will result in a similar runtime duration:
 
@@ -1010,7 +1010,7 @@ So the average transcoding time of the audio file would be:
 7378,3 / 1000 = 7,3783 sec
 ```
 
-Lets say we would be transcoding `100 000` of these audio files per month, with each output exactly 3 minutes long.
+Let's say we would be transcoding `100 000` of these audio files per month, with each output exactly 3 minutes long.
 That would amount to:
 
 ```txt

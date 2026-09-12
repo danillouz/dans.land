@@ -2,6 +2,7 @@
 title: SSH commit signing
 description: How to sign Git commits with SSH on macOS.
 created: 2025-01-05
+updated: 2026-09-12
 status: evergreen
 ---
 
@@ -133,7 +134,7 @@ Where `KEY_TYPE` must be `ssh-ed25519`.
 To get `PUBLIC_KEY` use:
 
 ```sh
- pbcopy < ~/.ssh/id_ed25519_github_danillouz.pub
+pbcopy < ~/.ssh/id_ed25519_github_danillouz.pub
 ```
 
 Then update the global Git config to use the allowed signers file:

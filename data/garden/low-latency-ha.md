@@ -2,7 +2,7 @@
 title: Low latency HA
 description: Low latency and HA (High Availability) patterns I learned from DynamoDB and S3.
 created: 2024-12-15
-updated: 2026-09-11
+updated: 2026-09-12
 aliases:
   - Request hedging
   - Shuffle sharding
@@ -13,7 +13,10 @@ status: seedling
 After watching the re:Invent 2024 DynamoDB ([DAT406](https://www.youtube.com/watch?v=Qzs8mU5dgx4)) and S3 ([STG302](https://www.youtube.com/watch?v=NXehLy7IiPM)) deep dives,
 I learned that DynamoDB uses an in-memory data store (MemDS) that serves their request routers.
 
-DynamoDB is a low latency (response time < 10 MS) and highly available system, and I learned it uses [[#Request hedging]] and [[#Constant work]] as design patterns to help achieve this.
+DynamoDB is a low-latency and highly available system.
+AWS reports [single-digit-millisecond average service latency](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/TroubleshootingLatency.html) for many single-item operations,
+excluding client and network overhead, and I learned it uses [[#Request hedging]] and [[#Constant work]] as design patterns to help achieve this.
+
 S3 also uses a pattern called [[#Shuffle sharding]] (I'm not sure if DynamoDB also uses that, but it seems likely to me).
 
 ## Request hedging
@@ -29,7 +32,7 @@ If the first request is in the tail, the second request may still complete soone
 Request hedging is a bet.
 It will not always pay off.
 But in practice, it's very effective.
-This pattern was invented at [Google (Dean and Barroso)](https://www.barroso.org/publications/TheTailAtScale.pdf).
+Dean and Barroso describe this pattern in [The Tail at Scale](https://www.barroso.org/publications/TheTailAtScale.pdf).
 
 > [!note]
 >
@@ -51,11 +54,8 @@ But shuffle sharding also helps achieve high availability:
 
 ### Power of two random choices
 
-Random allocation is okay, but has a high risk to be inefficient.
-Because it essentially gives you a bell curve (normal distribution), which has an imbalanced distribution.
-
-Instead, look [at 2 random choices and pick the better one](https://youtu.be/NXehLy7IiPM?t=2053).
-This is a lot more effective.
+Assigning requests completely at random can still leave some resources much busier than others.
+A surprisingly effective improvement is to [sample two resources and pick the less busy one](https://youtu.be/NXehLy7IiPM?t=2053).
 
 ## Constant work
 
