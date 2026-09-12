@@ -2,11 +2,11 @@
 title: HTTP handlers
 description: Learning about the HTTP request multiplexer, handlers and middleware in Go.
 created: 2022-12-22
-updated: 2026-09-11
+updated: 2026-09-12
 status: evergreen
 ---
 
-I recently had to hook-up some middleware in a Go service.
+I recently had to hook up some middleware in a Go service.
 While looking into the Go standard library [net/http](https://pkg.go.dev/net/http) package, I got a bit confused by all the different (but similarly named) types and functions that deal with HTTP handlers.
 
 For example, the `http.Handler` and `http.HandlerFunc` types,
@@ -206,7 +206,7 @@ Why does middleware accept and return an `http.Handler`? This allows us to creat
 http.Handle("/", middlewareA(middlewareB(middlewareC(handler))))
 ```
 
-But this can a get a bit unreadable and why third-party libraries typically offer a `Use()` function.
+But this can get a bit unreadable, which is why third-party libraries typically offer a `Use()` function.
 
 For example, this is how you'd use it with [chi](https://go-chi.io/#/pages/middleware):
 
@@ -222,13 +222,13 @@ To wrap up, I want to highlight some (sometimes unexpected) behavior I learned a
 
 ### Paths and patterns
 
-> [!warning]
+> [!note] Go 1.22 routing enhancements
 >
-> Go 1.22 added [method patterns and path wildcards](https://go.dev/blog/routing-enhancements),
-> like `GET /posts/{id}`, with captured values available through `Request.PathValue`.
-> Regular-expression patterns still require custom routing or a library.
+> This section focuses on fixed and subtree path patterns.
+> Since Go 1.22, `http.ServeMux` also supports [method-specific patterns and path wildcards](https://go.dev/blog/routing-enhancements).
+> Captured wildcard values are available through `Request.PathValue`.
 
-When registering a handler for a pattern with `http.ServeMux`, the pattern can either name **fixed paths**, or **subtree paths**.
+The simplest patterns name either **fixed paths** or **subtree paths**.
 
 Fixed paths do _not_ have a trailing slash (e.g. `/blog` or `/blog/create`).
 They are only matched when the URL _exactly_ matches the pattern.
@@ -271,13 +271,13 @@ mux.HandleFunc("/", homeHandler) // Subtree path
 mux.HandleFunc("/blog/", blogHandler) // Subtree path
 ```
 
-| Request path   | Calls `homeHandler` | Calls `blogHandler` |
-| :------------- | :------------------ | :------------------ |
-| `/`            | Yes                 | No                  |
-| `/blog`        | No                  | Yes                 |
-| `/blog/`       | No                  | Yes                 |
-| `/blog/create` | No                  | Yes                 |
-| `/notfound`    | Yes                 | No                  |
+| Request path   | Calls `homeHandler`        | Calls `blogHandler` |
+| :------------- | :------------------------- | :------------------ |
+| `/`            | Yes                        | No                  |
+| `/blog`        | No (redirects to `/blog/`) | No                  |
+| `/blog/`       | No                         | Yes                 |
+| `/blog/create` | No                         | Yes                 |
+| `/notfound`    | Yes                        | No                  |
 
 Also note that longer registered path patterns take precedence over shorter ones:
 
@@ -286,15 +286,15 @@ mux.HandleFunc("/blog/", blogHandler) // Subtree path
 mux.HandleFunc("/blog/create/", blogCreateHandler) // Subtree path
 ```
 
-| Request path     | Calls `blogHandler` | Calls `blogCreateHandler` |
-| :--------------- | :------------------ | :------------------------ |
-| `/`              | No                  | No                        |
-| `/blog`          | Yes                 | No                        |
-| `/blog/`         | Yes                 | No                        |
-| `/blog/1`        | Yes                 | No                        |
-| `/blog/create`   | No                  | Yes                       |
-| `/blog/create/1` | No                  | Yes                       |
-| `/notfound`      | Yes                 | No                        |
+| Request path     | Calls `blogHandler`        | Calls `blogCreateHandler`          |
+| :--------------- | :------------------------- | :--------------------------------- |
+| `/`              | No                         | No                                 |
+| `/blog`          | No (redirects to `/blog/`) | No                                 |
+| `/blog/`         | Yes                        | No                                 |
+| `/blog/1`        | Yes                        | No                                 |
+| `/blog/create`   | No                         | No (redirects to `/blog/create/`)  |
+| `/blog/create/1` | No                         | Yes                                |
+| `/notfound`      | Yes                        | No                                 |
 
 ### Path redirects
 
@@ -314,11 +314,8 @@ It will strip the port number and redirect any request containing `.` or `..` el
 
 ### Limitations
 
-`http.ServeMux` only supports basic prefix matching. So it does _not_ have support for:
+`http.ServeMux` supports fixed paths, subtree paths, method patterns and path wildcards.
+It does _not_ support regular-expression path patterns.
 
-- Path variables.
-- Regex path patterns.
-- Method-based routing.
-
-For such features, you either need to implement that yourself (e.g. check the request method in a handler).
-Or use a third-party library like [chi](https://github.com/go-chi/chi) or [gin](https://github.com/gin-gonic/gin).
+For regular-expression patterns, you either need to implement that yourself (e.g. check the path in a handler),
+or use a third-party library like [chi](https://github.com/go-chi/chi) or [gin](https://github.com/gin-gonic/gin).
