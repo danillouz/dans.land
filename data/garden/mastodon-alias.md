@@ -2,7 +2,7 @@
 title: Mastodon alias
 description: Using a custom domain to alias your Mastodon handle.
 created: 2023-01-03
-updated: 2026-09-11
+updated: 2026-09-12
 status: evergreen
 ---
 
@@ -28,7 +28,7 @@ But there are some caveats.
 ## What's WebFinger?
 
 WebFinger is a protocol[^1] that allows information about people or entities to be discovered over HTTP.
-It basically resolves some sort of URI identifier (like an email address, Mastodon account, or phone number) to a location (i.e. an URL),
+It basically resolves some sort of URI identifier (like an email address, Mastodon account, or phone number) to a location (i.e. a URL),
 which can be retrieved by making a WebFinger request.
 
 [^1]: [RFC 7033](https://www.rfc-editor.org/rfc/rfc7033) describes the WebFinger protocol.
@@ -168,7 +168,7 @@ Host: www.danillouz.dev
 But Mastodon will actually make the following request:
 
 ```sh title="HTTP request"
-GET /.well-known/webfinger?resource=acct:danillouz@mastodon.social
+GET /.well-known/webfinger?resource=acct:danillouz@danillouz.dev
 Host: www.danillouz.dev
 ```
 
@@ -215,7 +215,7 @@ The docs mention that you should include the server domain when sharing your han
 > but you have to keep in mind when sharing your username with other people,
 > you need to include the domain or they won't be able to find you as easily.
 >
-> [https://docs.joinmastodon.org/user/signup/#address](https://docs.joinmastodon.org/user/signup/#address)
+> [https://docs.joinmastodon.org/user/signup/#your-username-and-your-domain](https://docs.joinmastodon.org/user/signup/#your-username-and-your-domain)
 
 So in theory, setting up an alias allows you to create a handle that does not change when migrating to a different Mastodon server.
 It might make your account easier to find if people know your custom domain.
@@ -225,7 +225,8 @@ But practically speaking, searching for just the local username on different ser
 
 When the docs mentioned that you should include the server domain when sharing your handle,
 I thought this meant that someone would always have to search for `danillouz@mastodon.social` on servers _other_ than `mastodon.social` to find me.
-But this doesn't appears to be the case. For example, I can search for `danillouz` on `mast.to`, and it will find me.
+But this doesn't appear to be the case.
+For example, I can search for `danillouz` on `mast.to` and it will find me.
 
 So maybe, aliasing your handle isn't really a good idea?
 
@@ -258,7 +259,7 @@ Host: mastodon.social
 ```
 
 The difference is that the query parameter `resolve` is set to `true` when signed in.
-But is set to `false` when signed out.
+But it is set to `false` when signed out.
 
 Checking the v2 search API docs, we can see that `resolve` controls if a WebFinger lookup should happen or not:
 
@@ -271,36 +272,19 @@ Checking the v2 search API docs, we can see that `resolve` controls if a WebFing
 ### The alias behaves like a "catch-all"
 
 Since I'm [[#Redirecting WebFinger requests]], I'm returning the same response for all `acct:` queries.
-So any[^4] local username can be provided together with my custom domain.
+In my original testing, any[^4] local username could be provided together with my custom domain.
 
-[^4]: Sadly, using emoji doesn't work though.
+[^4]: Sadly, using emoji didn't work though.
 
-For example, these all work:
+Mastodon [validates](https://docs.joinmastodon.org/spec/webfinger/#mastodons-requirements-for-webfinger) an alias by resolving it to an ActivityPub actor and checking the actor's canonical WebFinger address.
+Both addresses must resolve to the same actor.
+So a catch-all can make many usernames resolve to one account, but it does not create separate accounts for them.
+
+For example, these all worked:
 
 - `hey@danillouz.dev`
 - `737@danillouz.dev`
 - `lol@danillouz.dev`
-
-## RSS and JSON
-
-I also learned that you can postfix any account or tag with `.rss`, and Mastodon will give you the RSS feed for it.
-
-This reminded me of the Reddit API.
-So I tried postfixing with `.json`, and that also works[^5].
-
-[^5]: But as far as I can tell, you won't get the posts in JSON for an account.
-
-For example:
-
-- [https://mastodon.social/@Mastodon.rss](https://mastodon.social/@Mastodon.rss)
-- [https://mastodon.social/tags/introduction.rss](https://mastodon.social/tags/introduction.rss)
-- [https://mastodon.social/@Mastodon.json](https://mastodon.social/@Mastodon.json)
-- [https://mastodon.social/tags/introduction.json](https://mastodon.social/tags/introduction.json)
-
-> [!note]
->
-> JSON responses may be restricted by an instance's authorization policy,
-> even when the corresponding public page or RSS feed is available.
 
 ## Resources
 
