@@ -2,7 +2,7 @@
 title: Obsidian web clipper
 description: My bookmarklet to clip web pages to Obsidian.
 created: 2023-06-18
-updated: 2026-09-12
+updated: 2026-09-13
 status: evergreen
 ---
 
@@ -11,7 +11,7 @@ status: evergreen
 > Obsidian now has an official [web clipper](https://obsidian.md/clipper).
 
 I recently started using [Obsidian](https://obsidian.md) and I like it a lot!
-One thing I was missing though, was to quickly save (i.e. "clip") a webpage to Obsidian from my browser.
+One thing I was missing, though, was a way to quickly save (i.e. "clip") a web page to Obsidian from my browser.
 So I was happy to find Stephan Ango's [Obsidian web clipper](https://stephanango.com/obsidian-web-clipper) which does just that (thanks Stephan!).
 
 Stephan's web clipper works pretty well, but I wanted slightly different behavior.
@@ -37,9 +37,9 @@ My version of the bookmarklet is based on Stephan Ango's [Obsidian web clipper](
 so it does pretty much the same thing, but with these differences:
 
 - npm dependencies are loaded as ECMAScript modules from [jsDelivr](https://www.jsdelivr.com/?docs=esm).
-- Clippings of entire webpages, and clippings of selections are stored in _separate_ Obsidian folders: `Clippings` and `Clippings/Quotes`.
-- Clippings of selections (quotes) of the same webpage are _appended_ to the same Obsidian note.
-- Quotes include the selected [text fragment](https://web.dev/text-fragments/) in the source link. So visiting the quote's source link will scroll you to, and highlight, the clipped text on the webpage. This works natively in current Chromium and Safari, and in Firefox 131 and later. For older or unsupported browsers, [this browser extension](https://github.com/GoogleChromeLabs/link-to-text-fragment#installation) can be installed to polyfill the functionality.
+- Clippings of entire web pages and clippings of selections are stored in _separate_ Obsidian folders: `Clippings` and `Clippings/Quotes`.
+- Clippings of selections (quotes) of the same web page are _appended_ to the same Obsidian note.
+- Quotes include the selected [text fragment](https://web.dev/text-fragments/) in the source link. So visiting the quote's source link will scroll you to, and highlight, the clipped text on the web page. This works natively in current Chromium and Safari, and in Firefox 131 and later. For older or unsupported browsers, [this browser extension](https://github.com/GoogleChromeLabs/link-to-text-fragment#installation) can be installed to polyfill the functionality.
 - An alert dialog will show when clipping fails.
 
 > [!note]
@@ -51,16 +51,16 @@ so it does pretty much the same thing, but with these differences:
 
 1. Drag this link to your bookmarks: <a href='javascript:(function(){function _getSelection(e){if(void 0===window.getSelection)return{hasSelection:!1,html:"",textFragment:""};const t=window.getSelection();if(!t||t.rangeCount<1)return{hasSelection:!1,html:"",textFragment:""};const{status:n,fragment:o}=e(t),i=_makeTextFragmentDirective(n,o),r=window.document.createElement("div");for(let e=0,n=t.rangeCount;e<n;++e)r.appendChild(t.getRangeAt(e).cloneContents());const l=r.innerHTML;return{hasSelection:Boolean(l),html:l,textFragment:i}}function _makeTextFragmentDirective(e,t){if(0!==e)return"";const n=t.prefix?`${encodeURIComponent(t.prefix)}-,`:"",o=t.suffix?`,-${encodeURIComponent(t.suffix)}`:"";return`#:~:text=${n}${encodeURIComponent(t.textStart)}${t.textEnd?`,${encodeURIComponent(t.textEnd)}`:""}${o}`}function _makeObsidianNoteContent({author:e,body:t,excerpt:n,selection:o,title:i,url:r}){let l=new URL(r);l.hash="",l=l.toString();const a=new Date;if(o.hasSelection){return`> [!quote] ${a.toLocaleDateString(void 0,{weekday:"short",year:"numeric",month:"short",day:"numeric",hour:"numeric",minute:"numeric"})} &bull; [Source](${l}${o.textFragment})\n\n${t}\n\n---\n\n`}{const o=n!==i?n:"",[r]=a.toISOString().split("T");return`---\ntitle: ${JSON.stringify(i)}\ndescription: ${JSON.stringify(o)}\ndate: ${r}\ntags:\n  - clipping\n---\n\n> [!note]\n> ${`[${i}](${l})`}${e?" by "+e:""}\n\n${t}\n`}}function _makeObsidianUri({config:e,content:t,selection:n,title:o}){const i={content:t,file:`${n.hasSelection?e.selectionFolderName:e.folderName}/${o.replace(/:/g,"").replace(/\//g,"-").replace(/\\/g,"-")}`};n.hasSelection&&(i.append="true");return`obsidian://new?${Object.entries(i).map((([e,t])=>`${e}=${encodeURIComponent(t)}`)).join("&")}`}Promise.all([import("https://cdn.jsdelivr.net/npm/@mozilla/readability/+esm"),import("https://cdn.jsdelivr.net/npm/turndown/+esm"),import("https://cdn.jsdelivr.net/npm/text-fragments-polyfill/dist/fragment-generation-utils.js/+esm"),Promise.resolve({folderName:"Clippings",selectionFolderName:"Clippings/Quotes"})]).then((([e,t,n,o])=>{const{Readability:i}=e.default,{default:r}=t,{generateFragment:l}=n,a=_getSelection(l),{byline:c,content:s,excerpt:d,title:m}=new i(window.document.cloneNode(!0)).parse(),u=_makeObsidianUri({config:o,content:_makeObsidianNoteContent({author:c,body:new r({headingStyle:"atx",hr:"---",bulletListMarker:"-",codeBlockStyle:"fenced"}).turndown(a.html||s),excerpt:d,selection:a,title:m,url:window.document.URL}),selection:a,title:m});window.document.location.href=u})).catch((e=>{alert("Failed to clip to Obsidian\n\n"+e+"\n\n(see the browser developer console for more details)")}));}());'>Clip to Obsidian</a>
 
-2. Visit a webpage:
+2. Visit a web page:
 
-   a. To clip an entire webpage: click the bookmark.
+   a. To clip an entire web page: click the bookmark.
 
-   b. To only clip part of a webpage: first select some text (can include images), then click the bookmark.
+   b. To only clip part of a web page: first select some text (can include images), then click the bookmark.
 
 ### Known issues
 
-- Clipping can fail on webpages whose [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) (CSP) blocks bookmarklets or third-party script loading (e.g. you can't clip Reddit and Twitter posts).
-- Clipping selections does not work in Safari. Because Safari's confirmation dialog "unselects" any content before clipping (so it always clips the entire webpage).
+- Clipping can fail on web pages whose [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) (CSP) blocks bookmarklets or third-party script loading (e.g. you can't clip Reddit and Twitter posts).
+- Clipping selections does not work in Safari because Safari's confirmation dialog "unselects" any content before clipping (so it always clips the entire web page).
 
 ### The code
 
@@ -90,12 +90,12 @@ Promise.all([
 
   // Config.
   Promise.resolve({
-    // Clippings of entire webpages will be stored as separate notes in
+    // Clippings of entire web pages will be stored as separate notes in
     // this Obsidian folder.
     folderName: "Clippings",
 
     // Clippings of selections will be stored in this Obsidian folder,
-    // where clippings of the same webpage will be appended to the same
+    // where clippings of the same web page will be appended to the same
     // Obsidian note.
     selectionFolderName: "Clippings/Quotes",
   }),
@@ -211,7 +211,7 @@ function _makeTextFragmentDirective(status, fragment) {
 /**
  * Makes the Obsidian note content.
  *
- * For webpage clippings only (i.e. not webpage selection clippings):
+ * For web page clippings only (i.e. not web page selection clippings):
  *
  * Uses YAML front matter to add metadata about the clipping to the note.
  * @see {@link https://help.obsidian.md/Editing+and+formatting/Metadata}

@@ -2,7 +2,7 @@
 title: Serverless auth
 description: Protecting AWS API Gateway endpoints with AWS Lambda and Auth0.
 created: 2019-06-19
-updated: 2026-09-12
+updated: 2026-09-13
 status: evergreen
 ---
 
@@ -30,7 +30,7 @@ In order to do that I'll focus on a specific (but common) use case, and show a w
 
 ## Use case and technologies
 
-How can we secure an HTTP API with a token based authentication strategy, so only authenticated and authorized clients can access it?
+How can we secure an HTTP API with a token-based authentication strategy, so only authenticated and authorized clients can access it?
 
 More specifically:
 
@@ -50,14 +50,14 @@ You can build an auth server yourself, for example using:
 
 - [OAuth 2.0](https://oauth.net/2): an authorization protocol.
 - [OpenID Connect](https://openid.net/connect) (OIDC): an authentication protocol. This is an "identity layer" built on top of OAuth 2.0.
-- [Token based authentication](https://auth0.com/learn/token-based-authentication-made-easy): a strategy that requires a client to send a signed bearer token when making requests to a protected API. The API will only respond to requests successfully when it receives a verified token.
-- [JSON Web Token](https://tools.ietf.org/html/rfc7519) (JWT): a way to send auth information (i.e. "claims") as JSON. A signed JWT contains a `Header`, `Payload` and `Signature` which are base64url encoded and separated by a period. In effect, a JWT can be used as a bearer token[^1].
+- [Token-based authentication](https://auth0.com/learn/token-based-authentication-made-easy): a strategy that requires a client to send a signed bearer token when making requests to a protected API. The API will only respond to requests successfully when it receives a verified token.
+- [JSON Web Token](https://www.rfc-editor.org/rfc/rfc7519) (JWT): a way to send auth information (i.e. "claims") as JSON. A signed JWT contains a `Header`, `Payload` and `Signature` which are base64url encoded and separated by a period. In effect, a JWT can be used as a bearer token[^1].
 
-[^1]: You can see how a JWT looks like by visiting [jwt.io](https://jwt.io).
+[^1]: You can see what a JWT looks like by visiting [jwt.io](https://jwt.io).
 
 But it will cost (a lot of) time, energy and money to build, operate and maintain it.
 
-There are valid use-cases to roll your own though.
+There are valid use cases for rolling your own though.
 However, using a third-party auth provider can increase shipping velocity.
 
 ## What will we build?
@@ -137,10 +137,10 @@ In short, it's a feature of APIG to control access to an API.
 
 There are actually two types of Lambda Authorizers:
 
-1. Token based authorizers.
+1. Token-based authorizers.
 2. Request parameter based authorizers.
 
-We'll be using the token based authorizer, because that supports bearer tokens.
+We'll be using the token-based authorizer, because that supports bearer tokens.
 
 ### What should it do?
 
@@ -208,7 +208,7 @@ Following this design also leads to a nice decoupling between the authentication
 When using OAuth 2.0, scopes can be used to apply authorization logic.
 In our case we could have a `get:profile` scope.
 A Lambda handler can check if the caller has been authorized to perform the action that is represented by the scope.
-If the scope is not present, the Lambda handler can return a `403 Forbidden` response back to the caller.
+If the scope is not present, the Lambda handler can return a `403 Forbidden` response to the caller.
 
 You can configure scope in the Auth0 dashboard by adding permissions to the registered API.
 Navigate to the "Permissions" tab of the API details screen and add `get:profile` as a scope.
@@ -303,7 +303,7 @@ We can visualize how these components will interact with each other like this:
 
 5. APIG will now evaluate the IAM Policy and if the `Effect` is set to `Allow`, it will invoke the specified Lambda handler.
 
-6. The Lambda handler will execute and when the `get:profile` scope is present, it will return the profile data back to the client.
+6. The Lambda handler will execute and when the `get:profile` scope is present, it will return the profile data to the client.
 
 Now for the easy part, writing the code!
 
@@ -450,7 +450,7 @@ module.exports.verifyBearer = async () => {
 ```
 
 If something goes wrong in the Lambda, we'll log the error and throw a new `Unauthorized` error.
-This will make APIG return a `401 Unauthorized` response back to the caller[^4].
+This will make APIG return a `401 Unauthorized` response to the caller[^4].
 
 [^4]: The thrown error message _must_ match the string `"Unauthorized"` _exactly_ for this to work.
 
@@ -481,7 +481,7 @@ module.exports = function getToken(event) {
 }
 ```
 
-Here we're only interested in `TOKEN` events because we're implementing a [[#What's a Lambda Authorizer?|token based authorizer]].
+Here we're only interested in `TOKEN` events because we're implementing a [[#What's a Lambda Authorizer?|token-based authorizer]].
 We can access the value of the `Authorization` request header via the `event.authorizationToken` property.
 
 Then `require` and call the helper in the Lambda with the APIG Lambda authorizer input [event](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-lambda-authorizer-input.html) as an argument:
@@ -548,7 +548,7 @@ By using the [kid](https://www.rfc-editor.org/rfc/rfc7517.html#section-4.5) head
 
 When we registered the API with Auth0 we chose the `RS256` signing algorithm.
 This algorithm generates an asymmetric signature.
-Which basically means that Auth0 uses a _private key_ to sign a JWT when it issues one.
+This basically means that Auth0 uses a _private key_ to sign a JWT when it issues one.
 We can use a _public key_ (fetched via the JWKS URI) to verify the authenticity of the token.
 
 First require the helper in the Lambda and pass the `token` as the first argument when calling it:
@@ -763,7 +763,7 @@ It's via this application that we obtain the test token, obtained via the [clien
 
 In this case the test application represents a "machine" and _not_ a user.
 But that's okay because the machine has a unique identifier the same way a user would have (by means of a client ID).
-This means that this implementation will also work when using "user-centric" auth flows like the [implicit grant](https://auth0.com/docs/flows/concepts/implicit).
+This means that this implementation will also work when using "user-centric" auth flows that issue an access token for the API, such as the [legacy implicit grant](https://auth0.com/docs/authenticate/login/oidc-conformant-authentication/oidc-adoption-implicit-flow).
 
 You can find the test application in the Auth0 dashboard by navigating to "Applications" and selecting "Account API (Test Application)".
 
@@ -781,7 +781,7 @@ In our case, an allowed request reaches the Lambda handler that gets the profile
 
 #### Granting a client scopes
 
-Like mentioned when discussing [[#Scopes]], Auth0 can provide scopes as authorization information.
+As mentioned when discussing [[#Scopes]], Auth0 can provide scopes as authorization information.
 In order for Auth0 to do this, we need to "grant" our client the `get:profile` scope.
 In our case, the client is the "Test Application" that has been created for us.
 
@@ -1018,7 +1018,7 @@ module.exports.getProfile = async () => {
 }
 ```
 
-If something goes wrong in the Lambda, we'll return an error response as [HTTP output](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-output-format) back to the caller.
+If something goes wrong in the Lambda, we'll return an error response as [HTTP output](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-output-format) to the caller.
 
 Otherwise we'll return the profile data:
 
@@ -1168,8 +1168,8 @@ Let's go over the `authorizer` properties:
 
 ### 6. Adding authorization logic
 
-Now the Lambda Authorizer is configured and we also propagate the `get:profile` scope from the Lambda Authorizer, we can check if a caller has been granted the required scope.
-If not, we'll return a `403 Forbidden` response back to the caller:
+Now that the Lambda Authorizer is configured and propagates the `get:profile` scope, we can check if a caller has been granted the required scope.
+If not, we'll return a `403 Forbidden` response to the caller:
 
 ```js title="account-api/src/handler.js" showLineNumbers {3,7-15}
 "use strict"
@@ -1257,7 +1257,7 @@ curl --request GET \
   --header 'authorization: Bearer eyJ...lKw'
 ```
 
-Pretty cool right!
+Pretty cool, right?
 Use this, but set the URL to your profile endpoint.
 For example:
 
@@ -1291,7 +1291,7 @@ Content-Type: application/json
 ```
 
 Awesome!
-We successfully secured our API with a token based authentication strategy.
+We successfully secured our API with a token-based authentication strategy.
 So only authenticated _and_ authorized clients can access it now!
 
 ## CORS headers

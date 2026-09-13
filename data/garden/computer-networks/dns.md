@@ -1,8 +1,8 @@
 ---
 title: DNS
-description: What I learned about the Domain Name System so far.
+description: What I learned about the Domain Name System (DNS) so far.
 created: 2023-06-03
-updated: 2026-09-12
+updated: 2026-09-13
 aliases:
   - The Domain Name System
 status: evergreen
@@ -38,7 +38,7 @@ But the protocol that's used is called the **Internet Protocol** (IP),
 and instead of using mail addresses to deliver mail to the correct destination,
 **IP addresses** must be used to deliver packets of data to the correct destination[^1].
 
-[^1]: The IP protocol is basically the addressing system of the internet, but there's more needed to deliver packets from source to destination. The exact details are out of scope for this page, but there's also a transport protocol needed to define rules _how_ data is sent and received. Ultimately there are multiple protocols needed which are "layered" on top of each other, like [TCP/IP](https://en.wikipedia.org/wiki/Internet_protocol_suite).
+[^1]: The IP protocol is basically the addressing system of the internet, but there's more needed to deliver packets from source to destination. The exact details are out of scope for this page, but there's also a transport protocol needed to define rules for how data is sent and received. Ultimately there are multiple protocols needed which are "layered" on top of each other, like [TCP/IP](https://en.wikipedia.org/wiki/Internet_protocol_suite).
 
 IP addresses identify network interfaces or destinations, but they are not universally unique device identifiers:
 private addresses are reused, and anycast addresses can represent multiple interfaces.
@@ -49,8 +49,8 @@ For example, if a device wants to visit this website it must (at the time of thi
 IP addresses work great for machines and robots because they _love_ numbers.
 But us humans usually have difficulty remembering them and we prefer using a more memorable **domain name** instead.
 
-But on the internet IP addresses must be used. So how can you for example type a domain name in a web browser and somehow still end up at the correct IP address?
-Well, this is the main problem that DNS solves: **DNS can look up the IP address of a domain name**.
+But on the internet IP addresses must be used. So how can you type a domain name in a web browser and somehow still end up at the correct IP address?
+This is the main problem that DNS solves: **DNS can look up the IP address of a domain name**.
 
 ## What is DNS?
 
@@ -74,7 +74,7 @@ and it can be visualized as a hierarchical structure that looks like a [tree](<h
 
 This hierarchy is reflected in domain names themselves:
 
-- Each part of a domain name that is separated with a `.` (dot) is called a **label**.
+- Each part of a domain name that is separated by a `.` (dot) is called a **label**.
 - Each label represents a node in the tree, and is a "sublevel" in the naming hierarchy.
 - The root of the tree is the "nameless" label `.` (dot), also called the **root domain**[^4].
 
@@ -178,7 +178,7 @@ There are 4 different kinds of servers needed to make DNS work:
 > I used to be confused about what authoritative name servers are and how they differ from other name servers.
 >
 > But an authoritative name server is just a name server that serves authoritative data for a zone.
-> So it depends on the queried name and its zone which name server is authoritative.
+> So which name server is authoritative depends on the queried name and its zone.
 >
 > For example, root name servers are authoritative for the root zone,
 > TLD name servers are authoritative for a TLD zone,
@@ -205,7 +205,7 @@ The following simplified example assumes the recursive resolver has nothing usef
 > For example, when a query is made for a domain name that was recently looked up,
 > the resolver can skip (some of) the steps above and return the cached result(s) immediately.
 >
-> Caching can happen at every step above: on the name server(s), resolver, on the browser and operating system.
+> Caching can happen at several points: on recursive resolvers, operating systems, and browsers.
 
 ## Bonus: how is the domain name system managed?
 
@@ -217,7 +217,7 @@ And who oversees all of this?
 
 [ICANN](https://www.icann.org/) (Internet Corporation for Assigned Names and Numbers) and [IANA](https://www.iana.org/) (Internet Assigned Numbers Authority) are 2 organizations that help provide stability and consistency on the internet.
 
-ICANN helps with administration, oversight and maintenance. But delegates some of this to IANA (which is part of ICANN).
+ICANN helps with administration, oversight, and maintenance, but delegates some of this to IANA (which is part of ICANN).
 
 For example, ICANN coordinates DNS policy and adding [new TLDs](https://newgtlds.icann.org/en/about/program), and operates 1 of the 13 DNS root name servers.
 IANA maintains shared lists of the numbers and names used by internet protocols (such as port numbers and DNS record types), coordinates global IP-address allocations through the regional Internet registries, and manages the DNS root zone.
@@ -250,7 +250,7 @@ Every time a domain name is registered, renewed, transferred, or expires,
 the registrar will then notify[^10] the registry,
 where for some operations registrars also pay registries (and ICANN) a fee[^11].
 
-[^9]: These requirements can differ per registry (and some make them [available online](https://www.verisign.com/en_US/channel-resources/become-a-registrar/verisign-domain-registrar/index.xhtml)). For example, most registries require the registrar to be [accredited by ICANN](https://www.icann.org/en/accredited-registrars). Sometimes registries even set rules that affect which _registrants_ may register a domain name for their TLD (e.g. [only US governments](https://get.gov/registration/requirements/) may register a `.gov` domain name).
+[^9]: These requirements can differ per registry (and some make them [available online](https://www.verisign.com/resources/become-a-registrar/)). For example, most registries require the registrar to be [accredited by ICANN](https://www.icann.org/en/accredited-registrars). Sometimes registries even set rules that affect which _registrants_ may register a domain name for their TLD (e.g. [only US governments](https://get.gov/registration/requirements/) may register a `.gov` domain name).
 
 [^10]: Registrars usually use the [Extensible Provisioning Protocol](https://en.wikipedia.org/wiki/Extensible_Provisioning_Protocol) (EPP) to interact with registries.
 

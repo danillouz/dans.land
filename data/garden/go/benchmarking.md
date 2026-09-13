@@ -2,7 +2,7 @@
 title: Benchmarking
 description: How to write benchmarks in Go.
 created: 2024-08-24
-updated: 2026-09-12
+updated: 2026-09-13
 status: sapling
 ---
 
@@ -25,7 +25,7 @@ func BenchmarkSomething(b *testing.B)
 > [!warning] Use `b.Loop()`
 >
 > Go 1.24 added [`b.Loop()`](https://go.dev/blog/testing-b-loop).
-> The `b.N` examples in this post still work, but have some [gotchas](#gotchas)
+> The `b.N` examples in this post still work, but have some [gotchas](#gotchas).
 
 A benchmark has some "code under test":
 
@@ -96,11 +96,11 @@ go test ./... -run ^$ -bench BenchmarkSomething -benchtime 100x
 
 ### Controlling duration
 
-By default `b.N` iterations for a benchmark are run for a duration of 1 second.
+By default, Go runs enough iterations of each benchmark to take about 1 second.
 But this may not be enough to produce a good enough sample size.
 
-To increase benchmark duration use the `-benchtime` test flag.
-It guarantees that a benchmark will run for at least that amount of time.
+To increase benchmark duration, use the `-benchtime` test flag.
+For a duration such as `10s`, Go runs enough iterations of each benchmark to take the requested time.
 
 For example:
 
@@ -173,7 +173,7 @@ geomean                 2.295µ        2.090µ        -8.94%
 
 Can be interpreted as follows:
 
-- `±` percentage indicates "variation". The lower the better: a high variation means unreliable samples and that the benchmark needs to be re-run.
+- `±` percentage indicates "variation". The lower, the better: a high variation means unreliable samples and that the benchmark needs to be re-run.
 - A negative percentage (`-17.20%`) means a benchmark was faster. A positive percentage means slower.
 - `p=` value measures how likely the differences were due to random chance.
 - `~` means there was no statistically significant difference between the two inputs.
@@ -239,9 +239,9 @@ go test ./... -run ^$ -bench BenchmarkSomething/Two
 
 > [!warning] Use `b.Loop()`
 >
-> Go 1.24 added [`b.Loop()`](https://go.dev/blog/testing-b-loop), which:
+> Go 1.24 added [`b.Loop()`](https://go.dev/blog/testing-b-loop) which:
 > - Automatically excludes setup and cleanup code from benchmark timing.
-> - Prevents unwanted compiler optimizations within the benchmark loop.
+> - Prevents the compiler from optimizing away function calls inside the benchmark loop.
 
 ### 1. Control the timer when doing setup and cleanup
 
@@ -258,7 +258,7 @@ For example:
 
 ```go
 func BenchmarkSomething(b *testing.B) {
-	// Do some (expensive) setup here..
+	// Do some (expensive) setup here.
 	b.ResetTimer()
 
 	for range b.N {
@@ -310,7 +310,7 @@ func BenchmarkOkay(b *testing.B) {
 > usually so a finalizer does not run too early.
 > It does not prevent constant folding or make an otherwise unused calculation observable.
 
-## Resources:
+## Resources
 
 - [How to write benchmarks in Go](https://dave.cheney.net/2013/06/30/how-to-write-benchmarks-in-go/)
 - [Common pitfalls in Go benchmarking](https://eli.thegreenplace.net/2023/common-pitfalls-in-go-benchmarking/)

@@ -1,12 +1,12 @@
 ---
 title: SQLite CLI
-description: Learning about the SQLite Command Line Interface.
+description: Learning about the SQLite command-line interface (CLI).
 created: 2023-07-15
-updated: 2026-09-11
+updated: 2026-09-13
 status: evergreen
 ---
 
-[SQLite](https://www.sqlite.org/index.html) provides a [Command Line Interface](https://www.sqlite.org/cli.html) (CLI) program named `sqlite3`.
+[SQLite](https://www.sqlite.org/index.html) provides a [command-line interface](https://www.sqlite.org/cli.html) (CLI) program named `sqlite3`.
 It is often already installed, or easy to install, on common operating systems.
 
 ## Basic usage

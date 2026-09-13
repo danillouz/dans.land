@@ -2,7 +2,7 @@
 title: Audio transcoding
 description: Transcoding short audio files with AWS Lambda, Amazon Elastic Transcoder or FFmpeg.
 created: 2019-10-27
-updated: 2026-09-12
+updated: 2026-09-13
 status: evergreen
 ---
 
@@ -13,7 +13,7 @@ status: evergreen
 > Prices, limits and billing increments refer to the original tests.
 
 For a side project I'm converting WebM audio files to MP3.
-I initially started doing this with [Amazon Elastic Transcoder](https://aws.amazon.com/blogs/media/support-for-amazon-elastic-transcoder-ending-soon/).
+I initially started doing this with [Amazon Elastic Transcoder](https://aws.amazon.com/blogs/aws/audio-support-for-the-amazon-elastic-transcoder/).
 But after doing the same with [FFmpeg](https://www.ffmpeg.org) and [Lambda Layers](https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html),
 my testing showed that the latter was **substantially cheaper and ~2 times faster for short audio** recordings (for ~3 minute, ~3 MB files).
 
@@ -132,7 +132,7 @@ Amazon Elastic Transcoder is a fully managed and highly scalable AWS service tha
 
 We can use this service to schedule a transcoding job in a pipeline.
 The pipeline knows from which bucket to read a file that needs to be converted, and to which bucket the converted file should be written.
-Whereas the job contains instructions on which file to transcode, and to what format it should be converted.
+The job contains instructions on which file to transcode, and to what format it should be converted.
 
 We'll create a Lambda function that will "listen" to the S3 input bucket.
 Whenever a new object is created in that bucket, Lambda will schedule a transcoder job to create the MP3 file.
@@ -895,7 +895,7 @@ How do we solve this? By optimizing the Lambda function!
 ### 6. Optimize the Lambda function
 
 First let's just set the timeout to a larger value.
-For example 180 seconds.
+For example, 180 seconds.
 This way we can see how long it would actually take to complete the transcoding process:
 
 ```yaml title="audio-transcoder/serverless.yml"
@@ -972,7 +972,7 @@ In this case, 6 seconds covered these test runs, though production needs headroo
 
 ## Comparing costs
 
-To compare costs between both implementations, I did a couple of test runs converting a 3 minute (2,8 MB) WebM audio file to MP3.
+To compare costs between both implementations, I did a couple of test runs converting a 3-minute (2.8 MB) WebM audio file to MP3.
 
 > [!warning]
 >
@@ -983,7 +983,7 @@ To compare costs between both implementations, I did a couple of test runs conve
 
 ### Amazon Elastic Transcoder costs
 
-Elastic Transcoder [charged per minute of output audio](https://aws.amazon.com/elastictranscoder/pricing/) (rounded up to whole minutes) with 20 free audio minutes per month.
+Elastic Transcoder [charged per minute of output audio](https://aws.amazon.com/blogs/aws/audio-support-for-the-amazon-elastic-transcoder/) (rounded up to whole minutes) with 20 free audio minutes per month.
 The rate used for these calculations in `eu-west-1` was `$0,00522` per output minute.
 Processing time affects how soon the file is ready, but is not the billing unit.
 
@@ -1137,7 +1137,7 @@ Otherwise data transferred into and out of Lambda functions will be charged at t
 
 ### Putting it all together
 
-Costs of transcoding `100 000` 3 minute (2,8 MB) WebM audio files to MP3 per month:
+Costs of transcoding `100 000` 3-minute (2.8 MB) WebM audio files to MP3 per month:
 
 | Implementation            | Cost without free tier | Cost with free tier |
 | :------------------------ | :--------------------- | :------------------ |

@@ -2,23 +2,23 @@
 title: Building proxies
 description: What I learned so far (and some musings) about building proxies in Go.
 created: 2024-08-23
-updated: 2026-09-12
+updated: 2026-09-13
 status: seedling
 ---
 
 It's pretty easy to start building a [[Proxies|proxy]] in Go.
-The simplest example to create a (reverse) proxy looks something like:
+The simplest example of creating a (reverse) proxy looks like this:
 
 ```go
 proxy := httputil.NewSingleHostReverseProxy(targetURL)
 ```
 
-But one thing that's not obvious to me yet, is the best way to work with upstreams (i.e. targets to proxy to) that are not known beforehand.
+But one thing that's not obvious to me yet is the best way to work with upstreams (i.e. targets to proxy to) that are not known beforehand.
 
 For example, Caddy has support for [dynamic upstreams](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy#dynamic-upstreams).
 But it looks like you do need to know them beforehand?
 
-So I'm not sure yet what the "best practice approach" is to proxy to a different target for different requests (e.g. performance wise).
+So I'm not sure yet what the "best practice approach" is to proxy to a different target for different requests (e.g. performance-wise).
 But I guess it depends on the exact use-case(s).
 
 I did learn that you can use `httputil.ReverseProxy` and `Rewrite` to do something more custom per request:
@@ -48,8 +48,8 @@ func NewProxy() *httputil.ReverseProxy {
 Here `ValidatedTargetFromContext` only returns a parsed `*url.URL` after checking its scheme and host against an explicit allowlist (or other policy).
 Parsing alone is not sufficient; otherwise this can become an SSRF/open-proxy endpoint.
 
-For example, by using the request context (`ValidatedTargetFromContext`).
-But this doesn't feel great (haven't explored how performance looks like when using this yet though).
+In this example, the validated target is passed through the request context (`ValidatedTargetFromContext`).
+But this doesn't feel great (and I haven't explored what performance looks like when using this yet).
 
 Maybe it's better to implement a "non-standard" (i.e. not using `ServeHTTP`) [[HTTP handlers|handler]] and just pass extra information to it?
 
@@ -63,7 +63,7 @@ customProxy.ProxyHTTP(w http.ResponseWriter, r *http.Request, targetURL string)
 >
 > Looks like Caddy also started from `httputil.ReverseProxy`:
 >
-> <https://github.com/caddyserver/caddy/blob/master/modules/caddyhttp/reverseproxy/reverseproxy.go#L756-L759>
+> <https://github.com/caddyserver/caddy/blob/56e3a88efe39be6e380496778e7b94cb97f60c00/modules/caddyhttp/reverseproxy/reverseproxy.go#L989-L990>
 
 ## Resources
 

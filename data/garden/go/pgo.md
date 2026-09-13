@@ -1,17 +1,17 @@
 ---
 title: PGO
-description: Profile-guided optimizations in Go.
+description: Profile-guided optimization (PGO) in Go.
 created: 2024-03-30
-updated: 2026-09-12
+updated: 2026-09-13
 aliases:
-  - Profile Guided Optimizations
+  - Profile-guided optimization
 status: seedling
 ---
 
 When Go builds a binary, the compiler will optimize it by default (e.g. by inlining code).
 But here the compiler will make a "best effort guess" by using static heuristics based on (un)common paths in functions.
 
-Starting from Go `1.20`, the compiler supports profile-guided optimizations (PGO) to better optimize built binaries by using collected CPU pprof profiles.
+Starting from Go `1.20`, the compiler supports profile-guided optimization (PGO) to better optimize built binaries by using collected CPU pprof profiles.
 Go 1.21 made PGO production-ready and enabled it by default when a profile is present.
 
 Providing profiles to the compiler gives it more information about how code behaves in a "real" production environment,

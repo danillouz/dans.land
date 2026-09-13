@@ -2,7 +2,7 @@
 title: Deno permissions
 description: Deno's permissions model can fail GitHub Actions jobs when creating job summaries.
 created: 2024-11-09
-updated: 2026-09-12
+updated: 2026-09-13
 status: evergreen
 ---
 
@@ -84,7 +84,7 @@ export async function createJobSummary<T extends Record<string, any>>(items: T[]
 ## Why it fails
 
 Creating a job summary essentially [writes to a file](https://docs.github.com/en/actions/reference/workflows-and-actions/variables#default-environment-variables).
-Which becomes obvious when checking the toolkit's [write](https://github.com/actions/toolkit/blob/193fa46c20fde8b0ed54194bc08b841c78c0776d/packages/core/src/summary.ts#L117-L130) code.
+This becomes obvious when checking the toolkit's [write](https://github.com/actions/toolkit/blob/193fa46c20fde8b0ed54194bc08b841c78c0776d/packages/core/src/summary.ts#L117-L130) code.
 
 But by default, Deno doesn't have access to sensitive APIs.
 For example, it does not have [permission to access the file system](https://docs.deno.com/runtime/reference/permissions/#file-system-access).
@@ -115,7 +115,7 @@ So the script must be run with `--allow-env`, `--allow-read`, `--allow-sys` and 
 
 ## Improving permission errors
 
-Debugging permission errors like described above isn't great.
+Debugging permission errors as described above isn't great.
 Can we make the script fail (faster) with a better error?
 
 Deno prompts for missing permissions when running interactively.
@@ -127,7 +127,7 @@ We can disable this behavior with `--no-prompt`:
 >
 > [https://docs.deno.com/runtime/fundamentals/security/#permissions](https://docs.deno.com/runtime/fundamentals/security/#permissions)
 
-When this flag is used, it will return a clearer permission error (and fail faster).
+When this flag is used, Deno returns a clearer permission error (and fails faster).
 Prompts are already disabled when stdout and stderr are not attached to a TTY, as is normally the case in GitHub Actions:
 
 ```sh

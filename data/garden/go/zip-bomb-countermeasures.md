@@ -2,7 +2,7 @@
 title: ZIP bomb countermeasures
 description: How to defend against ZIP bombs in Go.
 created: 2024-11-08
-updated: 2026-09-12
+updated: 2026-09-13
 status: sapling
 ---
 
@@ -41,11 +41,11 @@ When reading ZIP archives in Go, the following works in our favor:
 While Go currently lacks a [resource limits API](https://github.com/golang/go/issues/33036), we can easily implement the following countermeasures:
 
 - For the ZIP archive:
-  - Limit the amount of allowed files.
+  - Limit the number of allowed files.
 - For the files in the ZIP archive:
   - Apply a maximum uncompressed size.
   - Apply a maximum compression ratio.
-  - Limit the amount of bytes that can actually be read.
+  - Limit the number of bytes that can actually be read.
 
 ```go
 const (

@@ -2,24 +2,25 @@
 title: Cache stampeding
 description: How to prevent cache stampedes.
 created: 2025-01-04
-updated: 2026-09-12
+updated: 2026-09-13
 status: evergreen
 ---
 
-A cache stores data, so that future requests for that data can be served faster and/or more efficiently.
+A cache stores data, so that future requests for that data can be served faster and more efficiently.
 
-Cached data can for example be the result of a previous (expensive) computation, or a copy of data that's stored elsewhere.
+Cached data can for example be the result of a previous (expensive) computation or a copy of data that's stored elsewhere.
 
 When a system using a cache comes under high (concurrent) load, a specific type of failure can happen when a cache miss occurs.
 
-In that cache miss scenario, a lot of (concurrent) requests will try to revalidate the cache at the same time.
+In that cache miss scenario, many concurrent requests will try to revalidate the cache at the same time.
 For example, by fetching data from an origin, like a database.
 
-This can lead to congestion and/or resource issues, taking down the system, and is called a cache stampede (also known as a "cache thundering herd" or "cache dog piling").
+This can lead to congestion and resource issues that take down the system.
+The failure is called a cache stampede (also known as a "cache thundering herd" or "cache dog piling").
 
 > [!note]
 >
-> This is why "just adding a cache" to a slow system can be dangerous, and why highly-available and low-latency systems use techniques like [[low-latency-ha#constant-work|constant work]].
+> This is why "just adding a cache" to a slow system can be dangerous, and why highly available and low-latency systems use techniques like [[low-latency-ha#constant-work|constant work]].
 
 ## Mitigations
 
@@ -49,4 +50,4 @@ This approach does not have the downsides of using a cache lock, but needs to ta
 ### External revalidation
 
 By using "something external", the cache can be revalidated proactively.
-For example by pushing fresh data to the cache at the appropriate time.
+For example, by pushing fresh data to the cache at the appropriate time.

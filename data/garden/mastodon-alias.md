@@ -2,13 +2,13 @@
 title: Mastodon alias
 description: Using a custom domain to alias your Mastodon handle.
 created: 2023-01-03
-updated: 2026-09-12
+updated: 2026-09-13
 status: evergreen
 ---
 
 > [!note]
 >
-> I deleted my Mastodon account by now,
+> I have since deleted my Mastodon account,
 > so the endpoints and account URLs mentioned in this post are no longer live.
 
 I'm not very active on social media, but I recently created a [Mastodon](https://joinmastodon.org/) account.
@@ -16,11 +16,11 @@ I'm not very active on social media, but I recently created a [Mastodon](https:/
 I'm still learning about the fediverse.
 So I was reading the docs a bit, and that's when I stumbled upon [WebFinger](https://docs.joinmastodon.org/spec/webfinger/).
 
-I never heard of it before, but Mastodon uses WebFinger to figure out the location of an account.
-So it can for example resolve the account `danillouz@mastodon.social` to the location `https://mastodon.social/@danillouz`.
+I had never heard of it before, but Mastodon uses WebFinger to figure out the location of an account.
+So it can, for example, resolve the account `danillouz@mastodon.social` to the location `https://mastodon.social/@danillouz`.
 
-This location information is returned by a WebFinger endpoint.
-Which made me wonder.
+This location information is returned by a WebFinger endpoint,
+which made me wonder.
 Could my site, hosted on a custom domain, return this information as well, so that I could use my custom domain as an "alias" for my Mastodon handle?
 Turns out you can!
 But there are some caveats.
@@ -86,8 +86,8 @@ https://{MASTODON_DOMAIN}/.well-known/webfinger?resource=acct:{MASTODON_USERNAME
 
 ### Why is WebFinger used?
 
-On Mastodon, users have accounts on different servers.
-Like [mastodon.social](https://mastodon.social) or [mas.to](https://mas.to).
+On Mastodon, users have accounts on different servers,
+like [mastodon.social](https://mastodon.social) or [mas.to](https://mas.to).
 So even though the handles `danillouz@mastodon.social` and `danillouz@mas.to` share the same "local" username `danillouz`, they are different accounts.
 
 From what I understand, Mastodon's internal implementation can't just use the account handle.
@@ -109,7 +109,7 @@ So if you can host some static JSON on your custom domain, you can add a WebFing
 You can do this by:
 
 1. [[#Making a WebFinger request]] for your Mastodon account to get your WebFinger information.
-2. Copy-and-pasting the WebFinger JSON response from step 1 to a static file.
+2. Copy and paste the WebFinger JSON response from step 1 into a static file.
 3. Returning the JSON[^3] from step 2 whenever an HTTP `GET` request is made to `/.well-known/webfinger?resource=acct:{MASTODON_USERNAME}@{MASTODON_DOMAIN}` on your custom domain.
 
 [^3]: The WebFinger RFC [mentions](https://www.rfc-editor.org/rfc/rfc7033#section-10.2) that the `Content-Type` of a WebFinger response should be `application/jrd+json`. But it looks like using `application/json` also works.
@@ -202,7 +202,7 @@ For example, searching for `hi@danillouz.dev` will now give me a hit.
 
 I'm not sure to be honest.
 
-Like mentioned before, Mastodon is a bit different, where an account handle consists of two parts:
+As mentioned before, Mastodon is a bit different: an account handle consists of two parts:
 
 - The local username. For example `danillouz`.
 - The server domain. For example `mastodon.social`.
@@ -228,7 +228,7 @@ I thought this meant that someone would always have to search for `danillouz@mas
 But this doesn't appear to be the case.
 For example, I can search for `danillouz` on `mast.to` and it will find me.
 
-So maybe, aliasing your handle isn't really a good idea?
+So maybe aliasing your handle isn't really a good idea?
 
 I'm not sure if having an "extra" WebFinger endpoint can actually break stuff (can information become stale?).
 But there are some caveats when using your custom domain as an alias to be aware of.
@@ -244,14 +244,14 @@ But when I tried finding my account using the alias on a _different_ server, I w
 
 Turns out that when you're not signed in to a server, the search API will not use WebFinger to resolve the handle!
 
-This is how the search request looks like when I'm signed in:
+This is what the search request looks like when I'm signed in:
 
 ```sh title="HTTP request" /resolve=true/
 GET /api/v2/search?q=hi@danillouz.dev&resolve=true
 Host: mastodon.social
 ```
 
-And this is how the same search request looks like when I'm signed out:
+And this is what the same search request looks like when I'm signed out:
 
 ```sh title="HTTP request" /resolve=false/
 GET /api/v2/search?q=hi@danillouz.dev&resolve=false
@@ -261,7 +261,7 @@ Host: mastodon.social
 The difference is that the query parameter `resolve` is set to `true` when signed in.
 But it is set to `false` when signed out.
 
-Checking the v2 search API docs, we can see that `resolve` controls if a WebFinger lookup should happen or not:
+Checking the v2 search API docs, we can see that `resolve` controls if a WebFinger lookup should happen:
 
 > [!quote]
 >
@@ -288,5 +288,5 @@ For example, these all worked:
 
 ## Resources
 
-- [Mastodon on your own domain without hosting a server](https://blog.maartenballiauw.be/post/2022/11/05/mastodon-own-donain-without-hosting-server.html)
+- [Mastodon on your own domain without hosting a server](https://blog.maartenballiauw.be/posts/2022-11-05-mastodon-own-domain-without-hosting-server)
 - [Integrating Mastodon with Astro](https://www.lindsaykwardell.com/blog/integrate-mastodon-with-astro)

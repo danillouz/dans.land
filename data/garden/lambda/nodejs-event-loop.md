@@ -2,7 +2,7 @@
 title: Node.js event loop
 description: AWS Lambda can freeze and thaw its execution context, which can impact Node.js event loop behavior.
 created: 2019-05-30
-updated: 2026-09-11
+updated: 2026-09-13
 status: evergreen
 ---
 
@@ -177,7 +177,7 @@ But when it does (like when calling `setTimeout(callback)`) it makes use of the 
 In this simplified model, asynchronous work in the runtime is represented as a task in a queue. Or in other words, a _message queue_.
 
 Each message can be thought of as a function that will be called in <abbr title="First In First Out">FIFO</abbr> order to handle said work.
-For example, the callback provided to `setTimeout`, once its delay has elapsed.
+One example is a `setTimeout` callback whose delay has elapsed.
 
 ![Task queue processes tasks in first-in, first-out order](../_assets/nodejs-event-loop/queue.png)
 
@@ -574,7 +574,7 @@ See the AWS [Lambda runtime environment](https://docs.aws.amazon.com/lambda/late
 
 Obviously this is undesired behavior and you should _not_ write your code in the same way we wrote the code in `timeout.js`.
 
-Like stated in the AWS docs, we need to make sure to complete processing _all_ callbacks before our handler exits:
+As stated in the AWS docs, we need to make sure to complete processing _all_ callbacks before our handler exits:
 
 > [!quote]
 >

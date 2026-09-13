@@ -2,39 +2,44 @@
 title: Comments
 description: Learning new things about Go doc comments.
 created: 2024-08-19
-updated: 2026-09-12
+updated: 2026-09-13
 aliases:
   - Go Doc
 status: seedling
 ---
 
-Go doc comments are comments directly above `package`, `type`, `const`, `var` and `func` declarations. And every exported name should have a doc comment.
+Go doc comments are comments directly above `package`, `type`, `const`, `var` and `func` declarations.
+Every exported name should have a doc comment.
 
 The Go tooling can extract documentation from the source code when doc comments are used correctly.
 
-But it turns out I wasn't always formatting doc comments correctly, and I didn't know you could use [[#Links|links]] and [[#Doc links|doc links]] (which also work in your favourite code editor).
+But it turns out I wasn't always formatting doc comments correctly,
+and I didn't know you could use [[#Links|links]] and [[#Doc links|doc links]] (which also work in your favourite code editor).
 
 ## Paragraphs
 
-Line breaks are preserved by `gofmt` in paragraphs. So comments will not be rewrapped (`godoc` and `pkgsite` _will_ rewrap comment text when printing it).
+Line breaks are preserved by `gofmt` in paragraphs.
+So comments will not be rewrapped (`godoc` and `pkgsite` _will_ rewrap comment text when printing it).
 
 This makes it possible to use semantic linefeeds:
 
 ```go
 // This is a paragraph.
 // Each sentence can be placed on a separate line.
-// And it won't be rewrapped by gofmt.
+// It won't be rewrapped by gofmt.
 ```
 
 > [!note] Semantic linefeeds?
 >
-> Semantic linefeeds place sentences or long phrases on a separate line. This can make text easier to read, and diffs easier to maintain as code and comments change over time.
+> Semantic linefeeds place sentences or long phrases on a separate line.
+> This can make text easier to read, and diffs easier to maintain as code and comments change over time.
 >
 > See [semantic linefeeds](https://rhodesmill.org/brandon/2012/one-sentence-per-line/).
 
 ## Headings
 
-Headings are lines that begin with `#` followed by a space and text. Headings must be unindented and followed by a blank line:
+Headings are lines that begin with `#` followed by a space and text.
+Headings must be unindented and followed by a blank line:
 
 ```go
 // # This is a heading
@@ -44,7 +49,8 @@ Headings are lines that begin with `#` followed by a space and text. Headings mu
 
 ## Links
 
-Link targets are created by using the format `[Text]: URL`. Then other text in the same comment block can refer to the link by using `[Text]`:
+Link targets are created by using the format `[Text]: URL`.
+Then other text in the same comment block can refer to the link by using `[Text]`:
 
 ```go
 // This is a paragraph using a [Link to example].
@@ -54,7 +60,8 @@ Link targets are created by using the format `[Text]: URL`. Then other text in t
 
 ## Doc links
 
-Doc links link to symbols in the current or an external package. They are created using the format `[Name]` and `[pkg.Name]`:
+Doc links link to symbols in the current or an external package.
+They are created using the format `[Name]` and `[pkg.Name]`:
 
 ```go
 // This links to [http.Handler] and [SomeStruct].

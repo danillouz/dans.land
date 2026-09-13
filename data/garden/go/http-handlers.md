@@ -2,7 +2,7 @@
 title: HTTP handlers
 description: Learning about the HTTP request multiplexer, handlers and middleware in Go.
 created: 2022-12-22
-updated: 2026-09-12
+updated: 2026-09-13
 status: evergreen
 ---
 
@@ -80,8 +80,8 @@ But `http.ServeMux` also has the [HandleFunc()](https://pkg.go.dev/net/http#Serv
 So what's the difference?
 
 At first glance it looks like both accept a pattern and a handler.
-But `Handle()` requires a handler that satisfies the `http.Handler` interface.
-While `HandleFunc()` accepts any function that defines `http.ResponseWriter` and `*http.Request` parameters:
+But `Handle()` requires a handler that satisfies the `http.Handler` interface,
+while `HandleFunc()` accepts any function that defines `http.ResponseWriter` and `*http.Request` parameters:
 
 - `Handle(pattern string, handler Handler)`
 - `HandleFunc(pattern string, handler func(ResponseWriter, *Request))`
@@ -143,7 +143,7 @@ This default multiplexer is defined by the standard library, and named [DefaultS
 Turns out that a very useful type to know about when working with handlers is [http.HandlerFunc](https://pkg.go.dev/net/http#HandlerFunc).
 
 This type allows us to convert a "plain" handler function (i.e. `func(ResponseWriter, *Request)`) into a "real" `http.Handler`.
-Which is great, because this makes it more convenient to work with handlers.
+This is great because it makes working with handlers more convenient.
 
 So the following won't compile:
 
@@ -171,7 +171,7 @@ But it's a [type conversion](https://go.dev/ref/spec#Conversions)[^3] which conv
 
 ## Middleware
 
-Middleware are typically small functions which take a request, do something with it, and then pass it to _another_ middleware or the (final) handler.
+Middleware typically consists of small functions that take a request, do something with it, and then pass it to _another_ middleware function or the (final) handler.
 
 In Go, middleware will sit "between" the multiplexer and the handler responding to the HTTP requests.
 
@@ -304,7 +304,7 @@ it will redirect the request to the "subtree root" (i.e. redirect to the request
 
 To prevent this from happening you need to register the pattern for the path _without_ the trailing slash.
 
-For example, when registering `/blog/`, request to `/blog` will redirect to `/blog/`, _unless_ `/blog` is also registered.
+For example, when registering `/blog/`, a request to `/blog` will redirect to `/blog/`, _unless_ `/blog` is also registered.
 
 ### Sanitization
 

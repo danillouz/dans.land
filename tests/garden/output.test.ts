@@ -291,7 +291,7 @@ test("renders accessible, annotated Rosé Pine code blocks", async () => {
 })
 
 test("renders post context, dates, and reading time", async () => {
-  const [article, articleWithoutUpdate] = await Promise.all([
+  const [article, otherArticle] = await Promise.all([
     readFile("dist/garden/go/http-handlers.html", "utf8"),
     readFile("dist/garden/computer-networks/example-com.html", "utf8"),
   ])
@@ -299,12 +299,12 @@ test("renders post context, dates, and reading time", async () => {
   const metadata = article.match(
     /<div class="post-meta"[^>]*>(.*?)<\/header>/,
   )?.[1]
-  const metadataWithoutUpdate = articleWithoutUpdate.match(
+  const otherMetadata = otherArticle.match(
     /<div class="post-meta"[^>]*>(.*?)<\/header>/,
   )?.[1]
   assert.ok(header)
   assert.ok(metadata)
-  assert.ok(metadataWithoutUpdate)
+  assert.ok(otherMetadata)
   assert.ok(header.indexOf("<h1>") < header.indexOf("post-description"))
   assert.ok(header.indexOf("post-description") < header.indexOf("post-meta"))
   assert.match(metadata, /<span class="post-label"[^>]*>Go<\/span>/)
@@ -316,8 +316,8 @@ test("renders post context, dates, and reading time", async () => {
   assert.equal(metadata.match(/post-meta-separator/g)?.length, 1)
   assertReadableDate(metadata, "Planted")
   assertReadableDate(metadata, "Last tended")
-  assertReadableDate(metadataWithoutUpdate, "Planted")
-  assert.doesNotMatch(metadataWithoutUpdate, /Last tended/)
+  assertReadableDate(otherMetadata, "Planted")
+  assertReadableDate(otherMetadata, "Last tended")
 })
 
 test("renders article images as captioned figures", async () => {

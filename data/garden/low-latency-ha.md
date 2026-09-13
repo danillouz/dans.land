@@ -1,8 +1,8 @@
 ---
-title: Low latency HA
-description: Low latency and HA (High Availability) patterns I learned from DynamoDB and S3.
+title: Low-latency HA
+description: Low-latency and high-availability (HA) patterns I learned from DynamoDB and S3.
 created: 2024-12-15
-updated: 2026-09-12
+updated: 2026-09-13
 aliases:
   - Request hedging
   - Shuffle sharding

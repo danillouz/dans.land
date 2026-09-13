@@ -2,7 +2,7 @@
 title: Nagle's algorithm
 description: Nagle's algorithm solves the small-packet problem, but can cause problems.
 created: 2024-08-18
-updated: 2026-09-12
+updated: 2026-09-13
 aliases:
   - Nagling
   - TCP NODELAY
@@ -43,7 +43,7 @@ Delayed ACKs combine several ACK responses into a single one, by waiting for a s
 This way it can either:
 
 - Combine multiple ACKs.
-- Include the ACK in data it needs to send anyways (this is called "piggybacking").
+- Include the ACK in data it needs to send anyway (this is called "piggybacking").
 
 Delayed ACKs are usually _also_ enabled by default.
 

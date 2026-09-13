@@ -2,14 +2,14 @@
 title: Proxies
 description: What I learned about proxies so far.
 created: 2024-08-18
-updated: 2026-09-12
+updated: 2026-09-13
 aliases:
   - Reverse Proxy
   - Forward Proxy
 status: seedling
 ---
 
-A proxy is an "intermediary" between a client making an HTTP request, and a server responding to that request.
+A proxy is an "intermediary" between a client making an HTTP request and a server responding to that request.
 
 Generally speaking there are 2 types of proxies:
 
