@@ -11,7 +11,7 @@ const { title, description, canonical, openGraphType, structuredData } =
   Astro.props
 const socialImage = new URL("/social.png", Astro.site)
 const socialImageAlt =
-  "Postcard reading “I finally visited Dan’s Land! The garden was my favorite. Wish you were here…” beside castle and cinnamon-bun stamps."
+  "Postcard reading “I finally visited Dan’s Land! The garden was my favorite. Wish you were here…” beside castle and horse stamps."
 const serializedStructuredData = structuredData
   ? JSON.stringify(structuredData).replaceAll("<", "\\u003c")
   : undefined
