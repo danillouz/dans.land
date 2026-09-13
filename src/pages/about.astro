@@ -176,7 +176,7 @@ const structuredData = {
 
   .portrait-image {
     height: auto;
-    filter: drop-shadow(0 0.75rem 0.6rem rgb(0 0 0 / 0.22));
+    filter: drop-shadow(0 0.75rem 0.35rem rgb(0 0 0 / 0.18));
   }
 
   .placard {
@@ -211,6 +211,10 @@ const structuredData = {
       width: min(60rem, calc(100vw - 2.5rem));
       grid-template-columns: minmax(0, 1fr) var(--placard-width);
       align-self: center;
+    }
+
+    .portrait-image {
+      filter: drop-shadow(0 0.75rem 0.6rem rgb(0 0 0 / 0.22));
     }
   }
 </style>
