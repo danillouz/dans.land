@@ -322,7 +322,7 @@ test("Astro emits all pages and deployment files", async () => {
   await Promise.all(paths.map((path) => readFile(path)))
 })
 
-test("article fonts and small styles are discoverable in the initial HTML", async () => {
+test("articles inline small styles without loading web fonts", async () => {
   const { document } = await builtPage("dist/garden/go/http-handlers.html")
   const inlineStyles = elements(document, (node) => node.tagName === "style")
     .map(textContent)
@@ -335,24 +335,8 @@ test("article fonts and small styles are discoverable in the initial HTML", asyn
       attribute(node, "as") === "font",
   )
 
-  const preloadedFiles = await Promise.all(
-    preloads.map(async (font) => {
-      const href = attribute(font, "href")!
-      // Both an empty crossorigin attribute and "anonymous" enable font CORS.
-      assert.ok(["", "anonymous"].includes(attribute(font, "crossorigin")!))
-      assert.ok(inlineStyles.includes(attribute(font, "href")!))
-      return readFile(`dist${href}`)
-    }),
-  )
-  for (const variant of ["400-normal", "400-italic", "700-normal"]) {
-    const source = await readFile(
-      `node_modules/@fontsource/ia-writer-quattro/files/ia-writer-quattro-latin-${variant}.woff2`,
-    )
-    assert.ok(
-      preloadedFiles.some((file) => file.equals(source)),
-      `missing ${variant} font preload`,
-    )
-  }
+  assert.equal(preloads.length, 0)
+  assert.doesNotMatch(inlineStyles, /@font-face/)
   assert.match(inlineStyles, /\.post-description/)
 })
 

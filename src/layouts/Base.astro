@@ -1,6 +1,5 @@
 ---
 import "../styles/base.css"
-import { Font } from "astro:assets"
 
 interface Props {
   title: string
@@ -55,8 +54,6 @@ const rssUrl = rssBase && new URL("/rss.xml", rssBase)
         />
       )
     }
-
-    <Font cssVariable="--font-body" preload />
 
     <slot name="head" />
   </head>

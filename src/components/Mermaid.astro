@@ -7,10 +7,7 @@
   }
 
   async function render() {
-    const [{ default: mermaid }] = await Promise.all([
-      import("mermaid"),
-      document.fonts.ready,
-    ])
+    const { default: mermaid } = await import("mermaid")
 
     const styles = getComputedStyle(document.documentElement)
     const color = (name: string) => {
@@ -24,7 +21,7 @@
       startOnLoad: false,
       securityLevel: "strict",
       theme: "base",
-      fontFamily: '"iA Writer Quattro", ui-sans-serif, system-ui, sans-serif',
+      fontFamily: "ui-sans-serif, system-ui, sans-serif",
       themeVariables: {
         background: color("--color-surface"),
         primaryColor: color("--color-base"),

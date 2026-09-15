@@ -14,7 +14,7 @@ import Header from "./Header.astro"
 <style>
   main {
     box-sizing: border-box;
-    /* Quattro's 70ch is 42rem; keep the column stable while fonts load. */
+    /* Keep the content width independent of platform font metrics. */
     width: min(calc(100% - 2.5rem), 42rem);
     flex: 1 1 0%;
     margin-inline: auto;

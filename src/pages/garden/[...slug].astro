@@ -121,7 +121,8 @@ const dateFormatter = new Intl.DateTimeFormat("en-GB", {
   .post-meta {
     margin-top: 1.5rem;
     color: rgb(var(--garden-description));
-    font-size: 0.9375rem;
+    font-family: var(--font-ui);
+    font-size: var(--font-size-ui);
   }
 
   .post-meta-summary,
@@ -156,6 +157,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-GB", {
 
   .post-description {
     color: rgb(var(--color-text));
+    letter-spacing: var(--letter-spacing-copy);
   }
 
   @media (max-width: 32rem) {

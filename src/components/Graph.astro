@@ -41,14 +41,17 @@ const serializedGraph = JSON.stringify(graph).replaceAll("<", "\\u003c")
 <script>
   import type { GardenGraphData } from "../garden/graph"
 
-  for (const root of document.querySelectorAll<HTMLElement>("[data-garden-graph]")) {
+  for (const root of document.querySelectorAll<HTMLElement>(
+    "[data-garden-graph]",
+  )) {
     const data = root.querySelector<HTMLScriptElement>("[data-graph-data]")
     if (!data?.textContent) {
       continue
     }
 
     const graph = JSON.parse(data.textContent) as GardenGraphData
-    let graphModule: Promise<typeof import("../garden/graph-client")> | undefined
+    let graphModule:
+      Promise<typeof import("../garden/graph-client")> | undefined
     let drawing = false
     let redrawPending = false
     let drawingWidth = 0
@@ -141,7 +144,8 @@ const serializedGraph = JSON.stringify(graph).replaceAll("<", "\\u003c")
     color: rgb(var(--nav-link));
     cursor: pointer;
     font: inherit;
-    font-size: 0.875rem;
+    font-family: var(--font-ui);
+    font-size: var(--font-size-ui);
     line-height: 1.5rem;
   }
 
@@ -176,7 +180,6 @@ const serializedGraph = JSON.stringify(graph).replaceAll("<", "\\u003c")
     color: rgb(var(--garden-description));
     outline: none;
     text-decoration: none;
-    transition: opacity 120ms ease-out;
   }
 
   .garden-graph :global(.graph-nodes a[data-connected]) {
@@ -190,7 +193,15 @@ const serializedGraph = JSON.stringify(graph).replaceAll("<", "\\u003c")
     vector-effect: non-scaling-stroke;
   }
 
-  .garden-graph :global(.graph-nodes a[data-connected] circle:not(.node-hit)) {
+  .garden-graph :global(.graph-nodes .node-backdrop) {
+    fill: rgb(var(--color-base));
+  }
+
+  .garden-graph :global(.graph-nodes .node-dot) {
+    transition: opacity 120ms ease-out;
+  }
+
+  .garden-graph :global(.graph-nodes a[data-connected] .node-dot) {
     filter: drop-shadow(0 0 2px rgb(var(--color-rose) / 0.35));
   }
 
@@ -201,29 +212,42 @@ const serializedGraph = JSON.stringify(graph).replaceAll("<", "\\u003c")
 
   .garden-graph :global(.graph-nodes text) {
     fill: rgb(var(--color-text));
-    font-family: var(--font-body);
-    font-size: 0.75rem;
+    font-family: var(--font-ui);
+    font-size: var(--font-size-ui);
     paint-order: stroke;
     stroke: rgb(var(--color-base));
     stroke-linejoin: round;
     stroke-width: 3px;
+    transition:
+      fill-opacity 120ms ease-out,
+      stroke-opacity 120ms ease-out;
   }
 
   .garden-graph
-    :global(.graph-nodes a:is(:hover, :focus-visible) circle:not(.node-hit)) {
+    :global(.graph-nodes a:is(:hover, :focus-visible) .node-dot) {
     fill: rgb(var(--color-gold));
     stroke: rgb(var(--focus));
     stroke-width: 2;
     filter: drop-shadow(0 0 3px rgb(var(--color-gold) / 0.55));
   }
 
-  .garden-graph :global([data-dimmed]) {
+  .garden-graph :global(.graph-edges line[data-dimmed]) {
     opacity: 0.16;
+  }
+
+  .garden-graph :global(.graph-nodes a[data-dimmed] .node-dot) {
+    opacity: 0.16;
+  }
+
+  .garden-graph :global(.graph-nodes a[data-dimmed] text) {
+    fill-opacity: 0.16;
+    stroke-opacity: 0.16;
   }
 
   @media (prefers-reduced-motion: reduce) {
     .garden-graph :global(.graph-edges line),
-    .garden-graph :global(.graph-nodes a) {
+    .garden-graph :global(.graph-nodes .node-dot),
+    .garden-graph :global(.graph-nodes text) {
       transition: none;
     }
   }

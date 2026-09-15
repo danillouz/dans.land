@@ -1,5 +1,11 @@
 :root {
   color-scheme: light dark;
+  --font-body: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-ui: ui-sans-serif, system-ui, sans-serif;
+  --font-size-copy: 1.125rem;
+  --font-size-ui: 0.9375rem;
+  --font-size-code: 0.9375rem;
+  --letter-spacing-copy: 0.01em;
   --font-code:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
     monospace;
@@ -25,7 +31,7 @@ body {
   margin: 0;
   padding: 0;
   font-family: var(--font-body);
-  font-size: 1rem;
+  font-size: var(--font-size-copy);
   background-color: rgb(var(--color-surface));
   color: rgb(var(--color-text));
 }
@@ -51,7 +57,8 @@ a:focus-visible {
 .nav-link {
   display: inline-block;
   color: rgb(var(--nav-link));
-  font-size: 1rem;
+  font-family: var(--font-code);
+  font-size: var(--font-size-ui);
   line-height: 1.5rem;
   text-decoration: none;
   text-transform: uppercase;

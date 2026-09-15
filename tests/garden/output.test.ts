@@ -271,6 +271,10 @@ test("renders accessible, annotated Rosé Pine code blocks", async () => {
   )
   assert.ok(expressiveCodeStylesheet)
   assert.match(article, /\.frame:has\(pre:focus-visible\)/)
+  assert.match(article, /--ec-codeFontFml:var\(--font-code\)/)
+  assert.match(article, /--ec-codeFontSize:var\(--font-size-code\)/)
+  assert.match(article, /--ec-uiFontFml:var\(--font-ui\)/)
+  assert.match(article, /--ec-uiFontSize:var\(--font-size-ui\)/)
 
   const styles = await readFile(
     `dist/assets/${expressiveCodeStylesheet}`,

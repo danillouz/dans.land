@@ -210,12 +210,13 @@ const dateFormatter = new Intl.DateTimeFormat("en-GB", {
 
   .recent-list time {
     color: rgb(var(--color-caption));
+    font-family: var(--font-ui);
+    font-size: var(--font-size-ui);
     font-variant-numeric: tabular-nums;
   }
 
   .recent-all {
     margin: 1rem 0 0;
-    font-size: 1rem;
     line-height: 1.5rem;
     text-align: center;
   }
@@ -236,7 +237,6 @@ const dateFormatter = new Intl.DateTimeFormat("en-GB", {
     .recent-list time {
       display: block;
       margin-top: 0.125rem;
-      font-size: 0.875rem;
     }
   }
 </style>

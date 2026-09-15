@@ -49,7 +49,7 @@ function collisionRadius(node: GraphNode) {
 }
 
 function labelHalfWidth(node: GraphNode) {
-  return node.title.length * 3.75
+  return node.title.length * 4.5
 }
 
 function graphBounds(nodes: GraphNode[]) {
@@ -91,9 +91,7 @@ export function drawGraph(root: HTMLElement, graph: GardenGraphData) {
   const layoutScale = Math.max(1, Math.sqrt(nodes.length / 25))
   const layoutWidth = width * layoutScale
   const layoutHeight = height * layoutScale
-  const neighbours = new Map(
-    nodes.map((node) => [node.id, new Set<string>()]),
-  )
+  const neighbours = new Map(nodes.map((node) => [node.id, new Set<string>()]))
 
   for (const edge of graph.edges) {
     neighbours.get(edge.source)?.add(edge.target)
@@ -198,6 +196,13 @@ export function drawGraph(root: HTMLElement, graph: GardenGraphData) {
     .attr("r", 16)
   nodeElements
     .append("circle")
+    .attr("class", "node-backdrop")
+    .attr("cx", (node) => node.x ?? 0)
+    .attr("cy", (node) => node.y ?? 0)
+    .attr("r", (node) => nodeRadius(node.connections))
+  nodeElements
+    .append("circle")
+    .attr("class", "node-dot")
     .attr("cx", (node) => node.x ?? 0)
     .attr("cy", (node) => node.y ?? 0)
     .attr("r", (node) => nodeRadius(node.connections))

@@ -17,6 +17,14 @@
 
 <style>
   .link-preview {
+    --garden-divider-spacing: 1.25rem;
+    --preview-heading-spacing: 1.5rem;
+    --preview-title-size: 1.5rem;
+    --preview-h2-size: 1.25rem;
+    --preview-h3-size: var(--font-size-copy);
+    --preview-h4-size: 1.0625rem;
+    --preview-h5-size: 1rem;
+
     position: fixed;
     z-index: 20;
     width: min(30rem, calc(100vw - 2rem));
@@ -42,26 +50,47 @@
   }
 
   .link-preview :global(.post-header) {
-    margin-bottom: 1.25rem;
-    padding-bottom: 1rem;
+    margin-bottom: var(--garden-divider-spacing);
+    padding-bottom: var(--garden-divider-spacing);
   }
 
   .link-preview :global(.post-meta) {
     margin-top: 0.75rem;
-    font-size: 0.875rem;
+    font-size: var(--font-size-ui);
   }
 
   .link-preview :global(.post-header h1) {
     margin-block: 0;
-    font-size: 1.25rem;
+    font-size: var(--preview-title-size);
   }
 
   .link-preview :global(.post-description) {
     margin-block: 0.5rem 0;
   }
 
-  .link-preview :global(.post-content) {
-    font-size: 0.9375rem;
+  .link-preview :global(.post-content :is(h2, h3, h4, h5, h6)) {
+    margin-block: var(--preview-heading-spacing) 0.75rem;
+    line-height: 1.2;
+  }
+
+  .link-preview :global(.post-content h2) {
+    font-size: var(--preview-h2-size);
+  }
+
+  .link-preview :global(.post-content h3) {
+    font-size: var(--preview-h3-size);
+  }
+
+  .link-preview :global(.post-content h4) {
+    font-size: var(--preview-h4-size);
+  }
+
+  .link-preview :global(.post-content :is(h5, h6)) {
+    font-size: var(--preview-h5-size);
+  }
+
+  .link-preview :global(.post-content .footnotes h2) {
+    margin-top: 0;
   }
 
   .link-preview :global(.post-content > :first-child) {
@@ -70,6 +99,10 @@
 
   .link-preview :global(.post-content > :last-child) {
     margin-bottom: 0;
+  }
+
+  .link-preview :global(.backlinks--after-footnotes) {
+    margin-top: var(--garden-divider-spacing);
   }
 
   .link-preview :global(.heading-link::after),

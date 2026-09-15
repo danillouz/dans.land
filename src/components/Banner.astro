@@ -48,7 +48,6 @@ const { as: Tag = "p", id, lang, variant = "default" }: Props = Astro.props
   .banner p {
     width: 100%;
     margin: 0;
-    font-size: 1.125rem;
     font-style: italic;
     line-height: 1.875rem;
     letter-spacing: 0.015em;
@@ -62,7 +61,7 @@ const { as: Tag = "p", id, lang, variant = "default" }: Props = Astro.props
   .banner--not-found h1 {
     width: 100%;
     margin: 0;
-    font-size: 1.125rem;
+    font-size: var(--font-size-copy);
     font-style: italic;
     font-weight: normal;
     line-height: 1.875rem;
