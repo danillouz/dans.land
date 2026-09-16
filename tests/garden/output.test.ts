@@ -237,17 +237,15 @@ test("renders backlinks from the shared content index", async () => {
 })
 
 test("renders accessible, annotated Rosé Pine code blocks", async () => {
-  const [article, highlighted, diff, benchmarking, assetNames] =
-    await Promise.all([
-      readFile("dist/garden/go/http-handlers.html", "utf8"),
-      readFile("dist/garden/go/s3-upload-memory.html", "utf8"),
-      readFile("dist/garden/lambda/nodejs-event-loop.html", "utf8"),
-      readFile("dist/garden/go/benchmarking.html", "utf8"),
-      readdir("dist/assets"),
-    ])
-  const expressiveCodeStylesheet = assetNames.find((name) =>
-    /^ec\..+\.css$/.test(name),
-  )
+  const [article, highlighted, diff, benchmarking] = await Promise.all([
+    readFile("dist/garden/go/http-handlers.html", "utf8"),
+    readFile("dist/garden/go/s3-upload-memory.html", "utf8"),
+    readFile("dist/garden/lambda/nodejs-event-loop.html", "utf8"),
+    readFile("dist/garden/go/benchmarking.html", "utf8"),
+  ])
+  const styles = article.match(
+    /<div class="expressive-code"><style>(.*?)<\/style>/s,
+  )?.[1]
 
   assert.match(
     article,
@@ -269,17 +267,14 @@ test("renders accessible, annotated Rosé Pine code blocks", async () => {
     benchmarking,
     /<style>\s*\.expressive-code \.copy button \{\s*opacity: 0;/,
   )
-  assert.ok(expressiveCodeStylesheet)
+  assert.ok(styles)
+  assert.doesNotMatch(article, /<link rel="stylesheet" href="\/assets\/ec\./)
   assert.match(article, /\.frame:has\(pre:focus-visible\)/)
   assert.match(article, /--ec-codeFontFml:var\(--font-code\)/)
   assert.match(article, /--ec-codeFontSize:var\(--font-size-code\)/)
   assert.match(article, /--ec-uiFontFml:var\(--font-ui\)/)
   assert.match(article, /--ec-uiFontSize:var\(--font-size-ui\)/)
 
-  const styles = await readFile(
-    `dist/assets/${expressiveCodeStylesheet}`,
-    "utf8",
-  )
   assert.match(styles, /--ec-codeBg:#faf4ed/)
   assert.match(styles, /--ec-codeBg:#232136/)
   assert.match(styles, /--ec-gtrBrdWd:0px/)

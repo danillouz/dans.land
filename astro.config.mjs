@@ -24,7 +24,14 @@ export default defineConfig({
     breakpoints: [320, 480, 672, 960, 1344],
   },
   integrations: [
-    expressiveCode(),
+    // Avoid a layout shift while Expressive Code emits its stylesheet link
+    // inside the first code block instead of <head>.
+    // This duplicates ~3.5 KB of compressed CSS on every page with code,
+    // instead of sharing a cacheable asset.
+    // So when (https://github.com/expressive-code/expressive-code/issues/452) is fixed,
+    // remove this option.
+    expressiveCode({ emitExternalStylesheet: false }),
+
     sitemap({
       filter: (page) => page !== "https://dans.land/404",
     }),
