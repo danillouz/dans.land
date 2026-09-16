@@ -199,7 +199,10 @@ test("renders Mermaid diagrams only on pages that use them", async () => {
     readFile("dist/garden/go/http-handlers.html", "utf8"),
   ])
 
-  assert.match(diagramArticle, /<pre class="mermaid">/)
+  assert.match(
+    diagramArticle,
+    /<div class="mermaid-frame" data-mermaid-width="603" data-mermaid-height="382" style="--mermaid-width: 603px; --mermaid-ratio: 603 \/ 382"><pre class="mermaid">/,
+  )
   assert.match(diagramArticle, /accTitle: Domain name hierarchy/)
   assert.match(diagramArticle, /Mermaid\.astro/)
   assert.doesNotMatch(diagramArticle, /data-language="mermaid"/)

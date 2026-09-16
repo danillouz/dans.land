@@ -249,7 +249,8 @@
               const placeholder = document.createElement("p")
               placeholder.className = "preview-diagram-placeholder"
               placeholder.textContent = "Diagram available in the full post."
-              diagram.replaceWith(placeholder)
+              const frame = diagram.closest(".mermaid-frame") ?? diagram
+              frame.replaceWith(placeholder)
             })
 
           return template

@@ -44,7 +44,10 @@ export default defineConfig({
         remarkWikiLink,
         [remarkGardenLinks, { gardenRoot }],
         remarkCallouts,
-        remarkMermaid,
+        [
+          remarkMermaid,
+          { allowMissingSize: process.env.NODE_ENV === "development" },
+        ],
         remarkReadingTime,
       ],
       rehypePlugins: [

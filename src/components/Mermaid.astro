@@ -1,5 +1,11 @@
 <script>
   const diagrams = document.querySelectorAll<HTMLElement>("pre.mermaid")
+  const developmentDiagrams = import.meta.env.DEV
+    ? [...diagrams].map((diagram) => ({
+        diagram,
+        title: diagram.textContent?.match(/^\s*accTitle:\s*(.+)$/m)?.[1],
+      }))
+    : []
   let rendering: Promise<void> | undefined
 
   function renderDiagrams() {
@@ -35,6 +41,43 @@
     })
 
     await mermaid.run({ nodes: diagrams })
+
+    // Mermaid can produce slightly different fractional viewBox dimensions
+    // across browsers. Whole-pixel metadata plus a small tolerance keeps the
+    // development calibration useful without reporting harmless sub-pixel drift.
+    const dimensionTolerance = 1
+    for (const { diagram, title } of developmentDiagrams) {
+      const frame = diagram.closest<HTMLElement>(".mermaid-frame")
+      const viewBox = diagram
+        .querySelector("svg")
+        ?.getAttribute("viewBox")
+        ?.trim()
+        .split(/\s+/)
+      const width = viewBox?.[2]
+      const height = viewBox?.[3]
+      if (!frame || !width || !height) {
+        continue
+      }
+
+      const configuredWidth = Number(frame.dataset.mermaidWidth)
+      const configuredHeight = Number(frame.dataset.mermaidHeight)
+      const measuredWidth = Number(width)
+      const measuredHeight = Number(height)
+      const dimensionsMatch =
+        Number.isFinite(configuredWidth) &&
+        Number.isFinite(configuredHeight) &&
+        Math.abs(configuredWidth - measuredWidth) <= dimensionTolerance &&
+        Math.abs(configuredHeight - measuredHeight) <= dimensionTolerance
+      if (dimensionsMatch) {
+        continue
+      }
+
+      const label = title ? ` "${title}"` : ""
+      console.warn(
+        `[Mermaid]${label}: use \`\`\`mermaid width=${Math.ceil(measuredWidth)} height=${Math.ceil(measuredHeight)}`,
+        frame,
+      )
+    }
   }
 
   if (diagrams.length > 0) {

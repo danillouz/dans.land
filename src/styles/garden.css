@@ -191,15 +191,41 @@ h3 {
   letter-spacing: normal;
 }
 
-.garden-prose .mermaid {
+.garden-prose .mermaid-frame {
+  position: relative;
   margin-block: 2rem;
   padding: 1rem;
-  overflow-x: auto;
   border: 1px solid rgb(var(--garden-border));
   border-radius: var(--garden-radius);
   background: rgb(var(--color-base));
+}
+
+.garden-prose .mermaid-frame::before {
+  display: block;
+  width: min(100%, var(--mermaid-width));
+  margin-inline: auto;
+  aspect-ratio: var(--mermaid-ratio);
+  content: "";
+}
+
+.garden-prose .mermaid-frame--unreserved::before {
+  display: none;
+}
+
+.garden-prose .mermaid {
+  position: absolute;
+  inset: 1rem;
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+  border: 0;
+  background: transparent;
   letter-spacing: normal;
   text-align: center;
+}
+
+.garden-prose .mermaid-frame--unreserved .mermaid {
+  position: static;
 }
 
 .garden-prose .mermaid svg {

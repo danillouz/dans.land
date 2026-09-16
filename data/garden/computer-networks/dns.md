@@ -89,7 +89,7 @@ For example, the labels of the domain names:
 
 Can be visualized in the domain name space like this:
 
-```mermaid
+```mermaid width=603 height=382
 graph TD;
   accTitle: Domain name hierarchy
   accDescr: A hierarchy from the DNS root to top-level domains, second-level domains, and subdomains.
