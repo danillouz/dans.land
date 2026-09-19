@@ -2,7 +2,7 @@
 title: Dotfiles
 description: Collection of my dotfiles and configuration setup on macOS.
 created: 2025-01-05
-updated: 2026-09-12
+updated: 2026-09-19
 status: evergreen
 ---
 
@@ -18,7 +18,23 @@ First install the Xcode CLI tools:
 xcode-select --install
 ```
 
-And [Homebrew](https://brew.sh/).
+Then [Homebrew](https://brew.sh/).
+
+### Atuin
+
+Location:
+
+```txt
+~/.config/atuin/config.toml
+```
+
+Config:
+
+```toml
+# See: https://docs.atuin.sh/latest/reference/config/
+
+invert = true
+```
 
 ### Ghostty
 
@@ -28,6 +44,7 @@ Config:
 
 ```ini
 # Config: https://ghostty.org/docs/config/reference
+
 auto-update = check
 
 background-opacity = 0.95
@@ -40,6 +57,7 @@ font-size = 15
 
 macos-titlebar-style = tabs
 macos-option-as-alt = true
+macos-icon = holographic
 
 mouse-hide-while-typing = true
 
@@ -48,17 +66,14 @@ quick-terminal-position = bottom
 
 selection-invert-fg-bg = true
 
-theme = light:"Monokai Pro Light Sun",dark:"Monokai Pro Ristretto"
+theme = light:"Monokai Pro Light Sun", dark:"Monokai Pro Ristretto"
 
 window-colorspace = display-p3
-window-height = 40
+window-height = 45
 window-width = 120
 window-padding-x = 10
 window-padding-y = 10
 window-save-state = always
-
-# Keybindings: https://ghostty.org/docs/config/keybind
-keybind = global:ctrl+`=toggle_quick_terminal
 ```
 
 ### Git
@@ -86,22 +101,20 @@ Config:
 	format = ssh
 [gpg "ssh"]
 	allowedSignersFile = ~/.config/git_allowed_signers
-
 [commit]
 	gpgsign = true
 [tag]
 	gpgsign = true
 
-[help]
-	autocorrect = -1
-
 [pull]
 	rebase = true
 [push]
 	default = simple
+[rebase]
+	autosquash = true
 
 [alias]
-	aliases = config --get-regexp alias
+	alias = config --get-regexp alias
 	contribs = shortlog -sn
 	fuckit = !git reset --hard HEAD && git clean -d -f
 	tags = tag
@@ -132,24 +145,20 @@ Location:
 
 Config:
 
-```ini
+```toml
 # See: https://starship.rs/config
+
 "$schema" = 'https://starship.rs/config-schema.json'
 
 format = """
 $username\
 $hostname\
-$localip\
-$shlvl\
 $directory\
 $git_branch\
 $git_commit\
 $git_state\
-$git_metrics\
 $git_status\
 $docker_context\
-$direnv\
-$env_var\
 $sudo\
 $cmd_duration\
 $line_break\
@@ -174,39 +183,21 @@ diverged = "↕"
 renamed = "r"
 deleted = "x"
 
-[status]
-symbol = "[x](bold red) "
-
 [sudo]
+disabled = false
 symbol = "sudo "
+format = "[$symbol]($style)"
 ```
 
 ### Zsh
 
 Dependencies:
 
-- [fzf](https://junegunn.github.io/fzf/)
-- [zoxide](https://github.com/ajeetdsouza/zoxide)
+- [atuin](https://atuin.sh/)
 - [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
+- [zoxide](https://github.com/ajeetdsouza/zoxide)
 
-#### zprofile
-
-Location:
-
-```txt
-~/.zprofile
-```
-
-Config (Apple Silicon):
-
-```ini
-eval "$(/opt/homebrew/bin/brew shellenv)"
-
-# Restore Keychain-backed SSH identities for Git commit signing.
-ssh-add --apple-load-keychain >/dev/null 2>&1
-```
-
-### Aliases
+#### Aliases
 
 Location:
 
@@ -218,8 +209,9 @@ Config:
 
 ```ini
 # Configuration files
-alias configs='ide -n \
+alias config='ide -n \
   ~/.codex/config.toml \
+  ~/.config/atuin/config.toml \
   ~/.config/starship.toml \
   ~/.gitconfig \
   ~/.vimrc \
@@ -228,49 +220,58 @@ alias configs='ide -n \
   ~/.zshrc \
 '
 
-# git
+# Git
 alias g='git'
 
+# Git: inspect
+alias gs='git status -sb'
+alias gd='git diff'
+alias gds='git diff --staged'
+alias gsh='git show'
+alias gl='git log --stat --graph --pretty=format:"%C(green)%d%Creset %C(yellow)%h%Creset %C(magenta)(%cr)%Creset %C(blue)<%cn>%Creset %s"'
+alias gl1='git log --pretty=format:"%C(green)%d%Creset %C(yellow)%h%Creset %C(magenta)(%cd)%Creset %C(blue)<%cn>%Creset %s"'
+
+# Git: stage / unstage / discard
 alias ga='git add'
 alias gap='git add -p'
 alias gaa='git add -A'
+alias gusp='git restore --staged -p' # unstage selected hunks
+alias gdiscp='git restore -p'        # discard unstaged hunks (destructive)
 
-alias gb='git branch -vv'
-alias gbd='git branch -d'
-alias gbD='git branch -D'
-
-alias gco='git checkout'
-alias gcob='git checkout -b'
-
+# Git: commit / rewrite
 alias gc='git commit -v'
 alias gca='git commit -v -a'
 alias gcam='git commit -v --amend'
 alias gcfx='git commit --fixup'
-alias gunc='git reset --mixed HEAD~' # uncommit
-alias guns='git reset -q HEAD --' # unstage
+alias gunc='git reset --mixed HEAD~' # uncommit, retaining changes
 
+# Git: branches
+alias gb='git branch -vv'
+alias gbd='git branch -d'
+alias gbD='git branch -D'
+alias gco='git checkout'
+alias gcob='git checkout -b'
+
+# Git: sync / remotes
+alias gf='git fetch --prune'
+alias gpl='git pull'
 alias gp='git push origin HEAD'
 alias gpu='git push -u origin HEAD'
 alias gpf='git push --force-with-lease --force-if-includes origin HEAD'
+alias grpo='git remote prune origin'
+alias grso='git remote show origin'
 
-alias gl='git log --stat --graph --pretty=format:"%C(green)%d%Creset %C(yellow)%h%Creset %C(magenta)(%cr)%Creset %C(blue)<%cn>%Creset %s"'
-alias gl1='git log --pretty=format:"%C(green)%d%Creset %C(yellow)%h%Creset %C(magenta)(%cd)%Creset %C(blue)<%cn>%Creset %s"'
-
-alias gpl='git pull'
-
-alias gs='git status -sb'
-
+# Git: rebase
 alias grb='git rebase'
 alias grbi='git rebase -i'
 alias grbc='git rebase --continue'
 alias grba='git rebase --abort'
 
-alias grpo='git remote prune origin'
-alias grso='git remote show origin'
-
+# Git: stash
 alias gst='git stash'
-alias gstl='git stash list'
-alias gstp='git stash pop'
+alias gstp='git stash push -p'
+alias gstls='git stash list'
+alias gstpop='git stash pop'
 
 # ls
 alias ll='ls -alh'
@@ -294,6 +295,23 @@ up() {
 }
 ```
 
+#### zprofile
+
+Location:
+
+```txt
+~/.zprofile
+```
+
+Config (Apple Silicon):
+
+```ini
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
+# Restore Keychain-backed SSH identities for Git commit signing.
+ssh-add --apple-load-keychain >/dev/null 2>&1
+```
+
 #### zshrc
 
 Location:
@@ -307,7 +325,7 @@ Config:
 ```ini
 setopt auto_cd
 
-# Enables case-insensitive tab completion.
+# Enables case-insensitive tab-completion.
 # See: https://stackoverflow.com/a/69014927
 zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}' 'r:|=*' 'l:|=* r:|=*'
 autoload -Uz compinit && compinit
@@ -315,28 +333,25 @@ autoload -Uz compinit && compinit
 # Run `alias` to see all aliases.
 source ~/.zsh_aliases
 
-# See: https://junegunn.github.io/fzf/shell-integration/
-source <(fzf --zsh)
-
-# See: https://github.com/junegunn/fzf-git.sh?tab=readme-ov-file
-source ~/fzf-git.sh
-
 # See: https://starship.rs/guide/
 eval "$(starship init zsh)"
 
 # See: https://github.com/ajeetdsouza/zoxide/#installation
 eval "$(zoxide init zsh)"
 
-# See: https://github.com/zsh-users/zsh-autosuggestions/blob/master/INSTALL.md
-source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+# Atuin is the persistent history store,
+# and automatically adds itself as an autosuggest strategy (zsh-autosuggestions).
+#
+# See:
+#   - https://docs.atuin.sh/latest/guide/installation/#manual-installation
+#   - https://docs.atuin.sh/latest/integrations/#zsh-autosuggestions
+#   - https://github.com/zsh-users/zsh-autosuggestions/blob/master/INSTALL.md
+unset HISTFILE
+SAVEHIST=0
+eval "$(atuin init zsh)"
+source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 export PATH="$HOME/.local/bin:$PATH"
-```
-
-Install `~/fzf-git.sh` separately before starting a shell, for example:
-
-```sh
-curl -o ~/fzf-git.sh https://raw.githubusercontent.com/junegunn/fzf-git.sh/main/fzf-git.sh
 ```
 
 ## Vim
@@ -356,85 +371,6 @@ set number
 set smartindent
 set textwidth=80
 set wrap
-```
-
-## VSCode
-
-Config:
-
-```json
-{
-  "[css][html][javascript][json][jsonc][typescript][typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "chat.disableAIFeatures": true,
-  "editor.bracketPairColorization.independentColorPoolPerBracketType": true,
-  "editor.codeActionsOnSave": {
-    "source.organizeImports": "explicit"
-  },
-  "editor.copyWithSyntaxHighlighting": false,
-  "editor.fontFamily": "TX-02 SemiCondensed",
-  "editor.fontLigatures": true,
-  "editor.fontSize": 15,
-  "editor.formatOnSave": true,
-  "editor.guides.bracketPairs": "active",
-  "editor.minimap.showSlider": "always",
-  "editor.occurrencesHighlight": "multiFile",
-  "editor.renderWhitespace": "all",
-  "editor.rulers": [80],
-  "editor.stickyScroll.enabled": true,
-  "editor.wordWrap": "wordWrapColumn",
-  "editor.wordWrapColumn": 80,
-  "go.coverageDecorator": {
-    "coveredGutterStyle": "slashgreen",
-    "type": "gutter",
-    "uncoveredGutterStyle": "slashred"
-  },
-  "go.coverOnSingleTest": true,
-  "go.editorContextMenuCommands": {
-    "fillStruct": true
-  },
-  "go.formatTool": "goimports",
-  "go.lintTool": "golangci-lint",
-  "go.survey.prompt": false,
-  "go.testEnvFile": "${workspaceFolder}/.env.test",
-  "go.testFlags": ["-v"],
-  "gopls": {
-    "ui.codelenses": {
-      "gc_details": true
-    },
-    "ui.completion.usePlaceholders": true,
-    "ui.diagnostic.annotations": {
-      "escape": true
-    },
-    "ui.semanticTokens": true
-  },
-  "security.workspace.trust.untrustedFiles": "open",
-  "telemetry.telemetryLevel": "off",
-  "terminal.integrated.copyOnSelection": true,
-  "terminal.integrated.cursorBlinking": true,
-  "terminal.integrated.cursorStyle": "line",
-  "terminal.integrated.fontSize": 15,
-  "terminal.integrated.stickyScroll.enabled": true,
-  "window.autoDetectColorScheme": true,
-  "window.newWindowProfile": "Default",
-  "workbench.activityBar.location": "top",
-  "workbench.colorTheme": "Monokai Pro Light (Filter Sun)",
-  "workbench.editor.decorations.badges": true,
-  "workbench.editor.decorations.colors": true,
-  "workbench.editor.tabActionLocation": "left",
-  "workbench.iconTheme": "Monokai Pro Light (Filter Sun) Icons",
-  "workbench.layoutControl.enabled": false,
-  "workbench.navigationControl.enabled": false,
-  "workbench.preferredDarkColorTheme": "Monokai Pro (Filter Ristretto)",
-  "workbench.preferredLightColorTheme": "Monokai Pro Light (Filter Sun)",
-  "workbench.sideBar.location": "right",
-  "workbench.startupEditor": "none",
-  "workbench.tree.indent": 24,
-  "zig.zls.enabled": "on",
-  "zig.zls.inlayHintsShowParameterName": false,
-  "zig.zls.inlayHintsShowVariableTypeHints": false
-}
 ```
 
 ## Zed
