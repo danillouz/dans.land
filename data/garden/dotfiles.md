@@ -31,8 +31,10 @@ Location:
 Config:
 
 ```toml
-# See: https://docs.atuin.sh/latest/reference/config/
+# See: https://docs.atuin.sh/latest/configuration/config/
 
+enter_accept = true
+filter_mode_shell_up_key_binding = "session"
 invert = true
 ```
 
