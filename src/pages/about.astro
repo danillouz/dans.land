@@ -7,9 +7,9 @@ import Ascii from "../components/Ascii.astro"
 import Intro from "../components/Intro.astro"
 import Page from "../layouts/Page.astro"
 
+const portraitImage = await getImage({ src: portrait, format: "png" })
 const description =
   "Daniël Illouz is a backend engineer at Framer specializing in Go, high-performance backend systems, networking, and large-scale web infrastructure."
-const portraitImage = await getImage({ src: portrait, format: "png" })
 
 const structuredData = {
   "@context": "https://schema.org",

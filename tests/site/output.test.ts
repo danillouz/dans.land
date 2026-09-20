@@ -313,6 +313,7 @@ test("Astro emits all pages and deployment files", async () => {
     "dist/about.html",
     "dist/404.html",
     "dist/garden/all.html",
+    "dist/search-index.json",
     "dist/_headers",
     "dist/robots.txt",
     "dist/rss.xml",
@@ -428,6 +429,26 @@ test("every page shares the full header and footer shell", async () => {
         ["/about", "About"],
       ],
     )
+    const searchButton = element(
+      header,
+      (node) =>
+        node.tagName === "button" &&
+        attribute(node, "data-search-open") !== undefined,
+    )
+    assert.equal(attribute(searchButton, "aria-label"), "Search")
+    assert.equal(
+      attribute(searchButton, "title"),
+      "I'm Crumb. The tiniest and sole Steward of Dan's Land.",
+    )
+    const searchPetFaces = elements(
+      searchButton,
+      (node) =>
+        node.tagName === "span" &&
+        ["search-pet-idle", "search-pet-active"].includes(
+          attribute(node, "class") ?? "",
+        ),
+    ).map((face) => textContent(face))
+    assert.deepEqual(searchPetFaces, ["ᴖᴗᴖ", ">ᴗ<"])
     assert.ok(
       element(
         footer,
@@ -435,6 +456,92 @@ test("every page shares the full header and footer shell", async () => {
       ),
     )
   }
+})
+
+test("search keeps command navigation on the input", async () => {
+  const { document } = await builtPage("dist/index.html")
+  const input = element(
+    document,
+    (node) =>
+      node.tagName === "input" &&
+      attribute(node, "data-search-input") !== undefined,
+  )
+  const results = element(
+    document,
+    (node) =>
+      node.tagName === "div" &&
+      attribute(node, "data-search-results") !== undefined,
+  )
+  const scrollArea = element(
+    document,
+    (node) => attribute(node, "data-search-scroll") !== undefined,
+  )
+  assert.equal(attribute(input, "role"), "combobox")
+  assert.equal(attribute(input, "placeholder"), "Search Dan's Land…")
+  assert.equal(attribute(input, "autocapitalize"), "none")
+  assert.equal(attribute(input, "spellcheck"), "false")
+  assert.equal(attribute(input, "aria-controls"), "search-results")
+  assert.equal(attribute(results, "role"), "listbox")
+  assert.equal(attribute(results, "tabindex"), undefined)
+  assert.equal(attribute(scrollArea, "tabindex"), "-1")
+  assert.equal(
+    elements(
+      scrollArea,
+      (node) => attribute(node, "data-search-results") !== undefined,
+    ).length,
+    1,
+  )
+  assert.equal(
+    elements(scrollArea, (node) => attribute(node, "id") === "search-help")
+      .length,
+    1,
+  )
+  assert.equal(
+    elements(
+      document,
+      (node) => attribute(node, "data-search-close") !== undefined,
+    ).length,
+    0,
+  )
+})
+
+test("the search index contains pages and published garden content", async () => {
+  const index = JSON.parse(await readFile("dist/search-index.json", "utf8"))
+  const handlers = index.find(
+    (entry: { path: string }) => entry.path === "/garden/go/http-handlers",
+  )
+  assert.ok(index.length > 0)
+  assert.ok(
+    index.some(
+      (entry: {
+        content?: string
+        description?: string
+        kind: string
+        path: string
+        title: string
+      }) =>
+        entry.path === "/about" &&
+        entry.kind === "page" &&
+        entry.title === "About" &&
+        entry.description === undefined &&
+        entry.content === undefined,
+    ),
+  )
+  assert.ok(
+    index.some(
+      (entry: { content: string; path: string; title: string }) =>
+        entry.path === "/garden/computer-networks/dns" &&
+        entry.title === "DNS" &&
+        entry.content.includes("Why do we need DNS?"),
+    ),
+  )
+  assert.ok(
+    index.every((entry: { path: string }) => !entry.path.includes("/_drafts/")),
+  )
+  assert.ok(index.every((entry: { href?: string }) => entry.href === undefined))
+  assert.ok(handlers)
+  assert.equal(handlers.kind, "garden")
+  assert.doesNotMatch(handlers.content, /package main|ListenAndServe/)
 })
 
 test("garden routes only load their own styles", async () => {

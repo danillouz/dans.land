@@ -6,6 +6,7 @@
   --font-size-ui: 0.9375rem;
   --font-size-code: 0.9375rem;
   --letter-spacing-copy: 0.01em;
+  --radius: 0.25rem;
   --font-code:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
     monospace;

@@ -22,9 +22,10 @@ const dateFormatter = new Intl.DateTimeFormat("en-GB", {
   timeZone: "UTC",
   year: "numeric",
 })
+const description = "Dan's digital garden."
 ---
 
-<Garden title="Garden of Knowledge" description="Dan's digital garden.">
+<Garden title="Garden of Knowledge" {description}>
   <Intro prefix="You have found the..." title="Garden of Knowledge">
     <Ascii slot="art">
       <pre
@@ -98,7 +99,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-GB", {
 
     <p class="recent-all">
       <a class="nav-link" href="/garden/all" aria-label="All garden posts"
-        >All</a
+        >All garden posts</a
       >
     </p>
   </section>

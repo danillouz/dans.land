@@ -31,18 +31,24 @@ const { as: Tag = "p", id, lang, variant = "default" }: Props = Astro.props
   }
 
   .banner::before {
-    content: "◆ ◆ ◆";
+    content: "✦";
+    width: min(9rem, 100%);
     margin-bottom: 0.875rem;
-    font-size: 0.75rem;
-    letter-spacing: 0.35em;
+    background:
+      linear-gradient(currentColor, currentColor) left center /
+        calc(50% - 1.25rem) 1px no-repeat,
+      linear-gradient(currentColor, currentColor) right center /
+        calc(50% - 1.25rem) 1px no-repeat;
+    font-family: var(--font-code);
+    font-size: 1rem;
     line-height: 1;
   }
 
   .banner::after {
     content: "";
-    width: 7rem;
+    width: min(9rem, 100%);
     margin-top: 1.25rem;
-    border-top: 1.5px solid rgb(var(--banner-color) / 0.65);
+    border-top: 1px solid currentColor;
   }
 
   .banner p {

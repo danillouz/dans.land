@@ -1,4 +1,6 @@
 ---
+import Search from "./Search.astro"
+
 const path = Astro.url.pathname.replace(/\/$/, "") || "/"
 const links = [
   { href: "/", label: "Home" },
@@ -24,6 +26,8 @@ function current(href: string) {
         </a>
       ))
     }
+
+    <Search />
   </nav>
 </header>
 
@@ -40,6 +44,12 @@ function current(href: string) {
   nav {
     display: flex;
     gap: 1.5rem;
+  }
+
+  @media (min-width: 641px) {
+    nav {
+      width: 100%;
+    }
   }
 
   .nav-link[aria-current] {

@@ -12,15 +12,42 @@ const entries = [...(await getPublishedGardenEntries())].sort((a, b) =>
 )
 const graph = await gardenGraph(entries)
 const tree = gardenTree(entries)
+const description = "Explore every published post in Dan's digital garden."
 ---
 
-<Garden
-  title="All Garden Posts"
-  description="Explore every published post in Dan's digital garden."
->
-  <h1 class="sr-only">All garden posts</h1>
+<Garden title="All Garden Posts" {description}>
+  <header class="all-header">
+    <h1>All garden posts</h1>
 
-  <div class="all-view">
+    <div class="view-switcher" role="tablist" aria-label="Garden view">
+      <button
+        type="button"
+        role="tab"
+        aria-controls="garden-list"
+        aria-selected="true"
+        data-garden-view="list"
+      >
+        List
+      </button>
+
+      <button
+        type="button"
+        role="tab"
+        aria-controls="garden-map"
+        aria-selected="false"
+        tabindex="-1"
+        data-garden-view="map"
+      >
+        Map
+      </button>
+    </div>
+  </header>
+
+  <div id="garden-list" class="all-tree" role="tabpanel">
+    <Tree showRoot tree={tree} />
+  </div>
+
+  <div id="garden-map" class="all-map-view" role="tabpanel" hidden>
     <Banner>
       You discover a quiet clearing in the garden, then look up to find the
       knowledge below reflected in the stars above…
@@ -29,34 +56,147 @@ const tree = gardenTree(entries)
     <div class="all-map">
       <Graph {graph} />
     </div>
+
+    <p class="map-help">
+      Select a post title to open it. Drag to pan, scroll or pinch to zoom.
+    </p>
   </div>
-
-  <div class="all-tree" aria-label="All garden posts">
-    <Tree showRoot tree={tree} />
-  </div>
-
-  <noscript>
-    <style is:inline>
-      .all-map {
-        display: none;
-      }
-
-      .all-tree {
-        display: block;
-      }
-    </style>
-  </noscript>
 </Garden>
 
-<style>
-  .all-view {
-    display: flex;
-    flex-direction: column;
-    gap: 3rem;
+<script>
+  const controls = [
+    ...document.querySelectorAll<HTMLButtonElement>("[data-garden-view]"),
+  ]
+  const panels = {
+    list: document.querySelector<HTMLElement>("#garden-list"),
+    map: document.querySelector<HTMLElement>("#garden-map"),
+  }
+  const mapViewport = window.matchMedia("(min-width: 641px)")
+
+  function selectView(view: "list" | "map", updateUrl = true) {
+    const availableView = view === "map" && !mapViewport.matches ? "list" : view
+    for (const control of controls) {
+      const selected = control.dataset.gardenView === availableView
+      control.setAttribute("aria-selected", String(selected))
+      control.tabIndex = selected ? 0 : -1
+    }
+    if (panels.list) {
+      panels.list.hidden = availableView !== "list"
+    }
+    if (panels.map) {
+      panels.map.hidden = availableView !== "map"
+    }
+
+    if (updateUrl) {
+      const url = new URL(window.location.href)
+      if (availableView === "list") {
+        url.searchParams.delete("view")
+      } else {
+        url.searchParams.set("view", availableView)
+      }
+      history.replaceState(history.state, "", url)
+    }
   }
 
-  .all-view :global(.banner) {
-    margin: 0 auto;
+  for (const [index, control] of controls.entries()) {
+    control.addEventListener("click", () =>
+      selectView(control.dataset.gardenView === "map" ? "map" : "list"),
+    )
+    control.addEventListener("keydown", (event) => {
+      if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
+        return
+      }
+
+      event.preventDefault()
+      const targetIndex =
+        event.key === "Home"
+          ? 0
+          : event.key === "End"
+            ? controls.length - 1
+            : event.key === "ArrowRight"
+              ? (index + 1) % controls.length
+              : (index - 1 + controls.length) % controls.length
+      const target = controls[targetIndex]
+      target.focus()
+      selectView(target.dataset.gardenView === "map" ? "map" : "list")
+    })
+  }
+
+  if (new URLSearchParams(window.location.search).get("view") === "map") {
+    selectView("map", false)
+  }
+
+  mapViewport.addEventListener("change", () => {
+    const requestedView =
+      new URLSearchParams(window.location.search).get("view") === "map"
+        ? "map"
+        : "list"
+    selectView(requestedView, false)
+  })
+</script>
+
+<style>
+  .all-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .all-header h1 {
+    margin: 0;
+    font-size: 2rem;
+  }
+
+  .view-switcher {
+    display: flex;
+    overflow: hidden;
+    flex: none;
+    border: 1px solid rgb(var(--garden-border));
+    border-radius: var(--garden-radius);
+    background: rgb(var(--color-base));
+  }
+
+  .view-switcher button {
+    min-height: 2.5rem;
+    padding: 0.375rem 0.75rem;
+    border: 0;
+    background: transparent;
+    color: rgb(var(--nav-link));
+    cursor: pointer;
+    font: inherit;
+    font-family: var(--font-ui);
+    font-size: var(--font-size-ui);
+  }
+
+  .view-switcher button + button {
+    border-left: 1px solid rgb(var(--garden-border));
+  }
+
+  .view-switcher button[aria-selected="true"] {
+    background: rgb(var(--color-overlay));
+    font-weight: 700;
+  }
+
+  .view-switcher button:focus-visible {
+    position: relative;
+    outline: 2px solid rgb(var(--focus));
+    outline-offset: -2px;
+  }
+
+  .all-map-view {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .map-help {
+    margin: 0;
+    color: rgb(var(--garden-description));
+    font-family: var(--font-ui);
+    font-size: var(--font-size-ui);
+    text-align: center;
   }
 
   .all-map {
@@ -71,17 +211,26 @@ const tree = gardenTree(entries)
   }
 
   .all-tree {
-    display: none;
-    margin-top: 2rem;
+    min-height: 20rem;
   }
 
-  @media (width <= 40rem) {
-    .all-view {
+  [hidden] {
+    display: none;
+  }
+
+  @media (max-width: 40rem) {
+    .view-switcher {
       display: none;
     }
+  }
 
-    .all-tree {
-      display: block;
+  @media (max-width: 32rem) {
+    .all-header {
+      margin-bottom: 1.5rem;
+    }
+
+    .all-header h1 {
+      font-size: 1.75rem;
     }
   }
 </style>

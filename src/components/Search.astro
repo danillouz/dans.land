@@ -1,0 +1,907 @@
+<button
+  class="nav-link search-trigger"
+  type="button"
+  aria-label="Search"
+  aria-haspopup="dialog"
+  aria-keyshortcuts="Meta+K Control+K"
+  title="I'm Crumb. The tiniest and sole Steward of Dan's Land."
+  data-search-open
+>
+  <span class="search-pet" aria-hidden="true">
+    <span class="search-pet-idle">ᴖᴗᴖ</span>
+    <span class="search-pet-active">&gt;ᴗ&lt;</span>
+  </span>
+</button>
+
+<dialog
+  class="search-dialog"
+  aria-label="Search Dan's Land"
+  aria-describedby="search-help"
+  data-site-search
+>
+  <div class="search-panel">
+    <form class="search-form" role="search" data-search-form>
+      <label class="sr-only" for="site-search-input">Search Dan's Land</label>
+
+      <input
+        id="site-search-input"
+        type="search"
+        role="combobox"
+        inputmode="search"
+        autocomplete="off"
+        autocapitalize="none"
+        spellcheck="false"
+        placeholder="Search Dan's Land…"
+        aria-autocomplete="list"
+        aria-controls="search-results"
+        aria-expanded="false"
+        aria-haspopup="listbox"
+        data-search-input
+      />
+    </form>
+
+    <p class="sr-only" aria-live="polite" data-search-status></p>
+
+    <div class="search-scroll" tabindex="-1" data-search-scroll>
+      <div
+        id="search-results"
+        class="search-results"
+        role="listbox"
+        aria-label="Search results"
+        data-search-results
+      >
+      </div>
+
+      <p id="search-help" class="search-help">
+        <span class="search-help-item">
+          <span class="kbd-group"><kbd>↑</kbd><kbd>↓</kbd></span> roam
+        </span>
+
+        <span class="search-help-item"><kbd>Enter</kbd> visit</span>
+
+        <span class="search-help-item"><kbd>Esc</kbd> clear / dismiss</span>
+
+        <span class="search-help-item">
+          <span class="kbd-group"
+            ><kbd data-search-modifier>⌘</kbd><kbd>K</kbd></span
+          > summon
+        </span>
+      </p>
+    </div>
+  </div>
+</dialog>
+
+<script>
+  import {
+    normalizeSearchText,
+    prepareSearchIndex,
+    searchEntries,
+    type PreparedSearchEntry,
+  } from "../search/client"
+  import type { RankedSearchEntry, SearchEntry } from "../search/types"
+
+  const searchParameter = "search"
+  const dialog = document.querySelector<HTMLDialogElement>("[data-site-search]")
+  const openButton =
+    document.querySelector<HTMLButtonElement>("[data-search-open]")
+  const form = document.querySelector<HTMLFormElement>("[data-search-form]")
+  const input = document.querySelector<HTMLInputElement>("[data-search-input]")
+  const status = document.querySelector<HTMLElement>("[data-search-status]")
+  const results = document.querySelector<HTMLElement>("[data-search-results]")
+  const scrollArea = document.querySelector<HTMLElement>("[data-search-scroll]")
+  const shortcutModifier = document.querySelector<HTMLElement>(
+    "[data-search-modifier]",
+  )
+
+  let indexRequest: Promise<PreparedSearchEntry[]> | undefined
+  let activeResultIndex = -1
+  let resultId = 0
+  let renderedLinks: HTMLAnchorElement[] = []
+
+  function loadIndex() {
+    indexRequest ??= fetch("/search-index.json")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Search index: ${response.status}`)
+        }
+
+        return response.json() as Promise<SearchEntry[]>
+      })
+      .then(prepareSearchIndex)
+      .catch((error) => {
+        indexRequest = undefined
+        throw error
+      })
+    return indexRequest
+  }
+
+  function highlightedText(value: string, terms: string[]) {
+    const fragment = document.createDocumentFragment()
+    if (terms.length === 0) {
+      fragment.append(value)
+      return fragment
+    }
+
+    const escaped = terms
+      .map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+      .sort((left, right) => right.length - left.length)
+    const pattern = new RegExp(`(${escaped.join("|")})`, "gi")
+    for (const part of value.split(pattern)) {
+      if (terms.some((term) => normalizeSearchText(part) === term)) {
+        const mark = document.createElement("mark")
+        mark.textContent = part
+        fragment.append(mark)
+      } else {
+        fragment.append(part)
+      }
+    }
+    return fragment
+  }
+
+  function makeResult(entry: RankedSearchEntry, terms: string[]) {
+    const item = document.createElement("li")
+    const link = document.createElement("a")
+    const marker = document.createElement("span")
+    const copy = document.createElement("span")
+    const titleRow = document.createElement("span")
+    const title = document.createElement("strong")
+    const path = document.createElement("span")
+
+    link.href = entry.path
+    link.id = `search-result-${resultId++}`
+    link.className = `search-result search-result-${entry.kind}`
+    link.tabIndex = -1
+    link.setAttribute("role", "option")
+    link.setAttribute("aria-selected", "false")
+    renderedLinks.push(link)
+    marker.className = "search-result-marker"
+    marker.setAttribute("aria-hidden", "true")
+    marker.textContent = ">"
+    copy.className = "search-result-copy"
+    titleRow.className = "search-result-title"
+    title.append(highlightedText(entry.title, terms))
+    path.className = "search-result-path"
+    path.textContent = entry.path
+    titleRow.append(title, path)
+    copy.append(titleRow)
+    if (entry.kind === "garden") {
+      const snippet = document.createElement("span")
+      snippet.className = "search-result-snippet"
+      snippet.append(highlightedText(entry.snippet, terms))
+      copy.append(snippet)
+    }
+    link.append(marker, copy)
+    item.append(link)
+    return item
+  }
+
+  function appendGroup(
+    label: string,
+    entries: RankedSearchEntry[],
+    terms: string[],
+  ) {
+    if (!results || entries.length === 0) {
+      return
+    }
+
+    const group = document.createElement("section")
+    const heading = document.createElement("h3")
+    const list = document.createElement("ol")
+    const count = document.createElement("span")
+
+    group.className = "search-group"
+    group.setAttribute("role", "group")
+    heading.id = `search-group-${resultId}`
+    heading.className = "search-group-heading"
+    heading.textContent = label
+    count.textContent = String(entries.length)
+    heading.append(count)
+    list.className = "search-group-list"
+    list.setAttribute("role", "presentation")
+    group.setAttribute("aria-labelledby", heading.id)
+    for (const entry of entries) {
+      list.append(makeResult(entry, terms))
+    }
+    group.append(heading, list)
+    results.append(group)
+  }
+
+  function renderMessage(title: string, message: string) {
+    if (!results) {
+      return
+    }
+
+    const empty = document.createElement("div")
+    const ornament = document.createElement("span")
+    const heading = document.createElement("strong")
+    const hint = document.createElement("p")
+
+    empty.className = "search-empty"
+    ornament.className = "search-empty-ornament"
+    ornament.setAttribute("aria-hidden", "true")
+    ornament.textContent = ">_<"
+    heading.textContent = title
+    hint.textContent = message
+    empty.append(ornament, heading, hint)
+    results.append(empty)
+  }
+
+  function renderEmpty() {
+    renderMessage(
+      "Behold! Nothing.",
+      "I searched all of Dan's Land to no avail. I even asked the High Warden. He wants cinnamon buns.",
+    )
+  }
+
+  function renderUnavailable() {
+    renderMessage("Crumb fell asleep.", "Try waking it in a moment.")
+  }
+
+  function scrollResultIntoView(active: HTMLAnchorElement) {
+    if (!scrollArea) {
+      return
+    }
+
+    const viewport = scrollArea.getBoundingClientRect()
+    const result = active.getBoundingClientRect()
+    const visibleTop = viewport.top + 1
+    const visibleBottom = viewport.bottom - 1
+
+    if (result.top < visibleTop) {
+      scrollArea.scrollTop -= visibleTop - result.top
+    } else if (result.bottom > visibleBottom) {
+      scrollArea.scrollTop += result.bottom - visibleBottom
+    }
+  }
+
+  function setActiveResult(index: number, scroll = true) {
+    if (!input) {
+      return
+    }
+
+    if (renderedLinks.length === 0) {
+      activeResultIndex = -1
+      input.removeAttribute("aria-activedescendant")
+      return
+    }
+
+    const previous = renderedLinks[activeResultIndex]
+    activeResultIndex = (index + renderedLinks.length) % renderedLinks.length
+    const active = renderedLinks[activeResultIndex]
+
+    if (previous && previous !== active) {
+      previous.classList.remove("is-active")
+      previous.setAttribute("aria-selected", "false")
+    }
+    active.classList.add("is-active")
+    active.setAttribute("aria-selected", "true")
+
+    input.setAttribute("aria-activedescendant", active.id)
+    if (scroll) {
+      scrollResultIntoView(active)
+    }
+  }
+
+  function render(query: string, entries: PreparedSearchEntry[]) {
+    if (!results || !status) {
+      return
+    }
+
+    const matches = searchEntries(entries, query)
+    const { terms } = matches
+    activeResultIndex = -1
+    resultId = 0
+    renderedLinks = []
+    input?.removeAttribute("aria-activedescendant")
+    results.replaceChildren()
+    if (scrollArea) {
+      scrollArea.scrollTop = 0
+    }
+
+    if (terms.length === 0) {
+      const pages = entries
+        .map(({ entry }) => entry)
+        .filter(
+          (entry): entry is Extract<SearchEntry, { kind: "page" }> =>
+            entry.kind === "page",
+        )
+        .map((entry) => ({
+          ...entry,
+          score: 0,
+        }))
+      status.textContent = ""
+      appendGroup("Pages", pages, [])
+      setActiveResult(0, false)
+      return
+    }
+
+    const ranked = matches.entries
+
+    status.textContent =
+      ranked.length === 0
+        ? "No search results found."
+        : `${ranked.length} ${ranked.length === 1 ? "path" : "paths"} found.`
+
+    if (ranked.length === 0) {
+      renderEmpty()
+      return
+    }
+
+    appendGroup(
+      "Pages",
+      ranked.filter((entry) => entry.kind === "page"),
+      terms,
+    )
+    appendGroup(
+      "Garden posts",
+      ranked.filter((entry) => entry.kind === "garden"),
+      terms,
+    )
+    setActiveResult(0, false)
+  }
+
+  function updateUrl(query: string | null) {
+    const url = new URL(window.location.href)
+    if (query === null) {
+      url.searchParams.delete(searchParameter)
+    } else {
+      url.searchParams.set(searchParameter, query)
+    }
+    history.replaceState(history.state, "", url)
+  }
+
+  async function search() {
+    if (!input || !status) {
+      return
+    }
+
+    const query = input.value
+
+    status.textContent = query.trim()
+      ? "Consulting the archives…"
+      : "Loading search…"
+    try {
+      const entries = await loadIndex()
+      if (input.value === query) {
+        render(query, entries)
+      }
+    } catch (error) {
+      console.error("Unable to load the search index.", error)
+      if (input.value !== query) {
+        return
+      }
+
+      activeResultIndex = -1
+      renderedLinks = []
+      input.removeAttribute("aria-activedescendant")
+      status.textContent = "Search is unavailable right now."
+      results?.replaceChildren()
+      renderUnavailable()
+    }
+  }
+
+  function openSearch(query = input?.value ?? "", updateHistory = true) {
+    if (!dialog || !input) {
+      return
+    }
+
+    input.value = query
+
+    if (updateHistory) {
+      updateUrl(query.trim())
+    }
+    if (!dialog.open) {
+      dialog.showModal()
+    }
+    input.setAttribute("aria-expanded", "true")
+    document.documentElement.classList.add("search-open")
+    search()
+    requestAnimationFrame(() => input.focus())
+  }
+
+  function closeSearch(updateHistory = true) {
+    if (!dialog?.open) {
+      return
+    }
+
+    if (updateHistory) {
+      updateUrl(null)
+    }
+    input?.setAttribute("aria-expanded", "false")
+    input?.removeAttribute("aria-activedescendant")
+    dialog.close()
+  }
+
+  function clearOrCloseSearch() {
+    if (!input) {
+      return
+    }
+
+    if (input.value) {
+      input.value = ""
+      updateUrl("")
+      search()
+      return
+    }
+
+    closeSearch()
+  }
+
+  function syncFromUrl() {
+    const url = new URL(window.location.href)
+    if (url.searchParams.has(searchParameter)) {
+      openSearch(url.searchParams.get(searchParameter) ?? "", false)
+    } else {
+      closeSearch(false)
+    }
+  }
+
+  function warmSearchIndex() {
+    void loadIndex().catch(() => undefined)
+  }
+
+  openButton?.addEventListener("pointerenter", warmSearchIndex, { once: true })
+  openButton?.addEventListener("focus", warmSearchIndex, { once: true })
+  openButton?.addEventListener("click", () => openSearch())
+  input?.addEventListener("input", () => {
+    updateUrl(input.value.trim())
+    search()
+  })
+  input?.addEventListener("keydown", (event) => {
+    if (event.key === "Tab") {
+      event.preventDefault()
+      return
+    }
+
+    if (event.key === "Escape") {
+      event.preventDefault()
+      clearOrCloseSearch()
+      return
+    }
+
+    if (
+      event.key !== "ArrowDown" &&
+      event.key !== "ArrowUp" &&
+      event.key !== "Home" &&
+      event.key !== "End"
+    ) {
+      return
+    }
+    if (renderedLinks.length === 0) {
+      return
+    }
+
+    event.preventDefault()
+
+    if (event.key === "Home") {
+      setActiveResult(0)
+    } else if (event.key === "End") {
+      setActiveResult(renderedLinks.length - 1)
+    } else if (event.key === "ArrowDown") {
+      setActiveResult(activeResultIndex + 1)
+    } else {
+      setActiveResult(activeResultIndex - 1)
+    }
+  })
+  form?.addEventListener("submit", (event) => {
+    event.preventDefault()
+    const selected = renderedLinks[activeResultIndex] ?? renderedLinks[0]
+    if (selected) {
+      window.location.href = selected.href
+    }
+  })
+  results?.addEventListener("pointerover", (event) => {
+    const link = (event.target as Element).closest<HTMLAnchorElement>(
+      ".search-result",
+    )
+    if (!link) {
+      return
+    }
+
+    const index = renderedLinks.indexOf(link)
+    if (index !== activeResultIndex) {
+      setActiveResult(index, false)
+    }
+  })
+  dialog?.addEventListener("click", (event) => {
+    if (event.target === dialog) {
+      closeSearch()
+    }
+  })
+  dialog?.addEventListener("cancel", (event) => {
+    event.preventDefault()
+    clearOrCloseSearch()
+  })
+  dialog?.addEventListener("close", () => {
+    document.documentElement.classList.remove("search-open")
+    if (input) {
+      input.value = ""
+      input.setAttribute("aria-expanded", "false")
+      input.removeAttribute("aria-activedescendant")
+    }
+  })
+  document.addEventListener("keydown", (event) => {
+    if (
+      event.key.toLocaleLowerCase() !== "k" ||
+      !(event.metaKey || event.ctrlKey)
+    ) {
+      return
+    }
+    event.preventDefault()
+    if (dialog?.open) {
+      input?.focus()
+      input?.select()
+    } else {
+      openSearch()
+    }
+  })
+  const idleWindow = window as Window & {
+    requestIdleCallback?: typeof window.requestIdleCallback
+  }
+  if (idleWindow.requestIdleCallback) {
+    idleWindow.requestIdleCallback(warmSearchIndex, { timeout: 2_000 })
+  } else {
+    globalThis.setTimeout(warmSearchIndex, 1_500)
+  }
+  if (shortcutModifier && !/(Mac|iPhone|iPad|iPod)/i.test(navigator.platform)) {
+    shortcutModifier.textContent = "Ctrl"
+  }
+  window.addEventListener("popstate", syncFromUrl)
+  syncFromUrl()
+</script>
+
+<style>
+  :global(html.search-open) {
+    overflow: hidden;
+  }
+
+  :global(html.search-open body > main),
+  :global(html.search-open body > footer),
+  :global(html.search-open .site-header .nav-link) {
+    filter: blur(3px);
+  }
+
+  .search-trigger {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    font-family: var(--font-code);
+  }
+
+  .search-trigger::before,
+  .search-trigger::after {
+    content: none;
+  }
+
+  .search-pet {
+    display: inline-grid;
+    width: 3ch;
+    place-items: center;
+  }
+
+  .search-pet-idle,
+  .search-pet-active {
+    grid-area: 1 / 1;
+  }
+
+  .search-pet-active {
+    visibility: hidden;
+  }
+
+  .search-trigger:is(:hover, :focus-visible) .search-pet-idle {
+    visibility: hidden;
+  }
+
+  .search-trigger:is(:hover, :focus-visible) .search-pet-active {
+    visibility: visible;
+  }
+
+  .search-trigger:focus-visible {
+    outline: 2px solid rgb(var(--focus));
+    outline-offset: 0;
+  }
+
+  .search-dialog {
+    width: min(calc(100% - 2rem), 42rem);
+    height: min(42rem, calc(100dvh - 2rem));
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid rgb(var(--color-muted));
+    border-radius: var(--radius);
+    outline: none;
+    background: rgb(var(--color-surface));
+    color: rgb(var(--color-text));
+  }
+
+  .search-dialog::backdrop {
+    background: rgb(0 0 0 / 0.48);
+  }
+
+  .search-panel {
+    box-sizing: border-box;
+    display: grid;
+    height: 100%;
+    grid-template-rows: auto minmax(0, 1fr);
+    padding: 1.25rem 1.25rem 0;
+  }
+
+  .search-scroll {
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-color: rgb(var(--color-muted)) transparent;
+  }
+
+  .search-form {
+    display: grid;
+    min-height: 3.25rem;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: center;
+    border: 1px solid rgb(var(--color-muted));
+    border-radius: var(--radius);
+    background: rgb(var(--color-base));
+  }
+
+  .search-form input {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 3.125rem;
+    padding: 0.625rem 0.875rem;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: rgb(var(--color-text));
+    font: inherit;
+    font-family: var(--font-ui);
+  }
+
+  .search-form input::placeholder {
+    color: rgb(var(--color-caption));
+  }
+
+  .search-form:focus-within {
+    outline: 2px solid rgb(var(--focus));
+    outline-offset: -2px;
+  }
+
+  .search-results {
+    margin: 0.75rem 0 0;
+  }
+
+  .search-results :global(.search-group + .search-group) {
+    margin-top: 0.35rem;
+    padding-top: 0.35rem;
+    border-top: 1px solid rgb(var(--color-muted) / 0.45);
+  }
+
+  .search-results :global(.search-group-heading) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0;
+    padding: 0.45rem 0.75rem 0.35rem;
+    border: 0;
+    color: rgb(var(--color-caption));
+    font-family: var(--font-code);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+  }
+
+  .search-results :global(.search-group-heading span) {
+    min-width: 1.25rem;
+    color: rgb(var(--color-caption));
+    text-align: right;
+  }
+
+  .search-results :global(.search-group-list) {
+    margin: 0;
+    padding: 0.15rem 0;
+    list-style: none;
+  }
+
+  .search-results :global(.search-group-list li + li) {
+    margin-top: 0.125rem;
+  }
+
+  .search-results :global(.search-result) {
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: 0.75rem minmax(0, 1fr);
+    width: 100%;
+    min-height: 6.5rem;
+    align-items: start;
+    gap: 0.625rem;
+    padding: 0.7rem 0.75rem 0.75rem;
+    border-radius: var(--radius);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .search-results :global(.search-result.is-active) {
+    background: rgb(var(--color-overlay));
+  }
+
+  .search-results :global(.search-result-page) {
+    min-height: 3.25rem;
+    align-items: center;
+    padding-block: 0.5rem;
+  }
+
+  .search-results :global(.search-result-page .search-result-marker) {
+    padding-top: 0;
+  }
+
+  .search-results :global(.search-result-marker) {
+    padding-top: 0.08rem;
+    color: rgb(var(--color-gold));
+    font-family: var(--font-code);
+    font-weight: 700;
+    opacity: 0;
+  }
+
+  .search-results :global(.search-result.is-active .search-result-marker) {
+    opacity: 1;
+  }
+
+  .search-results :global(.search-result-copy) {
+    min-width: 0;
+  }
+
+  .search-results :global(.search-result-title) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 0.75rem;
+  }
+
+  .search-results :global(.search-result strong),
+  .search-results :global(.search-result-path) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .search-results :global(.search-result strong) {
+    font-size: var(--font-size-copy);
+    line-height: 1.3;
+  }
+
+  .search-results :global(.search-result-path) {
+    color: rgb(var(--color-caption));
+    font-family: var(--font-code);
+    font-size: 0.75rem;
+  }
+
+  .search-results :global(.search-result-snippet) {
+    display: -webkit-box;
+    margin-top: 0.25rem;
+    overflow: hidden;
+    color: rgb(var(--color-caption));
+    font-size: var(--font-size-copy);
+    line-height: 1.4;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .search-results :global(.search-result mark) {
+    border-radius: 0.125rem;
+    background: rgb(var(--color-gold) / 0.3);
+    color: inherit;
+  }
+
+  .search-results :global(.search-empty) {
+    display: grid;
+    min-height: 13rem;
+    place-content: center;
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .search-results :global(.search-empty-ornament) {
+    margin-bottom: 0.75rem;
+    color: rgb(var(--color-text));
+    font-family: var(--font-code);
+  }
+
+  .search-results :global(.search-empty p) {
+    width: min(80%, 38rem);
+    justify-self: center;
+    margin: 0.35rem 0 0;
+    color: rgb(var(--color-caption));
+    font-size: var(--font-size-copy);
+    line-height: 1.5;
+    text-wrap: balance;
+  }
+
+  .search-help {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin: auto 0 0;
+    padding: 1.75rem 0 0.75rem;
+    color: rgb(var(--color-caption));
+    font-family: var(--font-ui);
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+
+  .search-help-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    white-space: nowrap;
+  }
+
+  .kbd-group {
+    display: inline-flex;
+    gap: 0.125rem;
+  }
+
+  .search-help kbd {
+    box-sizing: border-box;
+    display: inline-flex;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.35rem;
+    border: 1px solid rgb(var(--color-muted) / 0.35);
+    border-radius: var(--radius);
+    background: rgb(var(--color-base));
+    color: rgb(var(--color-caption));
+    font-family: var(--font-ui);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  @media (min-width: 641px) {
+    .search-trigger {
+      margin-inline-start: auto;
+    }
+  }
+
+  @media (max-width: 32rem) {
+    .search-dialog {
+      width: min(calc(100% - 1rem), 42rem);
+      height: calc(100dvh - 1rem);
+    }
+
+    .search-panel {
+      padding: 1rem 1rem 0;
+    }
+
+    .search-help {
+      display: grid;
+      grid-template-columns: repeat(2, max-content);
+      column-gap: 1.5rem;
+      row-gap: 0.625rem;
+    }
+
+    .search-results :global(.search-result) {
+      min-height: 7.5rem;
+    }
+
+    .search-results :global(.search-result-page) {
+      min-height: 3.75rem;
+    }
+
+    .search-results :global(.search-result-title) {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.05rem;
+    }
+
+    .search-results :global(.search-empty p) {
+      width: 100%;
+    }
+  }
+</style>

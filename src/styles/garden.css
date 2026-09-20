@@ -1,7 +1,7 @@
 :root {
   --garden-callout-font-size: 1.0625rem;
   --garden-divider-spacing: 3rem;
-  --garden-radius: 0.25rem;
+  --garden-radius: var(--radius);
   --garden-description: var(--color-caption);
 }
 

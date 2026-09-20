@@ -6,8 +6,12 @@ import { parseFrontmatter } from "@astrojs/markdown-remark"
 
 test("renders the folder tree as the compact all-posts view", async () => {
   const all = await readFile("dist/garden/all.html", "utf8")
-  assert.match(all, /<h1 class="sr-only"[^>]*>All garden posts<\/h1>/)
+  assert.match(all, /<h1[^>]*>All garden posts<\/h1>/)
   assert.match(all, /class="all-tree"/)
+  assert.match(all, /data-garden-view="list"/)
+  assert.match(all, /data-garden-view="map"/)
+  assert.match(all, /id="garden-list"[^>]*role="tabpanel"/)
+  assert.match(all, /id="garden-map"[^>]*role="tabpanel"[^>]*hidden/)
   assert.match(all, /<strong[^>]*>Garden<\/strong>/)
   assert.match(all, /class="folder"[^>]*>computer networks<\/strong>/)
   assert.match(all, /href="\/garden\/computer-networks\/dns"[^>]*>DNS<\/a>/)
@@ -25,6 +29,10 @@ test("renders the public wikilink star map on the all-posts page", async () => {
   assert.match(page, /aria-label="Garden constellations"/)
   assert.match(page, /<svg[^>]*height="600"/)
   assert.ok(page.indexOf('class="banner"') < page.indexOf("data-garden-graph"))
+  assert.ok(
+    page.indexOf("data-garden-graph") <
+      page.indexOf("Select a post title to open it"),
+  )
   assert.match(page, /data-graph-zoom="0\.75"/)
   assert.match(page, /data-graph-reset/)
   assert.match(page, /data-graph-zoom="1\.25"/)
@@ -68,7 +76,10 @@ test("renders recently tended posts in date order", async () => {
     landing.indexOf('id="recent-posts"') <
       landing.indexOf('class="garden-about garden-prose"'),
   )
-  assert.match(landing, /href="\/garden\/all"[^>]*>All<\/a>/)
+  assert.match(
+    landing,
+    /href="\/garden\/all"[^>]*aria-label="All garden posts"[^>]*>All garden posts<\/a>/,
+  )
 
   const items = [...recent.matchAll(/<li\b[^>]*>([\s\S]*?)<\/li>/g)].map(
     (match) => match[1],
