@@ -1,3 +1,9 @@
+---
+import { getSearchIndex, sitePages } from "../search/index-build"
+
+const searchIndex = await getSearchIndex()
+---
+
 <button
   class="nav-link search-trigger"
   type="button"
@@ -18,6 +24,7 @@
   aria-label="Search Dan's Land"
   aria-describedby="search-help"
   data-site-search
+  data-search-index={searchIndex.url}
 >
   <div class="search-panel">
     <form class="search-form" role="search" data-search-form>
@@ -31,27 +38,74 @@
         autocomplete="off"
         autocapitalize="none"
         spellcheck="false"
-        placeholder="Search Dan's Land…"
+        placeholder="Search Dan's Land..."
         aria-autocomplete="list"
         aria-controls="search-results"
         aria-expanded="false"
-        aria-haspopup="listbox"
         data-search-input
       />
     </form>
 
-    <p class="sr-only" aria-live="polite" data-search-status></p>
+    <button
+      class="search-action search-close"
+      type="button"
+      aria-label="Close search"
+      data-search-close>Close</button
+    >
 
     <div class="search-scroll" tabindex="-1" data-search-scroll>
+      <p class="search-status sr-only" role="status" data-search-status></p>
+
       <div
         id="search-results"
         class="search-results"
         role="listbox"
         aria-label="Search results"
-        data-search-results
       >
+        <div
+          class="search-group"
+          role="group"
+          aria-labelledby="search-shortcuts-heading"
+          data-search-shortcuts
+        >
+          <h3 class="search-group-heading" id="search-shortcuts-heading">
+            Pages <span>{sitePages.length}</span>
+          </h3>
+
+          <ul class="search-result-list" role="presentation">
+            {
+              sitePages.map(({ path, title }, index) => (
+                <li role="presentation">
+                  <a
+                    id={`search-shortcut-${index}`}
+                    class="search-result"
+                    href={path}
+                    role="option"
+                    aria-selected="false"
+                    tabindex="-1"
+                  >
+                    <span class="search-result-marker" aria-hidden="true">
+                      &gt;
+                    </span>
+                    <strong>{title}</strong>
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+
+        <div data-search-results role="presentation"></div>
       </div>
 
+      <div data-search-message></div>
+
+      <button
+        class="search-action search-list-action"
+        type="button"
+        data-search-retry
+        hidden>Retry</button
+      >
       <p id="search-help" class="search-help">
         <span class="search-help-item">
           <span class="kbd-group"><kbd>↑</kbd><kbd>↓</kbd></span> roam
@@ -73,36 +127,58 @@
 
 <script>
   import {
-    normalizeSearchText,
     prepareSearchIndex,
     searchEntries,
+    searchResultHref,
     type PreparedSearchEntry,
   } from "../search/client"
+  import { highlightedText } from "../search/highlight"
+  import { normalizeSearchText, searchTermPositions } from "../search/text"
   import type { RankedSearchEntry, SearchEntry } from "../search/types"
 
   const searchParameter = "search"
+  const resultBatchSize = 10
   const dialog = document.querySelector<HTMLDialogElement>("[data-site-search]")
   const openButton =
     document.querySelector<HTMLButtonElement>("[data-search-open]")
   const form = document.querySelector<HTMLFormElement>("[data-search-form]")
   const input = document.querySelector<HTMLInputElement>("[data-search-input]")
   const status = document.querySelector<HTMLElement>("[data-search-status]")
+  const closeButton = document.querySelector<HTMLButtonElement>(
+    "[data-search-close]",
+  )
+  const retryButton = document.querySelector<HTMLButtonElement>(
+    "[data-search-retry]",
+  )
+  const popup = document.getElementById("search-results")
+  const shortcuts = document.querySelector<HTMLElement>(
+    "[data-search-shortcuts]",
+  )
   const results = document.querySelector<HTMLElement>("[data-search-results]")
+  const message = document.querySelector<HTMLElement>("[data-search-message]")
   const scrollArea = document.querySelector<HTMLElement>("[data-search-scroll]")
   const shortcutModifier = document.querySelector<HTMLElement>(
     "[data-search-modifier]",
   )
 
   let indexRequest: Promise<PreparedSearchEntry[]> | undefined
-  let activeResultIndex = -1
-  let resultId = 0
+  let requestToken = 0
+  let isComposing = false
   let renderedLinks: HTMLAnchorElement[] = []
+  let activeIndex = -1
+  let appendResults: (() => void) | undefined
+
+  class SearchIndexError extends Error {
+    constructor(readonly status: number) {
+      super(`Search index: ${status}`)
+    }
+  }
 
   function loadIndex() {
-    indexRequest ??= fetch("/search-index.json")
+    indexRequest ??= fetch(dialog?.dataset.searchIndex ?? "")
       .then((response) => {
         if (!response.ok) {
-          throw new Error(`Search index: ${response.status}`)
+          throw new SearchIndexError(response.status)
         }
 
         return response.json() as Promise<SearchEntry[]>
@@ -115,41 +191,24 @@
     return indexRequest
   }
 
-  function highlightedText(value: string, terms: string[]) {
-    const fragment = document.createDocumentFragment()
-    if (terms.length === 0) {
-      fragment.append(value)
-      return fragment
-    }
-
-    const escaped = terms
-      .map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-      .sort((left, right) => right.length - left.length)
-    const pattern = new RegExp(`(${escaped.join("|")})`, "gi")
-    for (const part of value.split(pattern)) {
-      if (terms.some((term) => normalizeSearchText(part) === term)) {
-        const mark = document.createElement("mark")
-        mark.textContent = part
-        fragment.append(mark)
-      } else {
-        fragment.append(part)
-      }
-    }
-    return fragment
-  }
-
-  function makeResult(entry: RankedSearchEntry, terms: string[]) {
+  function makeResult(
+    entry: RankedSearchEntry,
+    terms: string[],
+    index: number,
+  ) {
     const item = document.createElement("li")
     const link = document.createElement("a")
     const marker = document.createElement("span")
-    const copy = document.createElement("span")
-    const titleRow = document.createElement("span")
     const title = document.createElement("strong")
-    const path = document.createElement("span")
 
-    link.href = entry.path
-    link.id = `search-result-${resultId++}`
-    link.className = `search-result search-result-${entry.kind}`
+    item.setAttribute("role", "presentation")
+    link.href = searchResultHref(entry)
+    link.id = `search-result-${index}`
+    link.className = "search-result"
+    link.classList.toggle(
+      "search-result-quiet",
+      terms.length === 1 && /^\p{L}$/u.test(terms[0]),
+    )
     link.tabIndex = -1
     link.setAttribute("role", "option")
     link.setAttribute("aria-selected", "false")
@@ -157,57 +216,40 @@
     marker.className = "search-result-marker"
     marker.setAttribute("aria-hidden", "true")
     marker.textContent = ">"
-    copy.className = "search-result-copy"
-    titleRow.className = "search-result-title"
+    title.title = entry.title
     title.append(highlightedText(entry.title, terms))
-    path.className = "search-result-path"
-    path.textContent = entry.path
-    titleRow.append(title, path)
-    copy.append(titleRow)
+    link.append(marker, title)
     if (entry.kind === "garden") {
+      link.classList.add("search-result-post")
       const snippet = document.createElement("span")
       snippet.className = "search-result-snippet"
-      snippet.append(highlightedText(entry.snippet, terms))
-      copy.append(snippet)
+      const preview = entry.sectionTitle ?? entry.snippet
+      snippet.append(highlightedText(preview, terms))
+      link.append(snippet)
+
+      const matchesQuery = (value: string) => {
+        const text = normalizeSearchText(value)
+        return terms.some(
+          (term) => searchTermPositions(text, term, true, 1).length > 0,
+        )
+      }
+      const alias = entry.aliases.find(matchesQuery) ?? entry.aliases[0]
+      const detail = alias ?? entry.tags.find(matchesQuery)
+      if (detail) {
+        const metadata = document.createElement("span")
+        const label = alias ? "Alias: " : "Tag: "
+        metadata.className = "search-result-meta"
+        metadata.title = label + detail
+        metadata.append(label, highlightedText(detail, terms))
+        link.append(metadata)
+      }
     }
-    link.append(marker, copy)
     item.append(link)
     return item
   }
 
-  function appendGroup(
-    label: string,
-    entries: RankedSearchEntry[],
-    terms: string[],
-  ) {
-    if (!results || entries.length === 0) {
-      return
-    }
-
-    const group = document.createElement("section")
-    const heading = document.createElement("h3")
-    const list = document.createElement("ol")
-    const count = document.createElement("span")
-
-    group.className = "search-group"
-    group.setAttribute("role", "group")
-    heading.id = `search-group-${resultId}`
-    heading.className = "search-group-heading"
-    heading.textContent = label
-    count.textContent = String(entries.length)
-    heading.append(count)
-    list.className = "search-group-list"
-    list.setAttribute("role", "presentation")
-    group.setAttribute("aria-labelledby", heading.id)
-    for (const entry of entries) {
-      list.append(makeResult(entry, terms))
-    }
-    group.append(heading, list)
-    results.append(group)
-  }
-
-  function renderMessage(title: string, message: string) {
-    if (!results) {
+  function renderMessage(title: string, description: string) {
+    if (!message) {
       return
     }
 
@@ -221,9 +263,9 @@
     ornament.setAttribute("aria-hidden", "true")
     ornament.textContent = ">_<"
     heading.textContent = title
-    hint.textContent = message
+    hint.textContent = description
     empty.append(ornament, heading, hint)
-    results.append(empty)
+    message.append(empty)
   }
 
   function renderEmpty() {
@@ -233,111 +275,100 @@
     )
   }
 
-  function renderUnavailable() {
-    renderMessage("Crumb fell asleep.", "Try waking it in a moment.")
-  }
-
-  function scrollResultIntoView(active: HTMLAnchorElement) {
-    if (!scrollArea) {
-      return
-    }
-
-    const viewport = scrollArea.getBoundingClientRect()
-    const result = active.getBoundingClientRect()
-    const visibleTop = viewport.top + 1
-    const visibleBottom = viewport.bottom - 1
-
-    if (result.top < visibleTop) {
-      scrollArea.scrollTop -= visibleTop - result.top
-    } else if (result.bottom > visibleBottom) {
-      scrollArea.scrollTop += result.bottom - visibleBottom
-    }
-  }
-
   function setActiveResult(index: number, scroll = true) {
-    if (!input) {
-      return
-    }
-
-    if (renderedLinks.length === 0) {
-      activeResultIndex = -1
-      input.removeAttribute("aria-activedescendant")
-      return
-    }
-
-    const previous = renderedLinks[activeResultIndex]
-    activeResultIndex = (index + renderedLinks.length) % renderedLinks.length
-    const active = renderedLinks[activeResultIndex]
-
+    const previous = renderedLinks[activeIndex]
+    const active = renderedLinks[index]
     if (previous && previous !== active) {
       previous.classList.remove("is-active")
       previous.setAttribute("aria-selected", "false")
     }
+    activeIndex = index
+    if (!active) {
+      input?.removeAttribute("aria-activedescendant")
+      input?.setAttribute("aria-expanded", "false")
+      return
+    }
+
     active.classList.add("is-active")
     active.setAttribute("aria-selected", "true")
-
-    input.setAttribute("aria-activedescendant", active.id)
+    input?.setAttribute("aria-activedescendant", active.id)
+    input?.setAttribute("aria-expanded", "true")
     if (scroll) {
-      scrollResultIntoView(active)
+      active.scrollIntoView({ block: "nearest" })
     }
   }
 
+  function appendNearEnd() {
+    if (!scrollArea) {
+      return
+    }
+    while (
+      appendResults &&
+      scrollArea.scrollHeight -
+        scrollArea.clientHeight -
+        scrollArea.scrollTop <=
+        80
+    ) {
+      appendResults()
+    }
+  }
+
+  function appendGroup(parent: HTMLElement, label: string, count: number) {
+    const group = document.createElement("div")
+    const heading = document.createElement("h3")
+    const total = document.createElement("span")
+    const list = document.createElement("ol")
+
+    heading.id = `search-group-${parent.children.length}`
+    heading.className = "search-group-heading"
+    total.textContent = String(count)
+    heading.append(`${label} `, total)
+    group.className = "search-group"
+    group.setAttribute("role", "group")
+    group.setAttribute("aria-labelledby", heading.id)
+    list.className = "search-result-list"
+    list.setAttribute("role", "presentation")
+    group.append(heading, list)
+    parent.append(group)
+    return list
+  }
+
   function render(query: string, entries: PreparedSearchEntry[]) {
-    if (!results || !status) {
+    if (!results || !status || !popup) {
       return
     }
 
-    const matches = searchEntries(entries, query)
-    const { terms } = matches
-    activeResultIndex = -1
-    resultId = 0
-    renderedLinks = []
-    input?.removeAttribute("aria-activedescendant")
-    results.replaceChildren()
-    if (scrollArea) {
-      scrollArea.scrollTop = 0
-    }
-
-    if (terms.length === 0) {
-      const pages = entries
-        .map(({ entry }) => entry)
-        .filter(
-          (entry): entry is Extract<SearchEntry, { kind: "page" }> =>
-            entry.kind === "page",
-        )
-        .map((entry) => ({
-          ...entry,
-          score: 0,
-        }))
-      status.textContent = ""
-      appendGroup("Pages", pages, [])
-      setActiveResult(0, false)
-      return
-    }
-
-    const ranked = matches.entries
-
-    status.textContent =
-      ranked.length === 0
-        ? "No search results found."
-        : `${ranked.length} ${ranked.length === 1 ? "path" : "paths"} found.`
-
-    if (ranked.length === 0) {
+    const matches = searchEntries(entries, query, Infinity)
+    status.classList.add("sr-only")
+    if (!matches.total) {
+      status.textContent = "No results found."
       renderEmpty()
       return
     }
 
-    appendGroup(
-      "Pages",
-      ranked.filter((entry) => entry.kind === "page"),
-      terms,
-    )
-    appendGroup(
-      "Garden posts",
-      ranked.filter((entry) => entry.kind === "garden"),
-      terms,
-    )
+    const pages = matches.entries.filter((entry) => entry.kind === "page")
+    const posts = matches.entries.filter((entry) => entry.kind === "garden")
+    const ordered = [...pages, ...posts]
+    let list = pages.length
+      ? appendGroup(results, "Pages", pages.length)
+      : appendGroup(results, "Garden posts", posts.length)
+    popup.hidden = false
+    status.textContent = `${matches.total} ${matches.total === 1 ? "result" : "results"}`
+    appendResults = () => {
+      const start = renderedLinks.length
+      for (const entry of ordered.slice(start, start + resultBatchSize)) {
+        if (pages.length && renderedLinks.length === pages.length) {
+          list = appendGroup(results, "Garden posts", posts.length)
+        }
+        list.append(makeResult(entry, matches.terms, renderedLinks.length))
+      }
+      if (renderedLinks.length === matches.total) {
+        appendResults = undefined
+      }
+    }
+    appendResults()
     setActiveResult(0, false)
+    appendNearEnd()
   }
 
   function updateUrl(query: string | null) {
@@ -350,33 +381,92 @@
     history.replaceState(history.state, "", url)
   }
 
+  function resetResults() {
+    setActiveResult(-1, false)
+    renderedLinks = []
+    appendResults = undefined
+    if (popup) {
+      popup.hidden = true
+    }
+    results?.replaceChildren()
+    message?.replaceChildren()
+    if (scrollArea) {
+      scrollArea.scrollTop = 0
+    }
+  }
+
   async function search() {
-    if (!input || !status) {
+    if (!input || !status || !dialog?.open) {
       return
     }
 
-    const query = input.value
+    const thisRequest = ++requestToken
+    const query = input.value.trim()
+    resetResults()
+    if (retryButton) {
+      retryButton.hidden = true
+    }
+    if (shortcuts) {
+      shortcuts.hidden = Boolean(query)
+    }
+    if (!query) {
+      status.classList.add("sr-only")
+      status.textContent = ""
+      if (popup && shortcuts) {
+        popup.hidden = false
+        renderedLinks = Array.from(
+          shortcuts.querySelectorAll("a.search-result"),
+        )
+        setActiveResult(0, false)
+      }
+      return
+    }
 
-    status.textContent = query.trim()
-      ? "Consulting the archives…"
-      : "Loading search…"
+    const loadingNotice = window.setTimeout(() => {
+      if (thisRequest !== requestToken || !dialog.open) {
+        return
+      }
+      status.textContent = "Consulting the archives…"
+      status.classList.remove("sr-only")
+    }, 200)
     try {
       const entries = await loadIndex()
-      if (input.value === query) {
-        render(query, entries)
+      if (thisRequest !== requestToken || !dialog.open) {
+        return
       }
+      render(query, entries)
     } catch (error) {
       console.error("Unable to load the search index.", error)
-      if (input.value !== query) {
+      if (thisRequest !== requestToken || !dialog.open) {
         return
       }
 
-      activeResultIndex = -1
-      renderedLinks = []
-      input.removeAttribute("aria-activedescendant")
-      status.textContent = "Search is unavailable right now."
-      results?.replaceChildren()
-      renderUnavailable()
+      const needsReload =
+        error instanceof SearchIndexError && [404, 410].includes(error.status)
+      status.textContent = needsReload
+        ? "Reload this page to continue searching."
+        : "Search is unavailable right now."
+      status.classList.add("sr-only")
+      if (needsReload) {
+        renderMessage(
+          "The archives have moved.",
+          "Reload this page to continue searching.",
+        )
+      } else {
+        renderMessage("Crumb fell asleep.", "Try waking it in a moment.")
+      }
+      if (retryButton) {
+        retryButton.textContent = needsReload ? "Reload page" : "Retry"
+        retryButton.onclick = needsReload
+          ? () => window.location.reload()
+          : () => {
+              input.focus()
+              search()
+            }
+        retryButton.hidden = false
+      }
+    } finally {
+      window.clearTimeout(loadingNotice)
     }
   }
 
@@ -393,10 +483,16 @@
     if (!dialog.open) {
       dialog.showModal()
     }
-    input.setAttribute("aria-expanded", "true")
     document.documentElement.classList.add("search-open")
     search()
-    requestAnimationFrame(() => input.focus())
+    if (!query.trim()) {
+      void loadIndex().catch(() => {})
+    }
+    requestAnimationFrame(() => {
+      if (dialog.open) {
+        input.focus()
+      }
+    })
   }
 
   function closeSearch(updateHistory = true) {
@@ -407,8 +503,9 @@
     if (updateHistory) {
       updateUrl(null)
     }
-    input?.setAttribute("aria-expanded", "false")
-    input?.removeAttribute("aria-activedescendant")
+    requestToken += 1
+    isComposing = false
+    setActiveResult(-1, false)
     dialog.close()
   }
 
@@ -436,19 +533,42 @@
     }
   }
 
-  function warmSearchIndex() {
-    void loadIndex().catch(() => undefined)
-  }
-
-  openButton?.addEventListener("pointerenter", warmSearchIndex, { once: true })
-  openButton?.addEventListener("focus", warmSearchIndex, { once: true })
   openButton?.addEventListener("click", () => openSearch())
-  input?.addEventListener("input", () => {
+  input?.addEventListener("compositionstart", () => {
+    isComposing = true
+  })
+  input?.addEventListener("compositionend", () => {
+    isComposing = false
+    if (!input || !dialog?.open) {
+      return
+    }
+    updateUrl(input.value.trim())
+    search()
+  })
+  input?.addEventListener("input", (event) => {
+    if (
+      dialog?.open === false ||
+      isComposing ||
+      (event as InputEvent).isComposing
+    ) {
+      return
+    }
     updateUrl(input.value.trim())
     search()
   })
   input?.addEventListener("keydown", (event) => {
-    if (event.key === "Tab") {
+    if (isComposing || event.isComposing) {
+      if (event.key === "Enter") {
+        event.preventDefault()
+      }
+      return
+    }
+
+    if (
+      event.key === "Tab" &&
+      retryButton?.hidden !== false &&
+      !closeButton?.getClientRects().length
+    ) {
       event.preventDefault()
       return
     }
@@ -459,50 +579,66 @@
       return
     }
 
-    if (
-      event.key !== "ArrowDown" &&
-      event.key !== "ArrowUp" &&
-      event.key !== "Home" &&
-      event.key !== "End"
-    ) {
-      return
-    }
-    if (renderedLinks.length === 0) {
+    if (!renderedLinks.length) {
       return
     }
 
+    let nextIndex: number
+    switch (event.key) {
+      case "Home":
+        nextIndex = 0
+        break
+      case "End":
+        while (appendResults) {
+          appendResults()
+        }
+        nextIndex = renderedLinks.length - 1
+        break
+      case "ArrowUp":
+        if (activeIndex === 0) {
+          while (appendResults) {
+            appendResults()
+          }
+        }
+        nextIndex =
+          (activeIndex - 1 + renderedLinks.length) % renderedLinks.length
+        break
+      case "ArrowDown":
+        if (activeIndex === renderedLinks.length - 1) {
+          appendResults?.()
+        }
+        nextIndex = (activeIndex + 1) % renderedLinks.length
+        break
+      default:
+        return
+    }
     event.preventDefault()
-
-    if (event.key === "Home") {
-      setActiveResult(0)
-    } else if (event.key === "End") {
-      setActiveResult(renderedLinks.length - 1)
-    } else if (event.key === "ArrowDown") {
-      setActiveResult(activeResultIndex + 1)
-    } else {
-      setActiveResult(activeResultIndex - 1)
-    }
+    setActiveResult(nextIndex)
   })
   form?.addEventListener("submit", (event) => {
     event.preventDefault()
-    const selected = renderedLinks[activeResultIndex] ?? renderedLinks[0]
+    if (isComposing) {
+      return
+    }
+    const selected = renderedLinks[activeIndex]
     if (selected) {
       window.location.href = selected.href
     }
   })
-  results?.addEventListener("pointerover", (event) => {
+  popup?.addEventListener("pointermove", (event) => {
+    if (event.pointerType !== "mouse") {
+      return
+    }
     const link = (event.target as Element).closest<HTMLAnchorElement>(
       ".search-result",
     )
-    if (!link) {
-      return
-    }
-
-    const index = renderedLinks.indexOf(link)
-    if (index !== activeResultIndex) {
+    const index = link ? renderedLinks.indexOf(link) : -1
+    if (index >= 0 && index !== activeIndex) {
       setActiveResult(index, false)
     }
   })
+  scrollArea?.addEventListener("scroll", appendNearEnd)
+  closeButton?.addEventListener("click", () => closeSearch())
   dialog?.addEventListener("click", (event) => {
     if (event.target === dialog) {
       closeSearch()
@@ -513,11 +649,12 @@
     clearOrCloseSearch()
   })
   dialog?.addEventListener("close", () => {
+    if (dialog.open) {
+      return
+    }
     document.documentElement.classList.remove("search-open")
     if (input) {
       input.value = ""
-      input.setAttribute("aria-expanded", "false")
-      input.removeAttribute("aria-activedescendant")
     }
   })
   document.addEventListener("keydown", (event) => {
@@ -535,14 +672,6 @@
       openSearch()
     }
   })
-  const idleWindow = window as Window & {
-    requestIdleCallback?: typeof window.requestIdleCallback
-  }
-  if (idleWindow.requestIdleCallback) {
-    idleWindow.requestIdleCallback(warmSearchIndex, { timeout: 2_000 })
-  } else {
-    globalThis.setTimeout(warmSearchIndex, 1_500)
-  }
   if (shortcutModifier && !/(Mac|iPhone|iPad|iPod)/i.test(navigator.platform)) {
     shortcutModifier.textContent = "Ctrl"
   }
@@ -562,6 +691,9 @@
   }
 
   .search-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
     padding: 0;
     border: 0;
     background: transparent;
@@ -628,11 +760,13 @@
 
   .search-scroll {
     display: flex;
+    grid-column: 1 / -1;
     min-height: 0;
     flex-direction: column;
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
+    overflow-anchor: none;
     scrollbar-color: rgb(var(--color-muted)) transparent;
   }
 
@@ -669,7 +803,46 @@
     outline-offset: -2px;
   }
 
-  .search-results {
+  .search-action {
+    min-height: 2.75rem;
+    padding: 0.35rem 0.65rem;
+    border: 1px solid rgb(var(--color-muted) / 0.5);
+    border-radius: var(--radius);
+    background: rgb(var(--color-base));
+    color: rgb(var(--color-caption));
+    font: inherit;
+    font-size: var(--font-size-ui);
+    cursor: pointer;
+  }
+
+  .search-action:hover {
+    color: rgb(var(--color-text));
+    border-color: rgb(var(--color-muted));
+  }
+
+  .search-action:focus-visible {
+    outline: 2px solid rgb(var(--focus));
+    outline-offset: 2px;
+  }
+
+  .search-close {
+    display: none;
+  }
+
+  .search-list-action {
+    align-self: center;
+    margin: 0.75rem 0 0;
+  }
+
+  .search-status:not(.sr-only) {
+    min-height: 1.1rem;
+    margin: 0.45rem 0 0;
+    color: rgb(var(--color-caption));
+    font-family: var(--font-code);
+    font-size: 0.75rem;
+  }
+
+  .search-results:not([hidden]) {
     margin: 0.75rem 0 0;
   }
 
@@ -694,55 +867,52 @@
     text-transform: uppercase;
   }
 
-  .search-results :global(.search-group-heading span) {
-    min-width: 1.25rem;
-    color: rgb(var(--color-caption));
-    text-align: right;
-  }
-
-  .search-results :global(.search-group-list) {
+  .search-results :global(.search-result-list) {
     margin: 0;
+    display: grid;
+    gap: 0.5rem;
     padding: 0.15rem 0;
     list-style: none;
   }
 
-  .search-results :global(.search-group-list li + li) {
-    margin-top: 0.125rem;
-  }
-
   .search-results :global(.search-result) {
+    --search-preview-line-height: calc(var(--font-size-copy) * 1.4);
+    --search-result-row-gap: 0.125rem;
     box-sizing: border-box;
     display: grid;
-    grid-template-columns: 0.75rem minmax(0, 1fr);
+    grid-template-columns: 0.75rem minmax(0, 1fr) fit-content(40%);
     width: 100%;
-    min-height: 6.5rem;
-    align-items: start;
-    gap: 0.625rem;
-    padding: 0.7rem 0.75rem 0.75rem;
+    min-height: 2.75rem;
+    align-content: center;
+    gap: var(--search-result-row-gap) 0.5rem;
+    padding: 0.625rem 0.75rem;
     border-radius: var(--radius);
     color: inherit;
     text-decoration: none;
+    overflow-wrap: anywhere;
   }
 
-  .search-results :global(.search-result.is-active) {
+  .search-results :global(:where(li:nth-child(even)) > .search-result-post) {
+    background: rgb(var(--color-overlay) / 0.35);
+  }
+
+  .search-results :global(.search-result.is-active),
+  .search-results :global(.search-result:focus-visible) {
     background: rgb(var(--color-overlay));
   }
 
-  .search-results :global(.search-result-page) {
-    min-height: 3.25rem;
-    align-items: center;
-    padding-block: 0.5rem;
-  }
-
-  .search-results :global(.search-result-page .search-result-marker) {
-    padding-top: 0;
+  .search-results :global(.search-result:focus-visible) {
+    outline: 2px solid rgb(var(--focus));
+    outline-offset: -2px;
   }
 
   .search-results :global(.search-result-marker) {
-    padding-top: 0.08rem;
+    grid-area: 1 / 1;
+    align-self: baseline;
     color: rgb(var(--color-gold));
     font-family: var(--font-code);
     font-weight: 700;
+    line-height: 1.3;
     opacity: 0;
   }
 
@@ -750,44 +920,47 @@
     opacity: 1;
   }
 
-  .search-results :global(.search-result-copy) {
-    min-width: 0;
-  }
-
-  .search-results :global(.search-result-title) {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: baseline;
-    gap: 0.75rem;
-  }
-
   .search-results :global(.search-result strong),
-  .search-results :global(.search-result-path) {
+  .search-results :global(.search-result-meta) {
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   .search-results :global(.search-result strong) {
+    grid-area: 1 / 2;
+    align-self: baseline;
     font-size: var(--font-size-copy);
     line-height: 1.3;
   }
 
-  .search-results :global(.search-result-path) {
-    color: rgb(var(--color-caption));
-    font-family: var(--font-code);
-    font-size: 0.75rem;
-  }
-
   .search-results :global(.search-result-snippet) {
+    grid-area: 2 / 2 / auto / -1;
     display: -webkit-box;
-    margin-top: 0.25rem;
+    block-size: 2lh;
     overflow: hidden;
     color: rgb(var(--color-caption));
     font-size: var(--font-size-copy);
-    line-height: 1.4;
+    line-height: var(--search-preview-line-height);
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+  }
+
+  .search-results :global(.search-result-meta) {
+    grid-area: 1 / 3;
+    box-sizing: border-box;
+    max-width: 100%;
+    justify-self: end;
+    align-self: center;
+    padding-inline: 0.4rem;
+    border: 1px solid rgb(var(--color-muted) / 0.6);
+    border-radius: var(--radius);
+    background: rgb(var(--color-base));
+    color: rgb(var(--color-caption));
+    font-family: var(--font-code);
+    font-size: 0.75rem;
+    line-height: 1.125rem;
   }
 
   .search-results :global(.search-result mark) {
@@ -796,7 +969,11 @@
     color: inherit;
   }
 
-  .search-results :global(.search-empty) {
+  .search-results :global(.search-result-quiet mark) {
+    background: rgb(var(--color-gold) / 0.14);
+  }
+
+  .search-scroll :global(.search-empty) {
     display: grid;
     min-height: 13rem;
     place-content: center;
@@ -804,13 +981,13 @@
     text-align: center;
   }
 
-  .search-results :global(.search-empty-ornament) {
+  .search-scroll :global(.search-empty-ornament) {
     margin-bottom: 0.75rem;
     color: rgb(var(--color-text));
     font-family: var(--font-code);
   }
 
-  .search-results :global(.search-empty p) {
+  .search-scroll :global(.search-empty p) {
     width: min(80%, 38rem);
     justify-self: center;
     margin: 0.35rem 0 0;
@@ -822,9 +999,10 @@
 
   .search-help {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: center;
-    gap: 1rem;
+    gap: 0.5rem 1rem;
     margin: auto 0 0;
     padding: 1.75rem 0 0.75rem;
     color: rgb(var(--color-caption));
@@ -872,35 +1050,56 @@
 
   @media (max-width: 32rem) {
     .search-dialog {
-      width: min(calc(100% - 1rem), 42rem);
+      box-sizing: border-box;
+      width: calc(100% - 1rem);
       height: calc(100dvh - 1rem);
+      max-width: none;
+      max-height: none;
     }
 
     .search-panel {
-      padding: 1rem 1rem 0;
+      grid-template-columns: minmax(0, 1fr) auto;
+      column-gap: 0.5rem;
+      padding: 0.75rem 0.75rem 0;
+    }
+
+    .search-close {
+      display: block;
+      align-self: center;
+    }
+
+    .search-form input {
+      font-size: max(1rem, var(--font-size-copy));
     }
 
     .search-help {
-      display: grid;
-      grid-template-columns: repeat(2, max-content);
-      column-gap: 1.5rem;
-      row-gap: 0.625rem;
+      padding-block-start: 1rem;
     }
 
     .search-results :global(.search-result) {
-      min-height: 7.5rem;
+      grid-template-columns: 0.75rem minmax(0, 1fr);
     }
 
-    .search-results :global(.search-result-page) {
-      min-height: 3.75rem;
+    /* Split the two-line preview space between the excerpt and badge. */
+    .search-results :global(.search-result:has(> .search-result-meta)) {
+      grid-template-rows: auto var(--search-preview-line-height) calc(
+          var(--search-preview-line-height) - var(--search-result-row-gap)
+        );
     }
 
-    .search-results :global(.search-result-title) {
-      grid-template-columns: minmax(0, 1fr);
-      gap: 0.05rem;
+    .search-results :global(.search-result-snippet:has(+ .search-result-meta)) {
+      display: block;
+      block-size: 1lh;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
-    .search-results :global(.search-empty p) {
+    .search-results :global(.search-result-meta) {
+      grid-area: 3 / 2;
+      justify-self: start;
+    }
+
+    .search-scroll :global(.search-empty p) {
       width: 100%;
     }
   }

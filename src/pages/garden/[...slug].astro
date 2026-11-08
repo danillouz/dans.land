@@ -7,6 +7,7 @@ import Mermaid from "../../components/Mermaid.astro"
 import ToC from "../../components/ToC.astro"
 import {
   getPublishedGardenEntries,
+  prepareGardenEntryForSearch,
   renderGardenEntry,
 } from "../../garden/collection"
 import Garden from "../../layouts/Garden.astro"
@@ -25,8 +26,9 @@ export async function getStaticPaths() {
 }
 
 const { entry } = Astro.props
+const searchableEntry = prepareGardenEntryForSearch(entry)
 const { Content, graph, headings, readingTime, hasMermaid } =
-  await renderGardenEntry(entry)
+  await renderGardenEntry(searchableEntry)
 const hasFootnotes = headings.some(({ slug }) => slug === "footnote-label")
 const created = entry.data.created
 const updated = entry.data.updated
@@ -54,7 +56,9 @@ const dateFormatter = new Intl.DateTimeFormat("en-GB", {
     <header class="post-header" data-link-preview-content>
       <h1>{entry.data.title}</h1>
 
-      <p class="post-description">{entry.data.description}</p>
+      <p id="post-description" class="post-description" data-search-hit>
+        {entry.data.description}
+      </p>
 
       <div class="post-meta" aria-label="Post details">
         <div class="post-meta-summary">
@@ -112,6 +116,23 @@ const dateFormatter = new Intl.DateTimeFormat("en-GB", {
 </Garden>
 
 <style>
+  :global([data-search-hit]),
+  :global([data-search-hit-anchor]) {
+    scroll-margin-block: 1.5rem;
+  }
+
+  :global([data-search-hit-anchor]) {
+    display: block;
+    block-size: 0;
+  }
+
+  :global([data-search-hit]:target),
+  :global(:has(> [data-search-hit-anchor]:target)) {
+    outline: 2px solid rgb(var(--color-gold) / 0.65);
+    outline-offset: 0.35rem;
+    border-radius: var(--radius);
+  }
+
   .post-header {
     margin-bottom: var(--garden-divider-spacing);
     padding-bottom: var(--garden-divider-spacing);

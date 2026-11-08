@@ -5,6 +5,8 @@ import type { CollectionEntry } from "astro:content"
 import { getCollection, render } from "astro:content"
 import path from "node:path"
 
+import { prepareSearchContent } from "../search/index-content"
+
 // `?url` imports the asset's URL; `no-inline` keeps it as a separate file instead
 // of embedding its contents in a base64 data URL. The query also bypasses Astro's
 // dev navigation guard, so following the link in a browser works locally.
@@ -19,6 +21,18 @@ const jsonAssetUrls = import.meta.glob<string>(
 export async function getPublishedGardenEntries() {
   const entries = await getCollection("garden", ({ data }) => !data.draft)
   return entries.map(resolveJsonAssetLinks)
+}
+
+/** Apply the same pure HTML transform for indexed content and its rendered page. */
+export function prepareGardenEntryForSearch(entry: CollectionEntry<"garden">) {
+  const searchContent = prepareSearchContent(entry.rendered?.html ?? "")
+  return {
+    ...entry,
+    searchContent,
+    ...(entry.rendered && {
+      rendered: { ...entry.rendered, html: searchContent.html },
+    }),
+  }
 }
 
 function resolveJsonAssetLinks(entry: CollectionEntry<"garden">) {

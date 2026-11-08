@@ -1,5 +1,7 @@
 ---
 title: Dotfiles
+aliases:
+  - Mac OS
 description: My macOS (Apple Silicon) setup and application configuration.
 created: 2025-01-05
 updated: 2026-11-07

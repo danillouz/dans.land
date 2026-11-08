@@ -7,6 +7,12 @@ import { parseFrontmatter } from "@astrojs/markdown-remark"
 import { parse, type DefaultTreeAdapterMap } from "parse5"
 
 import { canonicalizeSlug } from "../../src/garden/links.ts"
+import {
+  prepareSearchIndex,
+  searchEntries,
+  searchResultHref,
+} from "../../src/search/client.ts"
+import type { SearchEntry } from "../../src/search/types.ts"
 
 type HtmlDocument = DefaultTreeAdapterMap["document"]
 type HtmlElement = DefaultTreeAdapterMap["element"]
@@ -313,7 +319,6 @@ test("Astro emits all pages and deployment files", async () => {
     "dist/about.html",
     "dist/404.html",
     "dist/garden/all.html",
-    "dist/search-index.json",
     "dist/_headers",
     "dist/robots.txt",
     "dist/rss.xml",
@@ -419,10 +424,13 @@ test("every page shares the full header and footer shell", async () => {
 
     assert.equal(attribute(body, "id"), "top")
     assert.deepEqual(
-      elements(header, (node) => node.tagName === "a").map((link) => [
-        attribute(link, "href"),
-        textContent(link).trim(),
-      ]),
+      elements(
+        header,
+        (node) =>
+          node.tagName === "a" &&
+          (attribute(node, "class")?.split(/\s+/).includes("nav-link") ??
+            false),
+      ).map((link) => [attribute(link, "href"), textContent(link).trim()]),
       [
         ["/", "Home"],
         ["/garden", "Garden"],
@@ -458,8 +466,12 @@ test("every page shares the full header and footer shell", async () => {
   }
 })
 
-test("search keeps command navigation on the input", async () => {
+test("search restores Crumb's command navigation semantics", async () => {
   const { document } = await builtPage("dist/index.html")
+  const trigger = element(
+    document,
+    (node) => attribute(node, "data-search-open") !== undefined,
+  )
   const input = element(
     document,
     (node) =>
@@ -469,21 +481,60 @@ test("search keeps command navigation on the input", async () => {
   const results = element(
     document,
     (node) =>
-      node.tagName === "div" &&
-      attribute(node, "data-search-results") !== undefined,
+      node.tagName === "div" && attribute(node, "id") === "search-results",
   )
   const scrollArea = element(
     document,
     (node) => attribute(node, "data-search-scroll") !== undefined,
   )
   assert.equal(attribute(input, "role"), "combobox")
-  assert.equal(attribute(input, "placeholder"), "Search Dan's Land…")
+  assert.equal(attribute(input, "placeholder"), "Search Dan's Land...")
   assert.equal(attribute(input, "autocapitalize"), "none")
   assert.equal(attribute(input, "spellcheck"), "false")
   assert.equal(attribute(input, "aria-controls"), "search-results")
+  assert.equal(attribute(input, "aria-autocomplete"), "list")
+  assert.equal(attribute(input, "aria-expanded"), "false")
   assert.equal(attribute(results, "role"), "listbox")
   assert.equal(attribute(results, "tabindex"), undefined)
   assert.equal(attribute(scrollArea, "tabindex"), "-1")
+  const shortcuts = element(
+    results,
+    (node) => attribute(node, "data-search-shortcuts") !== undefined,
+  )
+  assert.equal(attribute(shortcuts, "hidden"), undefined)
+  assert.equal(attribute(shortcuts, "role"), "group")
+  const shortcutsHeading = element(
+    shortcuts,
+    (node) =>
+      node.tagName === "h3" &&
+      (attribute(node, "class")
+        ?.split(/\s+/)
+        .includes("search-group-heading") ??
+        false),
+  )
+  assert.equal(
+    attribute(shortcuts, "aria-labelledby"),
+    attribute(shortcutsHeading, "id"),
+  )
+  assert.match(textContent(shortcutsHeading), /^Pages\s*4$/)
+  assert.deepEqual(
+    elements(shortcuts, (node) => node.tagName === "a").map((link) => [
+      attribute(link, "href"),
+      attribute(link, "role"),
+      attribute(link, "tabindex"),
+    ]),
+    [
+      ["/", "option", "-1"],
+      ["/garden", "option", "-1"],
+      ["/garden/all", "option", "-1"],
+      ["/about", "option", "-1"],
+    ],
+  )
+  const help = element(
+    scrollArea,
+    (node) => attribute(node, "id") === "search-help",
+  )
+  assert.match(textContent(help).replace(/\s+/g, " "), /↑.*↓.*roam/)
   assert.equal(
     elements(
       scrollArea,
@@ -499,49 +550,196 @@ test("search keeps command navigation on the input", async () => {
   assert.equal(
     elements(
       document,
-      (node) => attribute(node, "data-search-close") !== undefined,
+      (node) => attribute(node, "data-search-more") !== undefined,
     ).length,
     0,
+  )
+  const close = element(
+    document,
+    (node) => attribute(node, "data-search-close") !== undefined,
+  )
+  assert.equal(close.tagName, "button")
+  assert.equal(attribute(close, "aria-label"), "Close search")
+  assert.equal(
+    elements(
+      document,
+      (node) => attribute(node, "data-search-retry") !== undefined,
+    ).length,
+    1,
   )
 })
 
 test("the search index contains pages and published garden content", async () => {
-  const index = JSON.parse(await readFile("dist/search-index.json", "utf8"))
+  const index = await builtSearchIndex()
   const handlers = index.find(
-    (entry: { path: string }) => entry.path === "/garden/go/http-handlers",
+    (entry) => entry.path === "/garden/go/http-handlers",
   )
   assert.ok(index.length > 0)
+  assert.ok(index.every((entry) => ["page", "garden"].includes(entry.kind)))
+  assert.equal(new Set(index.map((entry) => entry.path)).size, index.length)
   assert.ok(
     index.some(
-      (entry: {
-        content?: string
-        description?: string
-        kind: string
-        path: string
-        title: string
-      }) =>
+      (entry) =>
         entry.path === "/about" &&
         entry.kind === "page" &&
         entry.title === "About" &&
-        entry.description === undefined &&
-        entry.content === undefined,
+        !("description" in entry) &&
+        !("passages" in entry),
     ),
   )
   assert.ok(
     index.some(
-      (entry: { content: string; path: string; title: string }) =>
+      (entry) =>
         entry.path === "/garden/computer-networks/dns" &&
+        entry.kind === "garden" &&
         entry.title === "DNS" &&
-        entry.content.includes("Why do we need DNS?"),
+        entry.passages.some(({ text }) => text.includes("massive system")),
     ),
   )
-  assert.ok(
-    index.every((entry: { path: string }) => !entry.path.includes("/_drafts/")),
-  )
-  assert.ok(index.every((entry: { href?: string }) => entry.href === undefined))
+  assert.ok(index.every((entry) => !entry.path.includes("/_drafts/")))
+  assert.ok(index.every((entry) => !("href" in entry)))
   assert.ok(handlers)
   assert.equal(handlers.kind, "garden")
-  assert.doesNotMatch(handlers.content, /package main|ListenAndServe/)
+  assert.doesNotMatch(
+    handlers.passages.map(({ text }) => text).join(" "),
+    /package main|ListenAndServe/,
+  )
+  assert.ok(handlers.sections.some(({ id }) => id === "search-hit-servemux"))
+
+  const { document: article } = await builtPage(
+    "dist/garden/go/http-handlers.html",
+  )
+  assert.ok(
+    handlers.passages.every(({ text }) =>
+      textContent(article).replace(/\s+/g, " ").includes(text),
+    ),
+  )
+  for (const [query, path] of [
+    ["Atuin", "/garden/dotfiles#search-hit-atuin"],
+    ["Handler", "/garden/go/http-handlers#search-hit-handler"],
+    ["Help", "/garden/sqlite-cli#search-hit-help"],
+  ]) {
+    const hit = searchEntries(prepareSearchIndex(index), query).entries.find(
+      (entry) => entry.kind === "garden" && entry.matchPath === path,
+    )
+    assert.ok(hit, `Exact section search should open ${path}`)
+  }
+
+  assert.equal(
+    searchEntries(
+      prepareSearchIndex(index),
+      "go permissions",
+      Infinity,
+    ).entries.some(
+      (entry) => entry.path === "/garden/lambda/audio-transcoding",
+    ),
+    false,
+  )
+  const genericGoHit = searchEntries(
+    prepareSearchIndex(index),
+    "go",
+    Infinity,
+  ).entries.find((entry) => entry.path === "/garden/go/benchmarking")
+  assert.ok(genericGoHit)
+  assert.equal(genericGoHit.kind, "garden")
+  assert.notEqual(
+    genericGoHit.matchPath,
+    "/garden/go/benchmarking#search-hit-gotchas",
+  )
+
+  const footnote = "http.ServeMux also satisfies the http.Handler interface"
+  assert.equal(
+    handlers.passages.filter(({ text }) => text.startsWith(footnote)).length,
+    1,
+  )
+  assert.ok(
+    index
+      .filter((entry) => entry.kind === "garden")
+      .every((entry) =>
+        entry.passages.every(
+          ({ text }) => !text.includes("※") && !text.includes("↩"),
+        ),
+      ),
+  )
+})
+
+test("indexed passages and sections point to search targets in the built page", async () => {
+  const index = await builtSearchIndex()
+  for (const post of index.filter((entry) => entry.kind === "garden")) {
+    const { document } = await builtPage(`dist${post.path}.html`)
+    for (const { id } of post.passages) {
+      const target = element(document, (node) => attribute(node, "id") === id)
+      assert.ok(target, `Missing indexed target: ${post.path}#${id}`)
+      assert.equal(attribute(target, "data-search-hit"), "")
+    }
+    for (const { id } of post.sections) {
+      assert.match(id, /^search-hit-/)
+      const target = element(document, (node) => attribute(node, "id") === id)
+      assert.ok(target, `Missing indexed section anchor: ${post.path}#${id}`)
+      assert.equal(target.tagName, "span")
+      assert.equal(attribute(target, "data-search-hit-anchor"), "")
+      const heading = target.parentNode
+      assert.ok(
+        heading && "tagName" in heading,
+        `Missing parent heading: ${post.path}#${id}`,
+      )
+      assert.ok(["h2", "h3", "h4", "h5", "h6"].includes(heading.tagName))
+      assert.equal(attribute(heading, "data-search-hit"), undefined)
+      const headingId = attribute(heading, "id")
+      assert.ok(headingId)
+      assert.ok(
+        elements(
+          heading,
+          (node) =>
+            node.tagName === "a" &&
+            attribute(node, "class")?.split(/\s+/).includes("heading-link") ===
+              true &&
+            attribute(node, "href") === `#${headingId}`,
+        ).length > 0,
+        `Heading link changed: ${post.path}#${headingId}`,
+      )
+    }
+  }
+})
+
+test("the UI loads a fingerprinted index with immutable caching", async () => {
+  const { document } = await builtPage("dist/index.html")
+  const dialog = element(
+    document,
+    (node) => attribute(node, "data-site-search") !== undefined,
+  )
+  const url = attribute(dialog, "data-search-index")
+  assert.ok(url)
+  assert.match(url, /^\/search\/[a-f0-9]{64}\.index\.json$/)
+  const json = await readFile(`dist${url}`, "utf8")
+  assert.equal(url, `/search/${sha256(json)}.index.json`)
+  const headers = await readFile("dist/_headers", "utf8")
+  assert.match(
+    headers,
+    /\/search\/\*\s+Cache-Control: public, max-age=31536000, immutable/,
+  )
+})
+
+test("visible figure captions can link directly to the matching figure", async () => {
+  const index = await builtSearchIndex()
+  const entries = prepareSearchIndex(index)
+  const query = "frames added last removed first"
+  const hit = searchEntries(entries, query, 100).entries.find(
+    (entry) => entry.path === "/garden/lambda/nodejs-event-loop",
+  )
+  assert.ok(hit)
+  assert.equal(hit.kind, "garden")
+  assert.ok(hit.matchPath)
+  assert.match(
+    searchResultHref(hit),
+    /^\/garden\/lambda\/nodejs-event-loop#search-hit-\d+$/,
+  )
+  assert.equal(
+    searchEntries(entries, "last in first out", Infinity).entries.some(
+      (entry) => entry.path === "/garden/lambda/nodejs-event-loop",
+    ),
+    false,
+  )
 })
 
 test("garden routes only load their own styles", async () => {
@@ -731,6 +929,17 @@ function sha256(value: string) {
 async function builtPage(path: string) {
   const html = await readFile(path, "utf8")
   return { document: parse(html), html }
+}
+
+async function builtSearchIndex() {
+  const { document } = await builtPage("dist/index.html")
+  const dialog = element(
+    document,
+    (node) => attribute(node, "data-site-search") !== undefined,
+  )
+  const url = attribute(dialog, "data-search-index")
+  assert.ok(url)
+  return JSON.parse(await readFile(`dist${url}`, "utf8")) as SearchEntry[]
 }
 
 async function builtStyles(document: HtmlDocument) {

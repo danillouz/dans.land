@@ -146,7 +146,7 @@ test("links rendered headings to their URL fragments", async () => {
 
   assert.match(
     article,
-    /<h2 id="lists"><a class="heading-link" href="#lists">Lists<\/a><\/h2>/,
+    /<h2 id="lists"><span id="search-hit-lists" data-search-hit-anchor="" aria-hidden="true"><\/span><a class="heading-link" href="#lists">Lists<\/a><\/h2>/,
   )
 })
 
@@ -183,16 +183,16 @@ test("renders Obsidian callouts", async () => {
   )
   assert.match(
     calloutArticle,
-    /<p class="callout-title"><span aria-hidden="true" class="callout-icon">※<\/span>Note<\/p>/,
+    /<p class="callout-title"[^>]*><span aria-hidden="true" class="callout-icon">※<\/span>Note<\/p>/,
   )
   assert.doesNotMatch(calloutArticle, /\[!note\]/i)
   assert.match(
     quotedArticle,
-    /<figure class="callout callout--quote" data-callout="quote">\s*<span aria-hidden="true" class="callout-icon">“<\/span>\s*<blockquote cite="https:\/\/docs\.aws\.amazon\.com\/lambda\/latest\/dg\/lambda-runtime-environment\.html">/,
+    /<figure class="callout callout--quote" data-callout="quote"[^>]*>\s*<span aria-hidden="true" class="callout-icon">“<\/span>\s*<blockquote cite="https:\/\/docs\.aws\.amazon\.com\/lambda\/latest\/dg\/lambda-runtime-environment\.html">/,
   )
   assert.match(
     quotedArticle,
-    /<figcaption class="callout-citation"><cite><a href="https:\/\/docs\.aws\.amazon\.com\/lambda\/latest\/dg\/lambda-runtime-environment\.html">https:\/\/docs\.aws\.amazon\.com\/lambda\/latest\/dg\/lambda-runtime-environment\.html<\/a><\/cite><\/figcaption>/,
+    /<figcaption class="callout-citation"[^>]*><cite><a href="https:\/\/docs\.aws\.amazon\.com\/lambda\/latest\/dg\/lambda-runtime-environment\.html">https:\/\/docs\.aws\.amazon\.com\/lambda\/latest\/dg\/lambda-runtime-environment\.html<\/a><\/cite><\/figcaption>/,
   )
   assert.match(
     denoQuoteArticle,
@@ -258,12 +258,12 @@ test("renders accessible, annotated Rosé Pine code blocks", async () => {
     readFile("dist/garden/go/benchmarking.html", "utf8"),
   ])
   const styles = article.match(
-    /<div class="expressive-code"><style>(.*?)<\/style>/s,
+    /<div class="expressive-code"[^>]*><style>(.*?)<\/style>/s,
   )?.[1]
 
   assert.match(
     article,
-    /<h3 id="servemux"><a class="heading-link" href="#servemux">/,
+    /<h3 id="servemux"><span id="search-hit-servemux" data-search-hit-anchor="" aria-hidden="true"><\/span><a class="heading-link" href="#servemux">/,
   )
   assert.match(article, /class="post-description"/)
   assert.match(article, /class="expressive-code"/)
@@ -318,7 +318,8 @@ test("renders post context, dates, and reading time", async () => {
   assert.ok(header)
   assert.ok(metadata)
   assert.ok(otherMetadata)
-  assert.ok(header.indexOf("<h1>") < header.indexOf("post-description"))
+  assert.ok(header.search(/<h1\b/) >= 0)
+  assert.ok(header.search(/<h1\b/) < header.indexOf("post-description"))
   assert.ok(header.indexOf("post-description") < header.indexOf("post-meta"))
   assert.match(metadata, /<span class="post-label"[^>]*>Go<\/span>/)
   assert.match(metadata, /<span class="post-label"[^>]*>Evergreen<\/span>/)
@@ -339,7 +340,7 @@ test("renders article images as captioned figures", async () => {
     "utf8",
   )
   const stepsStart = article.indexOf("<ol>")
-  assert.match(article, /<figure class="post-image">/)
+  assert.match(article, /<figure class="post-image"[^>]*>/)
   assert.match(
     article,
     /<figcaption aria-hidden="true">SEC_ERROR_UNKNOWN_ISSUER<\/figcaption>/,

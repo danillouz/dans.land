@@ -32,9 +32,7 @@ export default defineConfig({
     // remove this option.
     expressiveCode({ emitExternalStylesheet: false }),
 
-    sitemap({
-      filter: (page) => page !== "https://dans.land/404",
-    }),
+    sitemap({ filter: (page) => page !== "https://dans.land/404" }),
   ],
   markdown: {
     processor: unified({
