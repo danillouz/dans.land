@@ -27,6 +27,9 @@
       startOnLoad: false,
       securityLevel: "strict",
       theme: "base",
+      layout: "dagre",
+      look: "classic",
+      flowchart: { minNodeWidth: 0 },
       fontFamily: "ui-sans-serif, system-ui, sans-serif",
       themeVariables: {
         background: color("--color-surface"),
@@ -83,7 +86,9 @@
   if (diagrams.length > 0) {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (!entries.some((entry) => entry.isIntersecting)) return
+        if (!entries.some((entry) => entry.isIntersecting)) {
+          return
+        }
         observer.disconnect()
         void renderDiagrams().catch((error) => {
           console.error("Could not render Mermaid diagrams", error)

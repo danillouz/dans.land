@@ -12,7 +12,7 @@ Welcome to Dan's Land, my personal site.
 
 ## Build commands
 
-Requires Node.js `>=22.12.0`. After running `npm i`, run:
+Requires Node.js `>=22.23.4`. After running `npm i`, run:
 
 - `npm start` to start the local development server.
 - `npm run build` to build the site for deployment.
