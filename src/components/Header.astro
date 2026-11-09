@@ -1,7 +1,8 @@
 ---
+import { normalizePagePathname } from "../urls"
 import Search from "./Search.astro"
 
-const path = Astro.url.pathname.replace(/\/$/, "") || "/"
+const path = normalizePagePathname(Astro.url.pathname).replace(/\/$/, "") || "/"
 const links = [
   { href: "/", label: "Home" },
   { href: "/garden", label: "Garden" },

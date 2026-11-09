@@ -401,14 +401,14 @@ test("the homepage preserves spaces around inline links", async () => {
 })
 
 test("every page shares the full header and footer shell", async () => {
-  for (const path of [
-    "dist/index.html",
-    "dist/about.html",
-    "dist/404.html",
-    "dist/garden.html",
-    "dist/garden/all.html",
-    "dist/garden/cache-stampeding.html",
-  ]) {
+  for (const [path, expectedActiveLinks] of [
+    ["dist/index.html", [["/", "page"]]],
+    ["dist/about.html", [["/about", "page"]]],
+    ["dist/404.html", []],
+    ["dist/garden.html", [["/garden", "page"]]],
+    ["dist/garden/all.html", [["/garden", "location"]]],
+    ["dist/garden/cache-stampeding.html", [["/garden", "location"]]],
+  ] as const) {
     const { document } = await builtPage(path)
     const header = element(
       document,
@@ -423,19 +423,31 @@ test("every page shares the full header and footer shell", async () => {
     const body = element(document, (node) => node.tagName === "body")
 
     assert.equal(attribute(body, "id"), "top")
+    const primaryNav = element(
+      header,
+      (node) =>
+        node.tagName === "nav" && attribute(node, "aria-label") === "Primary",
+    )
+    const navLinks = elements(
+      primaryNav,
+      (node) =>
+        node.tagName === "a" &&
+        (attribute(node, "class")?.split(/\s+/).includes("nav-link") ?? false),
+    )
     assert.deepEqual(
-      elements(
-        header,
-        (node) =>
-          node.tagName === "a" &&
-          (attribute(node, "class")?.split(/\s+/).includes("nav-link") ??
-            false),
-      ).map((link) => [attribute(link, "href"), textContent(link).trim()]),
+      navLinks.map((link) => [attribute(link, "href"), textContent(link).trim()]),
       [
         ["/", "Home"],
         ["/garden", "Garden"],
         ["/about", "About"],
       ],
+    )
+    assert.deepEqual(
+      navLinks
+        .filter((link) => attribute(link, "aria-current") !== undefined)
+        .map((link) => [attribute(link, "href"), attribute(link, "aria-current")]),
+      expectedActiveLinks,
+      `Active navigation links in ${path}`,
     )
     const searchButton = element(
       header,
