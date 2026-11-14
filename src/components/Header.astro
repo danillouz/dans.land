@@ -44,13 +44,8 @@ function current(href: string) {
 
   nav {
     display: flex;
+    width: 100%;
     gap: 1.5rem;
-  }
-
-  @media (min-width: 641px) {
-    nav {
-      width: 100%;
-    }
   }
 
   .nav-link[aria-current] {
@@ -68,13 +63,16 @@ function current(href: string) {
   @media (max-width: 40rem) {
     nav {
       flex-wrap: wrap;
-      gap: 0.25rem 1rem;
+      justify-content: space-evenly;
+      gap: 0.25rem 0.5rem;
     }
 
-    .nav-link {
+    nav > :global(.nav-link) {
       display: inline-flex;
-      align-items: center;
+      min-width: 2.75rem;
       min-height: 2.75rem;
+      align-items: center;
+      justify-content: center;
     }
   }
 </style>
