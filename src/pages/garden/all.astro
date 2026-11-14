@@ -141,7 +141,6 @@ const description = "Explore every published post in Dan's digital garden."
     align-items: center;
     justify-content: space-between;
     gap: 1.5rem;
-    margin-bottom: 2rem;
   }
 
   .all-header h1 {
@@ -186,13 +185,15 @@ const description = "Explore every published post in Dan's digital garden."
   }
 
   .all-map-view {
+    --map-banner-gap: 3rem;
+
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    margin-block-start: var(--map-banner-gap);
   }
 
   .map-help {
-    margin: 0;
+    margin: 1.5rem 0 0;
     color: rgb(var(--garden-description));
     font-family: var(--font-ui);
     font-size: var(--font-size-ui);
@@ -202,6 +203,7 @@ const description = "Explore every published post in Dan's digital garden."
   .all-map {
     width: min(calc(100vw - 3rem), 69rem);
     flex: none;
+    margin-block-start: var(--map-banner-gap);
     margin-inline-start: 50%;
     transform: translateX(-50%);
   }
@@ -212,10 +214,17 @@ const description = "Explore every published post in Dan's digital garden."
 
   .all-tree {
     min-height: 20rem;
+    margin-block-start: 2rem;
   }
 
   [hidden] {
     display: none;
+  }
+
+  @media (max-width: 799px) {
+    .all-map-view {
+      --map-banner-gap: 2rem;
+    }
   }
 
   @media (max-width: 40rem) {
@@ -225,8 +234,8 @@ const description = "Explore every published post in Dan's digital garden."
   }
 
   @media (max-width: 32rem) {
-    .all-header {
-      margin-bottom: 1.5rem;
+    .all-tree {
+      margin-block-start: 1.5rem;
     }
 
     .all-header h1 {
