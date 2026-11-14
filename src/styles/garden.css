@@ -9,10 +9,6 @@
   box-sizing: border-box;
 }
 
-body {
-  line-height: 1.65;
-}
-
 .garden-prose {
   letter-spacing: var(--letter-spacing-copy);
 }

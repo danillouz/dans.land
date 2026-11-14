@@ -1,11 +1,19 @@
-body {
-  line-height: 1.6;
-}
-
 main {
   display: flex;
   flex-direction: column;
-  gap: 3rem;
+  gap: var(--page-section-gap);
+}
+
+:is(.page-copy, .profile-copy) {
+  letter-spacing: var(--letter-spacing-copy);
+}
+
+:is(.page-copy, .profile-copy) > p {
+  margin: 0;
+}
+
+:is(.page-copy, .profile-copy) > p + p {
+  margin-block-start: 1.5rem;
 }
 
 .radiate {
@@ -27,11 +35,5 @@ main {
   .radiate {
     animation: none;
     text-shadow: 0 0 4px currentColor;
-  }
-}
-
-@media (max-width: 799px) {
-  main {
-    gap: 2rem;
   }
 }

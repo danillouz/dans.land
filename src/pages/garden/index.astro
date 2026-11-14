@@ -155,8 +155,9 @@ const description = "Dan's digital garden."
 </Garden>
 
 <style>
-  .garden-about {
-    margin-top: 4rem;
+  .garden-about,
+  .recent {
+    margin-block-start: var(--page-section-gap);
   }
 
   .garden-about > :first-child {
@@ -181,7 +182,6 @@ const description = "Dan's digital garden."
     box-sizing: border-box;
     position: relative;
     isolation: isolate;
-    margin-top: 4rem;
     padding: 1.5rem;
     border: var(--frame-line) solid var(--frame-accent);
     background: rgb(var(--color-base));

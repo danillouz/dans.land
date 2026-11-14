@@ -137,7 +137,8 @@ const serializedGraph = JSON.stringify(graph).replaceAll("<", "\\u003c")
   }
 
   .graph-controls button {
-    min-width: 2rem;
+    min-width: var(--control-min-size);
+    min-height: var(--control-min-size);
     padding: 0.125rem 0.5rem;
     border: 0;
     background: transparent;
